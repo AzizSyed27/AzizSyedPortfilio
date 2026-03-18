@@ -1,7 +1,7 @@
 // Home.jsx
 
 import React from 'react';
-import Picture from '../src/person-pics/aziz_top_shot.jpeg';
+import Picture from '../src/person-pics/aziz_top_shot_2.jpeg';
 import { Link } from 'react-router-dom';
 
 export default function Home() {
@@ -15,8 +15,9 @@ export default function Home() {
               Building practical, reliable, and user-focused software.
             </h1>
             <p className="hero-subtitle">
-              I’m <span className="highlight">Aziz Syed</span>, a Software Engineering and Technology
-              graduate from <br></br><span className="highlight-college">Centennial College</span>. I’ve built
+              I’m <span className="highlight">Aziz Syed</span>, a Computer Science student chading their Bacherlor of Sceince (Honours) at The University of Ontario Institute of Technology. 
+              I'm also a Software Engineering Technology
+              graduate from <span className="highlight-college">Centennial College</span>. I’ve built
               hands-on experience in full-stack development, cloud computing, and emerging web
               technologies. I enjoy turning real-world problems into scalable, maintainable software
               solutions.
@@ -48,9 +49,9 @@ export default function Home() {
           </div>
 
           <div className="hero-photo-wrapper">
-            <div className="hero-photo-card">
-              <img src={Picture} alt="Aziz Syed" className="hero-photo" />
-            </div>
+             <div className="about-photo-wrapper">
+                <img src={Picture} alt="Aziz Syed" className="about-photo" />
+              </div>
           </div>
         </div>
       </section>

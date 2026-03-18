@@ -1,7 +1,7 @@
 // about.jsx
 
 import React from 'react';
-import Picture from '../src/person-pics/aziz_top_shot_2.jpeg';
+import Picture from '../src/person-pics/aziz_top_shot.jpeg';
 import Resume from '../src/person-pics/AzizSyedResume.pdf';
 
 export default function About() {
@@ -18,8 +18,10 @@ export default function About() {
       </header>
 
       <div className="about-grid">
-        <div className="about-photo-wrapper">
-          <img src={Picture} alt="Aziz Syed" className="about-photo" />
+       
+
+        <div className="hero-photo-card">
+          <img src={Picture} alt="Aziz Syed" className="hero-photo" />
         </div>
 
         <div className="about-content">
