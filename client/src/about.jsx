@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Picture from '../src/person-pics/aziz_top_shot.jpeg';
-import Resume from '../src/person-pics/AzizSyedResume.pdf';
+import Resume from '../src/person-pics/Aziz_Syed_Resume_.pdf';
 
 export default function About() {
   return (
