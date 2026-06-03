@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hand Mode — Sensor PIP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A0F14; --fg: #E8F6FB; --accent: #4FDFFF; --accent-bright: #8BEBFF;
+    --panel: rgba(8, 14, 21, 0.82); --line: rgba(79,223,255,0.16); --line-strong: rgba(79,223,255,0.40);
+    --muted: rgba(232,246,251,0.55); --muted-2: rgba(232,246,251,0.34); --live: #2FE6C0;
+    --f-display: "Instrument Serif", serif; --f-body: "Bricolage Grotesque", -apple-system, sans-serif; --f-mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  .frame { position: relative; width: 100%; height: 100%; overflow: hidden;
+    background: radial-gradient(120% 90% at 72% 14%, rgba(79,223,255,0.06), transparent 55%), var(--bg);
+    color: var(--fg); font-family: var(--f-body); }
+
+  /* mock page behind */
+  .pg { position: absolute; inset: 0; z-index: 1; padding: 26px 40px; }
+  .pg-top { display: flex; align-items: center; justify-content: space-between; padding-bottom: 18px; border-bottom: 0.5px solid var(--line); }
+  .pg-brand { display: flex; align-items: flex-start; gap: 11px; }
+  .pg-mark { font-family: var(--f-display); font-style: italic; font-size: 26px; line-height: 0.8; }
+  .pg-meta { font-family: var(--f-mono); font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); line-height: 1.5; padding-top: 2px; }
+  .pg-meta b { display: block; color: var(--fg); font-weight: 500; }
+  .pg-nav { display: flex; gap: 15px; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .pg-nav .on { color: var(--fg); }
+  .pg-pill { display: inline-flex; align-items: center; gap: 8px; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+    border: 0.5px solid var(--live); border-radius: 999px; padding: 5px 11px; }
+  .pg-pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--live); }
+  .pg-hero { margin-top: 64px; max-width: 60%; }
+  .pg-eyebrow { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+  .pg-display { font-family: var(--f-display); font-weight: 400; font-size: 64px; line-height: 0.98; letter-spacing: -0.025em; }
+  .pg-display em { font-style: italic; color: var(--accent); }
+  .pg-tiles { position: absolute; left: 40px; right: 40px; bottom: 44px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .pg-tile { border: 0.5px solid var(--line); border-radius: 9px; background: rgba(15,26,36,0.5); padding: 16px 18px; height: 130px; display: flex; flex-direction: column; justify-content: space-between; }
+  .pg-tile .t-code { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--accent); }
+  .pg-tile .t-title { font-family: var(--f-display); font-size: 28px; line-height: 1; }
+  .pg-tile .t-tags { font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.05em; color: var(--muted); }
+
+  /* HUD corners */
+  .ov-corner { position: absolute; width: 26px; height: 26px; z-index: 6; }
+  .ov-corner::before, .ov-corner::after { content: ""; position: absolute; background: var(--accent); opacity: 0.7; }
+  .ov-corner::before { width: 13px; height: 1.5px; } .ov-corner::after { width: 1.5px; height: 13px; }
+  .ov-corner.tl { top: 18px; left: 18px; } .ov-corner.tl::before, .ov-corner.tl::after { top: 0; left: 0; }
+  .ov-corner.bl { bottom: 18px; left: 18px; } .ov-corner.bl::before { bottom: 0; left: 0; } .ov-corner.bl::after { bottom: 0; left: 0; }
+  .ov-corner.br { bottom: 18px; right: 18px; } .ov-corner.br::before { bottom: 0; right: 0; } .ov-corner.br::after { bottom: 0; right: 0; }
+
+  /* ░░ SENSOR PIP — top-right diagnostic panel ░░ */
+  .pip { position: absolute; top: 84px; right: 30px; z-index: 7; width: 232px;
+    background: var(--panel); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    border: 0.5px solid var(--line-strong); border-radius: 10px; padding: 9px; font-family: var(--f-mono);
+    box-shadow: 0 24px 50px -24px rgba(0,0,0,0.8); }
+  .pip-head { display: flex; align-items: center; justify-content: space-between; padding: 1px 3px 8px; }
+  .pip-title { display: inline-flex; align-items: center; gap: 7px; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg); }
+  .pip-title .rec { width: 7px; height: 7px; border-radius: 50%; background: var(--live); box-shadow: 0 0 0 2px color-mix(in srgb, var(--live) 28%, transparent); animation: blink 1.4s ease-in-out infinite; }
+  .pip-title b { color: var(--accent); font-weight: 500; }
+  .pip-cam { font-size: 8px; letter-spacing: 0.1em; color: var(--muted-2); }
+
+  .pip-video { position: relative; aspect-ratio: 4 / 3; border-radius: 6px; overflow: hidden;
+    background: linear-gradient(180deg, #0b1722, #060d14); border: 0.5px solid var(--line); }
+  .pip-video::before { content: ""; position: absolute; inset: 0;
+    background-image: linear-gradient(var(--line) 0.5px, transparent 0.5px), linear-gradient(90deg, var(--line) 0.5px, transparent 0.5px);
+    background-size: 22px 22px; opacity: 0.5; }
+  .pip-video .scan { position: absolute; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent-bright), transparent); opacity: 0.6; animation: scan 3s linear infinite; }
+  @keyframes scan { 0% { top: 6%; } 100% { top: 94%; } }
+  .pip-skel { position: absolute; inset: 0; }
+  .pip-skel svg { width: 100%; height: 100%; display: block; }
+  .pip-skel .bone { stroke: var(--accent); stroke-width: 1.4; fill: none; opacity: 0.85; }
+  .pip-skel .joint { fill: var(--accent-bright); }
+  .pip-skel .palm { fill: rgba(79,223,255,0.08); stroke: var(--accent); stroke-width: 0.8; }
+
+  /* video-corner brackets */
+  .vc { position: absolute; width: 12px; height: 12px; z-index: 3; }
+  .vc::before, .vc::after { content: ""; position: absolute; background: var(--accent-bright); }
+  .vc::before { width: 9px; height: 1.5px; } .vc::after { width: 1.5px; height: 9px; }
+  .vc.a { top: 5px; left: 5px; } .vc.a::before, .vc.a::after { top: 0; left: 0; }
+  .vc.b { top: 5px; right: 5px; } .vc.b::before { top: 0; right: 0; } .vc.b::after { top: 0; right: 0; }
+  .vc.c { bottom: 5px; left: 5px; } .vc.c::before { bottom: 0; left: 0; } .vc.c::after { bottom: 0; left: 0; }
+  .vc.d { bottom: 5px; right: 5px; } .vc.d::before { bottom: 0; right: 0; } .vc.d::after { bottom: 0; right: 0; }
+  .pip-gesture { position: absolute; left: 7px; bottom: 7px; z-index: 3; font-size: 7.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); background: rgba(5,8,12,0.65); padding: 1px 5px; border-radius: 3px; }
+
+  .pip-readout { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; padding: 8px 3px 2px; }
+  .ro { display: flex; align-items: baseline; justify-content: space-between; }
+  .ro .k { font-size: 7.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .ro .v { font-size: 10px; color: var(--accent); }
+  .ro .v.grn { color: var(--live); }
+
+  .frame-cap { position: absolute; left: 30px; bottom: 30px; z-index: 6; font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-2); }
+  .frame-cap::before { content: ""; display: inline-block; width: 16px; height: 1px; background: var(--line-strong); vertical-align: middle; margin-right: 7px; }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel">
+    const NAV = ["Index", "About", "Services", "Work", "Contact", "Log"];
+
+    // 21-keypoint hand skeleton (MediaPipe topology) in a 0..100 box
+    const PTS = [
+      [50,94],[38,84],[31,71],[27,60],[24,51],   // thumb (0-4)
+      [44,58],[42,44],[41,34],[40,26],            // index (5-8)
+      [51,56],[51,41],[51,30],[51,21],            // middle (9-12)
+      [58,58],[60,45],[61,35],[62,27],            // ring (13-16)
+      [65,63],[69,53],[71,45],[72,38],            // pinky (17-20)
+    ];
+    const BONES = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+
+    function Skeleton() {
+      return (
+        <div className="pip-skel">
+          <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+            <polygon className="palm" points="50,94 44,58 51,56 58,58 65,63" />
+            {BONES.map(([a, b], i) => (
+              <line key={i} className="bone" x1={PTS[a][0]} y1={PTS[a][1]} x2={PTS[b][0]} y2={PTS[b][1]} />
+            ))}
+            {PTS.map((p, i) => <circle key={i} className="joint" cx={p[0]} cy={p[1]} r={i === 0 ? 2.4 : 1.7} />)}
+          </svg>
+        </div>
+      );
+    }
+
+    function SensorPIP() {
+      const [fps, setFps] = React.useState(30);
+      React.useEffect(() => {
+        const id = setInterval(() => setFps(28 + Math.round(Math.random() * 4)), 700);
+        return () => clearInterval(id);
+      }, []);
+      return (
+        <div className="pip">
+          <div className="pip-head">
+            <span className="pip-title"><span className="rec" /> SENSOR · <b>LIVE</b></span>
+            <span className="pip-cam">CAM 01</span>
+          </div>
+          <div className="pip-video">
+            <div className="scan" />
+            <Skeleton />
+            <span className="vc a" /><span className="vc b" /><span className="vc c" /><span className="vc d" />
+            <span className="pip-gesture">▸ open palm</span>
+          </div>
+          <div className="pip-readout">
+            <div className="ro"><span className="k">fps</span><span className="v">{fps}</span></div>
+            <div className="ro"><span className="k">landmarks</span><span className="v">21</span></div>
+            <div className="ro"><span className="k">latency</span><span className="v">28ms</span></div>
+            <div className="ro"><span className="k">track</span><span className="v grn">lock</span></div>
+          </div>
+        </div>
+      );
+    }
+
+    function MockPage() {
+      return (
+        <div className="pg">
+          <div className="pg-top">
+            <div className="pg-brand"><div className="pg-mark">AZ</div><div className="pg-meta"><b>Aziz Syed</b>Software Engineer</div></div>
+            <div className="pg-nav">{NAV.map((n, i) => <span key={n} className={i === 0 ? "on" : ""}>{n}</span>)}</div>
+            <div className="pg-pill"><i></i> Hand Ctrl · Live</div>
+          </div>
+          <div className="pg-hero">
+            <div className="pg-eyebrow">Spatial control · engaged</div>
+            <h1 className="pg-display">I build software that <em>thinks</em>, sees, and <em>responds</em>.</h1>
+          </div>
+          <div className="pg-tiles">
+            <div className="pg-tile"><div className="t-code">P/01</div><div className="t-title">Projects by the Projects</div><div className="t-tags">Spring Boot · React</div></div>
+            <div className="pg-tile"><div className="t-code">P/02</div><div className="t-title">MyE46</div><div className="t-tags">React Three Fiber</div></div>
+            <div className="pg-tile"><div className="t-code">P/03</div><div className="t-title">ASL Hand Coach</div><div className="t-tags">MediaPipe</div></div>
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      return (
+        <DesignCanvas>
+          <DCSection id="pip" title="Hand Mode · Sensor PIP" subtitle="Top-right hand-skeleton camera restyled as a HUD diagnostic panel — page content unchanged">
+            <DCArtboard id="pipboard" label="Sensor · live" width={1180} height={720}>
+              <div className="frame">
+                <MockPage />
+                <div className="ov-corner tl" /><div className="ov-corner bl" /><div className="ov-corner br" />
+                <SensorPIP />
+                <div className="frame-cap">docked top-right · appears only in hand mode</div>
+              </div>
+            </DCArtboard>
+          </DCSection>
+        </DesignCanvas>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>

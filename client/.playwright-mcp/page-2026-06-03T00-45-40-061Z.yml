@@ -1,0 +1,254 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: AZ
+      - generic [ref=e7]:
+        - generic [ref=e8]: Aziz Syed
+        - text: Software Engineer
+        - text: Scarborough, ON
+    - navigation [ref=e9]:
+      - button "01 Index" [ref=e10]:
+        - generic [ref=e11]: "01"
+        - generic [ref=e12]: Index
+      - button "02 About" [ref=e13]:
+        - generic [ref=e14]: "02"
+        - generic [ref=e15]: About
+      - button "03 Services" [ref=e16]:
+        - generic [ref=e17]: "03"
+        - generic [ref=e18]: Services
+      - button "04 Work" [ref=e19]:
+        - generic [ref=e20]: "04"
+        - generic [ref=e21]: Work
+      - button "05 Contact" [ref=e22]:
+        - generic [ref=e23]: "05"
+        - generic [ref=e24]: Contact
+      - button "06 Log" [ref=e25]:
+        - generic [ref=e26]: "06"
+        - generic [ref=e27]: Log
+    - generic [ref=e28]:
+      - generic [ref=e29]: 20:45:39 EST · v3.0
+      - generic [ref=e30]:
+        - button "Theme Select ▾" [ref=e32]:
+          - generic [ref=e34]: Theme Select
+          - generic [ref=e35]: ▾
+        - button "Hand Ctrl · Standby" [ref=e36]:
+          - generic [ref=e38]: Hand Ctrl · Standby
+  - generic [ref=e45]:
+    - generic [ref=e46]:
+      - generic [ref=e47]: 03 Services · /capabilities
+      - generic [ref=e48]:
+        - generic [ref=e49]:
+          - heading "What I do." [level=2] [ref=e50]:
+            - text: What I
+            - emphasis [ref=e51]: do
+            - text: .
+          - paragraph [ref=e52]: A snapshot of where I'm sharpest — full-stack engineering, AI agents, computer vision, and the messy infrastructure between them.
+        - generic [ref=e55]:
+          - generic [ref=e56]:
+            - generic [ref=e57]: CAPABILITY · RADAR
+            - generic [ref=e58]: sweep · live
+          - generic [ref=e59]:
+            - button [ref=e62]
+            - button [ref=e64]
+            - button [ref=e66]
+            - button [ref=e68]
+            - button [ref=e70]
+            - button [ref=e72]
+          - generic [ref=e75]:
+            - generic [ref=e76]: 03 / 06
+            - generic [ref=e77]: Computer vision
+      - generic [ref=e78]:
+        - generic [ref=e79]:
+          - generic [ref=e80]:
+            - heading "Full-stack engineering" [level=3] [ref=e81]
+            - generic [ref=e82]: C/01
+          - paragraph [ref=e83]: Comfortable end-to-end — UIs, APIs, databases, deploys. I like understanding how the whole thing fits together.
+          - generic [ref=e84]:
+            - generic [ref=e85]: ▸React
+            - generic [ref=e86]: ▸Angular
+            - generic [ref=e87]: ▸Next.js
+            - generic [ref=e88]: ▸Spring Boot
+            - generic [ref=e89]: ▸Express
+            - generic [ref=e90]: ▸FastAPI
+            - generic [ref=e91]: ▸.NET Core
+            - generic [ref=e92]: ▸REST
+            - generic [ref=e93]: ▸GraphQL
+          - generic:
+            - generic:
+              - generic [ref=e94]: Outcome
+              - paragraph [ref=e95]
+        - generic [ref=e97]:
+          - generic [ref=e98]:
+            - heading "AI agents & automation" [level=3] [ref=e99]
+            - generic [ref=e100]: C/02
+          - paragraph [ref=e101]: Multi-agent pipelines, RAG, SSE streaming. I shipped a 3-agent debug pipeline catching 150+ production bugs.
+          - generic [ref=e102]:
+            - generic [ref=e103]: ▸Gemini API
+            - generic [ref=e104]: ▸Agent pipelines
+            - generic [ref=e105]: ▸RAG
+            - generic [ref=e106]: ▸SSE
+            - generic [ref=e107]: ▸LLM tool use
+          - generic:
+            - generic:
+              - generic [ref=e108]: Outcome
+              - paragraph [ref=e109]
+        - generic [ref=e111]:
+          - generic [ref=e112]:
+            - heading "Computer vision" [level=3] [ref=e113]
+            - generic [ref=e114]: C/03
+          - paragraph [ref=e115]: "Real-time ML inference in the browser. Built ASL Hand Coach: CNN palm detector + landmark regression at sub-200ms."
+          - generic [ref=e116]:
+            - generic [ref=e117]: ▸MediaPipe
+            - generic [ref=e118]: ▸CNN palm detection
+            - generic [ref=e119]: ▸21-keypoint regression
+            - generic [ref=e120]: ▸WebGL
+          - generic:
+            - generic:
+              - generic [ref=e121]: Outcome
+              - paragraph [ref=e122]
+        - generic [ref=e124]:
+          - generic [ref=e125]:
+            - heading "Cloud & DevOps" [level=3] [ref=e126]
+            - generic [ref=e127]: C/04
+          - paragraph [ref=e128]: Deployed across AWS, Azure, Cloudflare. CI/CD pipelines, containerization, observable releases.
+          - generic [ref=e129]:
+            - generic [ref=e130]: ▸AWS
+            - generic [ref=e131]: ▸Azure
+            - generic [ref=e132]: ▸Docker
+            - generic [ref=e133]: ▸Kubernetes
+            - generic [ref=e134]: ▸Terraform
+            - generic [ref=e135]: ▸CI/CD
+          - generic:
+            - generic:
+              - generic [ref=e136]: Outcome
+              - paragraph [ref=e137]
+        - generic [ref=e139]:
+          - generic [ref=e140]:
+            - heading "Geospatial & data" [level=3] [ref=e141]
+            - generic [ref=e142]: C/05
+          - paragraph [ref=e143]: PostGIS, spatial indexes, ETL across shapefile/CSV/GeoTIFF. Graph inference with NetworkX over 100K+ entities.
+          - generic [ref=e144]:
+            - generic [ref=e145]: ▸PostGIS
+            - generic [ref=e146]: ▸GiST + KNN indexes
+            - generic [ref=e147]: ▸GeoPandas
+            - generic [ref=e148]: ▸NetworkX
+          - generic:
+            - generic:
+              - generic [ref=e149]: Outcome
+              - paragraph [ref=e150]
+        - generic [ref=e152]:
+          - generic [ref=e153]:
+            - heading "3D & real-time graphics" [level=3] [ref=e154]
+            - generic [ref=e155]: C/06
+          - paragraph [ref=e156]: React Three Fiber, adaptive rendering. Cut GPU usage from 90% to 15-30% under 200 concurrent users.
+          - generic [ref=e157]:
+            - generic [ref=e158]: ▸Three.js
+            - generic [ref=e159]: ▸React Three Fiber
+            - generic [ref=e160]: ▸Adaptive LOD
+            - generic [ref=e161]: ▸WebGL
+          - generic:
+            - generic:
+              - generic [ref=e162]: Outcome
+              - paragraph [ref=e163]
+    - generic [ref=e165]:
+      - generic [ref=e166]: 04 Client work · /freelance
+      - heading "For small businesses, built carefully." [level=3] [ref=e167]:
+        - text: For small businesses,
+        - emphasis [ref=e168]: built carefully
+        - text: .
+      - paragraph [ref=e169]: I take a small number of freelance projects per year — typically for businesses who need their existing software to actually work, or who want one new automation that pays for itself in saved hours.
+      - generic [ref=e170]:
+        - generic [ref=e171]:
+          - generic [ref=e172]: A
+          - generic [ref=e173]:
+            - heading "Able I.T Solutions" [level=4] [ref=e174]
+            - generic [ref=e175]: AI ticket-triage agent + technical support workflows
+            - paragraph [ref=e176]: Built an AI agent that ranks support tickets by severity with auto-synopses. Eliminated ~2 hrs of manual triage per shift.
+            - generic:
+              - generic:
+                - generic [ref=e177]: Outcome
+                - paragraph [ref=e178]
+          - generic [ref=e180]:
+            - generic [ref=e181]: 92%
+            - text: resolution rate
+        - generic [ref=e182]:
+          - generic [ref=e183]: R
+          - generic [ref=e184]:
+            - heading "Remedy's Rx Pharmacy" [level=4] [ref=e185]
+            - generic [ref=e186]: Legacy POS modernization · inventory automation
+            - paragraph [ref=e187]: Refactored Angular POS workflow, cutting checkout from 5 to 3 steps. Automated weekly inventory reconciliation in Python + SQL.
+            - generic:
+              - generic:
+                - generic [ref=e188]: Outcome
+                - paragraph [ref=e189]
+          - generic [ref=e191]:
+            - generic [ref=e192]: 25%
+            - text: faster checkout
+    - generic [ref=e193]:
+      - generic [ref=e194]: 05 Stack · /tools
+      - paragraph [ref=e195]: Day-to-day tools I'm comfortable in — grab one to see where it ships.
+      - generic [ref=e196]:
+        - generic [ref=e197]:
+          - tablist "Stack view" [ref=e198]:
+            - tab "◇ Cloud" [selected] [ref=e199]
+            - tab "▦ Grid" [ref=e200]
+          - button "⟲ scatter" [ref=e201]
+        - tabpanel [ref=e202]:
+          - img
+          - generic: Languages
+          - generic: Frameworks
+          - generic: Cloud / Data
+          - generic: Concepts
+          - button "TypeScript" [ref=e203]
+          - button "JavaScript" [ref=e204]
+          - button "Python" [ref=e205]
+          - button "Java" [ref=e206]
+          - button "C#" [ref=e207]
+          - button "SQL" [ref=e208]
+          - button "Bash" [ref=e209]
+          - button "React" [pressed] [ref=e210]
+          - button "Next.js" [ref=e211]
+          - button "Angular" [ref=e212]
+          - button "Node.js" [ref=e213]
+          - button "Express" [ref=e214]
+          - button "Spring Boot" [ref=e215]
+          - button "Flask" [ref=e216]
+          - button "FastAPI" [ref=e217]
+          - button "Django" [ref=e218]
+          - button ".NET" [ref=e219]
+          - button "Three.js / R3F" [ref=e220]
+          - button "MediaPipe" [ref=e221]
+          - button "scikit-learn / XGBoost" [ref=e222]
+          - button "SwiftUI" [ref=e223]
+          - button "PostgreSQL" [ref=e224]
+          - button "PostGIS" [ref=e225]
+          - button "MongoDB" [ref=e226]
+          - button "Docker" [ref=e227]
+          - button "AWS" [ref=e228]
+          - button "Azure" [ref=e229]
+          - button "Cloudflare" [ref=e230]
+          - button "CI/CD" [ref=e231]
+          - button "Git" [ref=e232]
+          - button "Jira" [ref=e233]
+          - button "Linux/Unix" [ref=e234]
+          - button "Stripe" [ref=e235]
+          - button "AI agents" [ref=e236]
+          - button "Machine Learning" [ref=e237]
+          - button "Computer Vision" [ref=e238]
+          - button "REST API" [ref=e239]
+          - button "Microservices" [ref=e240]
+          - button "Concurrency" [ref=e241]
+          - button "OAuth2" [ref=e242]
+          - button "JWT Auth" [ref=e243]
+          - button "Kerberos Auth" [ref=e244]
+          - generic:
+            - generic:
+              - generic: React
+              - generic: Frameworks
+            - generic: 7 projects
+            - generic: MyE46 · HiddenHooks · GymNet · ASL Hand Coach · Projects by the Projects · Tru North Couriers · Portfolio
+  - contentinfo [ref=e40]:
+    - generic [ref=e41]: © 2026 Aziz Syed · Built with care
+    - generic [ref=e42]: v3.0 · Spatial preview · Keys 1–6 navigate · H toggles cheat sheet · [ ] cycles themes
+    - link "github.com/AzizSyed27" [ref=e44] [cursor=pointer]:
+      - /url: https://github.com/AzizSyed27

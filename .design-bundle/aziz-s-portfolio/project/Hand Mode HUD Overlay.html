@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hand Mode — HUD Overlay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A0F14;
+    --bg-2: #0D141C;
+    --panel: rgba(15, 26, 36, 0.7);
+    --fg: #E8F6FB;
+    --accent: #4FDFFF;
+    --accent-bright: #8BEBFF;
+    --line: rgba(79, 223, 255, 0.16);
+    --line-strong: rgba(79, 223, 255, 0.40);
+    --muted: rgba(232, 246, 251, 0.55);
+    --muted-2: rgba(232, 246, 251, 0.32);
+    --live: #2FE6C0;
+    --f-display: "Instrument Serif", serif;
+    --f-body: "Bricolage Grotesque", -apple-system, sans-serif;
+    --f-mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+
+  .frame { position: relative; width: 100%; height: 100%; overflow: hidden;
+    background: radial-gradient(120% 90% at 72% 14%, rgba(79,223,255,0.06), transparent 55%), var(--bg);
+    color: var(--fg); font-family: var(--f-body); }
+
+  /* ░░ MOCK PAGE (behind the overlay) ░░ */
+  .pg { position: absolute; inset: 0; z-index: 1; padding: 26px 40px; transition: opacity .3s, filter .3s; }
+  .pg.dim { opacity: 0.5; filter: saturate(0.7) brightness(0.8); }
+  .pg-top { display: flex; align-items: center; justify-content: space-between; padding-bottom: 18px; border-bottom: 0.5px solid var(--line); }
+  .pg-brand { display: flex; align-items: flex-start; gap: 11px; }
+  .pg-mark { font-family: var(--f-display); font-style: italic; font-size: 26px; line-height: 0.8; }
+  .pg-meta { font-family: var(--f-mono); font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); line-height: 1.5; padding-top: 2px; }
+  .pg-meta b { display: block; color: var(--fg); font-weight: 500; }
+  .pg-nav { display: flex; gap: 15px; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .pg-nav .on { color: var(--fg); }
+  .pg-pill { display: inline-flex; align-items: center; gap: 8px; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+    border: 0.5px solid var(--live); border-radius: 999px; padding: 5px 11px; background: color-mix(in srgb, var(--live) 12%, transparent); }
+  .pg-pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--live); }
+
+  .pg-hero { margin-top: 54px; }
+  .pg-eyebrow { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+  .pg-display { font-family: var(--f-display); font-weight: 400; font-size: 58px; line-height: 0.98; letter-spacing: -0.025em; max-width: 16ch; }
+  .pg-display em { font-style: italic; color: var(--accent); }
+
+  .pg-tiles { position: absolute; left: 40px; right: 40px; bottom: 94px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .pg-tile { border: 0.5px solid var(--line); border-radius: 9px; background: var(--panel); padding: 16px 18px; height: 138px; display: flex; flex-direction: column; justify-content: space-between; }
+  .pg-tile .t-code { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--accent); }
+  .pg-tile .t-title { font-family: var(--f-display); font-size: 30px; line-height: 1; }
+  .pg-tile .t-tags { font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.05em; color: var(--muted); }
+
+  /* ░░ OVERLAY LAYER ░░ */
+  .ov { position: absolute; inset: 0; z-index: 5; pointer-events: none; font-family: var(--f-mono); }
+
+  /* HUD frame corners */
+  .ov-corner { position: absolute; width: 26px; height: 26px; }
+  .ov-corner::before, .ov-corner::after { content: ""; position: absolute; background: var(--accent); opacity: 0.7; }
+  .ov-corner::before { width: 13px; height: 1.5px; } .ov-corner::after { width: 1.5px; height: 13px; }
+  .ov-corner.tl { top: 18px; left: 18px; } .ov-corner.tl::before, .ov-corner.tl::after { top: 0; left: 0; }
+  .ov-corner.tr { top: 18px; right: 18px; } .ov-corner.tr::before { top: 0; right: 0; } .ov-corner.tr::after { top: 0; right: 0; }
+  .ov-corner.bl { bottom: 18px; left: 18px; } .ov-corner.bl::before { bottom: 0; left: 0; } .ov-corner.bl::after { bottom: 0; left: 0; }
+  .ov-corner.br { bottom: 18px; right: 18px; } .ov-corner.br::before { bottom: 0; right: 0; } .ov-corner.br::after { bottom: 0; right: 0; }
+
+  .ov-state { position: absolute; top: 24px; left: 50%; transform: translateX(-50%); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .ov-state b { color: var(--accent); }
+  .ov-state.idle b { color: var(--muted); }
+
+  /* ── FREE RETICLE ── */
+  .reticle { position: absolute; }
+  .reticle .cross-h, .reticle .cross-v { position: absolute; background: var(--accent); opacity: 0.7; }
+  .reticle .cross-h { height: 1px; width: 96px; left: -48px; top: 0; }
+  .reticle .cross-v { width: 1px; height: 96px; left: 0; top: -48px; }
+  /* gap mask in the middle so lines don't cross the box */
+  .reticle .gap { position: absolute; left: -13px; top: -13px; width: 26px; height: 26px; background: transparent; }
+  .reticle .box { position: absolute; left: -11px; top: -11px; width: 22px; height: 22px; }
+  .reticle .box::before, .reticle .box::after { content: ""; position: absolute; width: 7px; height: 7px; border: 1.5px solid var(--accent); }
+  .reticle .box::before { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+  .reticle .box::after { bottom: 0; right: 0; border-left: 0; border-top: 0; }
+  .reticle .box i { position: absolute; }
+  .reticle .box i::before, .reticle .box i::after { content: ""; position: absolute; width: 7px; height: 7px; border: 1.5px solid var(--accent); }
+  .reticle .box i::before { top: 0; right: 0; border-left: 0; border-bottom: 0; }
+  .reticle .box i::after { bottom: 0; left: 0; border-right: 0; border-top: 0; }
+  .reticle .dot { position: absolute; left: -1.5px; top: -1.5px; width: 3px; height: 3px; border-radius: 50%; background: var(--accent-bright); }
+  .reticle .readout { position: absolute; left: 22px; top: 12px; font-size: 11px; letter-spacing: 0.06em; color: var(--accent); white-space: nowrap; }
+  .reticle .readout::before { content: ""; position: absolute; left: -14px; top: -6px; width: 12px; height: 12px; border-left: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong); }
+  .reticle .readout small { color: var(--muted-2); }
+
+  /* ── SNAPPED RETICLE (locks to a target) ── */
+  .snap { position: absolute; }
+  .snap .sb { position: absolute; width: 16px; height: 16px; }
+  .snap .sb::before, .snap .sb::after { content: ""; position: absolute; background: var(--accent-bright); }
+  .snap .sb::before { width: 16px; height: 2px; } .snap .sb::after { width: 2px; height: 16px; }
+  .snap .sb.tl { top: -3px; left: -3px; } .snap .sb.tl::before, .snap .sb.tl::after { top: 0; left: 0; }
+  .snap .sb.tr { top: -3px; right: -3px; } .snap .sb.tr::before { top: 0; right: 0; } .snap .sb.tr::after { top: 0; right: 0; }
+  .snap .sb.bl { bottom: -3px; left: -3px; } .snap .sb.bl::before { bottom: 0; left: 0; } .snap .sb.bl::after { bottom: 0; left: 0; }
+  .snap .sb.br { bottom: -3px; right: -3px; } .snap .sb.br::before { bottom: 0; right: 0; } .snap .sb.br::after { bottom: 0; right: 0; }
+  .snap .edge { position: absolute; inset: 0; border: 0.5px solid var(--accent); border-radius: 6px; opacity: 0.5; }
+  .snap .tag { position: absolute; top: -13px; left: 14px; display: inline-flex; align-items: center; gap: 6px;
+    font-size: 10px; letter-spacing: 0.08em; color: var(--bg); background: var(--accent-bright);
+    border-radius: 4px; padding: 3px 8px; }
+  .snap .lock { position: absolute; bottom: -13px; right: 12px; font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); background: var(--bg); padding: 1px 6px; border: 0.5px solid var(--line-strong); border-radius: 3px; }
+
+  /* ── IDLE PROMPT ── */
+  .idle-prompt { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .idle-ring { width: 54px; height: 54px; position: relative; }
+  .idle-ring svg { width: 100%; height: 100%; display: block; }
+  .idle-ring .ir { fill: none; stroke: var(--muted); stroke-width: 1; opacity: 0.5; }
+  .idle-ring .ir-dash { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 2 4; animation: spin 9s linear infinite; transform-origin: center; }
+  .idle-ring .ir-dot { fill: var(--accent); }
+  .idle-text { font-size: 11px; letter-spacing: 0.26em; text-transform: uppercase; color: var(--muted); padding-left: 0.26em; }
+  .idle-pulse { animation: pulse 2.2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── AI ORB DOCK ── */
+  .orb-dock { position: absolute; left: 30px; bottom: 22px; display: flex; align-items: center; gap: 14px; }
+  .orb { width: 60px; height: 60px; position: relative; }
+  .orb svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .orb .o-ring { fill: none; stroke: var(--line-strong); stroke-width: 1; }
+  .orb .o-seg { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 2.5 3.5; opacity: 0.7; animation: spin 14s linear infinite; transform-origin: center; }
+  .orb .o-socket { fill: rgba(79,223,255,0.04); stroke: var(--line); stroke-width: 1; }
+  .orb .o-cross { stroke: var(--muted-2); stroke-width: 1; }
+  .orb .o-core { fill: none; stroke: var(--muted); stroke-width: 1; stroke-dasharray: 1.5 2.5; opacity: 0.6; }
+  .orb-label { line-height: 1.5; }
+  .orb-label .ol-name { font-size: 12px; letter-spacing: 0.14em; color: var(--fg); }
+  .orb-label .ol-sub { font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted-2); margin-top: 2px; }
+  .orb-label .ol-sub b { color: var(--muted); font-weight: 400; }
+
+  .frame-tag { position: absolute; left: 22px; top: 22px; z-index: 6; font-family: var(--f-mono);
+    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted-2); display: none; }
+
+  /* annotation chips (spec labels) */
+  .anno { position: absolute; z-index: 7; font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-2); }
+  .anno::before { content: ""; display: inline-block; width: 18px; height: 1px; background: var(--line-strong); vertical-align: middle; margin-right: 7px; }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel">
+    const NAV = ["Index", "About", "Services", "Work", "Contact", "Log"];
+
+    function MockPage({ dim }) {
+      return (
+        <div className={`pg ${dim ? "dim" : ""}`}>
+          <div className="pg-top">
+            <div className="pg-brand">
+              <div className="pg-mark">AZ</div>
+              <div className="pg-meta"><b>Aziz Syed</b>Software Engineer</div>
+            </div>
+            <div className="pg-nav">{NAV.map((n, i) => <span key={n} className={i === 3 ? "on" : ""}>{n}</span>)}</div>
+            <div className="pg-pill"><i></i> Hand Ctrl · Live</div>
+          </div>
+          <div className="pg-hero">
+            <div className="pg-eyebrow">Spatial control · engaged</div>
+            <h1 className="pg-display">I build software that <em>thinks</em>, sees, and <em>responds</em>.</h1>
+          </div>
+          <div className="pg-tiles">
+            <div className="pg-tile"><div className="t-code">P/01</div><div className="t-title">Projects by the Projects</div><div className="t-tags">Spring Boot · React</div></div>
+            <div className="pg-tile"><div className="t-code">P/02</div><div className="t-title">MyE46</div><div className="t-tags">React Three Fiber</div></div>
+            <div className="pg-tile"><div className="t-code">P/03</div><div className="t-title">ASL Hand Coach</div><div className="t-tags">MediaPipe</div></div>
+          </div>
+        </div>
+      );
+    }
+
+    function AIOrb() {
+      return (
+        <div className="orb-dock">
+          <div className="orb">
+            <svg viewBox="0 0 60 60">
+              <circle cx="30" cy="30" r="28" className="o-ring" />
+              <circle cx="30" cy="30" r="28" className="o-seg" pathLength="100" />
+              <circle cx="30" cy="30" r="19" className="o-socket" />
+              <circle cx="30" cy="30" r="11" className="o-core" pathLength="40" />
+              <line x1="30" y1="25" x2="30" y2="35" className="o-cross" />
+              <line x1="25" y1="30" x2="35" y2="30" className="o-cross" />
+            </svg>
+          </div>
+          <div className="orb-label">
+            <div className="ol-name">AZIZ_OS</div>
+            <div className="ol-sub"><b>standby</b> · v0 reserved</div>
+          </div>
+        </div>
+      );
+    }
+
+    function FreeReticle({ x, y }) {
+      return (
+        <div className="reticle" style={{ left: x, top: y }}>
+          <div className="cross-h"></div>
+          <div className="cross-v"></div>
+          <div className="box"><i></i></div>
+          <div className="dot"></div>
+          <div className="readout">x:0.42 <small>y:</small>0.31</div>
+        </div>
+      );
+    }
+
+    function SnapReticle({ x, y, w, h, code }) {
+      return (
+        <div className="snap" style={{ left: x, top: y, width: w, height: h }}>
+          <div className="edge"></div>
+          <div className="sb tl"></div><div className="sb tr"></div>
+          <div className="sb bl"></div><div className="sb br"></div>
+          <div className="tag">→ {code}</div>
+          <div className="lock">LOCK</div>
+        </div>
+      );
+    }
+
+    function IdlePrompt() {
+      return (
+        <div className="idle-prompt idle-pulse">
+          <div className="idle-ring">
+            <svg viewBox="0 0 54 54">
+              <circle cx="27" cy="27" r="22" className="ir" />
+              <circle cx="27" cy="27" r="22" className="ir-dash" />
+              <circle cx="27" cy="27" r="3" className="ir-dot" />
+            </svg>
+          </div>
+          <div className="idle-text">Awaiting input · raise hand</div>
+        </div>
+      );
+    }
+
+    function Corners() {
+      return (<>
+        <div className="ov-corner tl"></div><div className="ov-corner tr"></div>
+        <div className="ov-corner bl"></div><div className="ov-corner br"></div>
+      </>);
+    }
+
+    // ARTBOARD 1 — tracking (free + snapped reticle + orb)
+    function TrackingFrame() {
+      return (
+        <div className="frame">
+          <MockPage dim={false} />
+          <div className="ov">
+            <Corners />
+            <div className="ov-state">hand ctrl · <b>tracking</b> · open palm</div>
+            <FreeReticle x={372} y={300} />
+            {/* snapped onto the P/02 tile (center) */}
+            <SnapReticle x={413} y={488} w={355} h={138} code="P/02" />
+            <AIOrb />
+            <div className="anno" style={{ left: 410, top: 268 }}>free reticle · live cursor</div>
+            <div className="anno" style={{ left: 600, top: 462 }}>snapped · locked on target</div>
+            <div className="anno" style={{ left: 116, top: 646 }}>docked assistant socket</div>
+          </div>
+        </div>
+      );
+    }
+
+    // ARTBOARD 2 — idle (no hand)
+    function IdleFrame() {
+      return (
+        <div className="frame">
+          <MockPage dim={true} />
+          <div className="ov">
+            <Corners />
+            <div className="ov-state idle">hand ctrl · <b>live</b> · no hand detected</div>
+            <IdlePrompt />
+            <AIOrb />
+            <div className="anno" style={{ left: 116, top: 646 }}>docked assistant socket</div>
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      return (
+        <DesignCanvas>
+          <DCSection id="hud" title="Hand Mode · HUD Overlay" subtitle="Overlay elements composited on top of the page — page content unchanged">
+            <DCArtboard id="track" label="Tracking · reticles" width={1180} height={720}><TrackingFrame /></DCArtboard>
+            <DCArtboard id="idle" label="Idle · awaiting input" width={1180} height={720}><IdleFrame /></DCArtboard>
+          </DCSection>
+        </DesignCanvas>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>

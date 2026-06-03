@@ -1,0 +1,137 @@
+/* tokens.css — 9 palette token sets (8 user + 1 HUD).
+   Switching themes = swap data-theme on <html>. Values mirror the
+   design bundle's theme.js exactly. */
+
+/* Amber Smoke — default */
+:root,
+[data-theme="amber"] {
+  --bg: #F2E0D0;
+  --fg: #1A1F2A;
+  --accent: #6E88B0;
+  --surface: #ECD6C2;
+  --line: rgba(26, 31, 42, 0.14);
+  --line-strong: rgba(26, 31, 42, 0.32);
+  --muted: rgba(26, 31, 42, 0.6);
+  --muted-2: rgba(26, 31, 42, 0.4);
+  --selection-fg: #F2E0D0;
+  --accent-bright: var(--accent);
+  --shadow: 0 30px 60px rgba(26, 31, 42, 0.12);
+}
+
+[data-theme="pistachio"] {
+  --bg: #200F07;
+  --fg: #F0EBE0;
+  --accent: #C5E384;
+  --surface: #2E1A10;
+  --line: rgba(240, 235, 224, 0.12);
+  --line-strong: rgba(240, 235, 224, 0.3);
+  --muted: rgba(240, 235, 224, 0.55);
+  --muted-2: rgba(240, 235, 224, 0.35);
+  --selection-fg: #200F07;
+  --accent-bright: var(--accent);
+  --shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="matcha"] {
+  --bg: #F4F6F1;
+  --fg: #1F1F1F;
+  --accent: #7BAF85;
+  --surface: #E8EFE4;
+  --line: rgba(31, 31, 31, 0.12);
+  --line-strong: rgba(31, 31, 31, 0.3);
+  --muted: rgba(31, 31, 31, 0.58);
+  --muted-2: rgba(31, 31, 31, 0.4);
+  --selection-fg: #F4F6F1;
+  --accent-bright: var(--accent);
+  --shadow: 0 30px 60px rgba(31, 31, 31, 0.1);
+}
+
+[data-theme="moss"] {
+  --bg: #F8F5F2;
+  --fg: #1F2A24;
+  --accent: #385144;
+  --surface: #EFEAE3;
+  --line: rgba(31, 42, 36, 0.12);
+  --line-strong: rgba(31, 42, 36, 0.32);
+  --muted: rgba(31, 42, 36, 0.6);
+  --muted-2: rgba(31, 42, 36, 0.4);
+  --selection-fg: #F8F5F2;
+  --accent-bright: var(--accent);
+  --shadow: 0 30px 60px rgba(31, 42, 36, 0.12);
+}
+
+[data-theme="dreamy"] {
+  --bg: #EAEBED;
+  --fg: #0A1A22;
+  --accent: #006989;
+  --surface: #DFE2E5;
+  --line: rgba(10, 26, 34, 0.12);
+  --line-strong: rgba(10, 26, 34, 0.3);
+  --muted: rgba(10, 26, 34, 0.6);
+  --muted-2: rgba(10, 26, 34, 0.38);
+  --selection-fg: #EAEBED;
+  --accent-bright: var(--accent);
+  --shadow: 0 30px 60px rgba(10, 26, 34, 0.12);
+}
+
+[data-theme="chartreuse"] {
+  --bg: #00272B;
+  --fg: #E8F4F5;
+  --accent: #E0FF4F;
+  --surface: #0A3439;
+  --line: rgba(232, 244, 245, 0.1);
+  --line-strong: rgba(232, 244, 245, 0.28);
+  --muted: rgba(232, 244, 245, 0.55);
+  --muted-2: rgba(232, 244, 245, 0.35);
+  --selection-fg: #00272B;
+  --accent-bright: var(--accent);
+  --shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="robin"] {
+  --bg: #2E382E;
+  --fg: #E8EEE8;
+  --accent: #50C9CE;
+  --surface: #384338;
+  --line: rgba(232, 238, 232, 0.1);
+  --line-strong: rgba(232, 238, 232, 0.28);
+  --muted: rgba(232, 238, 232, 0.55);
+  --muted-2: rgba(232, 238, 232, 0.35);
+  --selection-fg: #2E382E;
+  --accent-bright: var(--accent);
+  --shadow: 0 30px 60px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="strawberry"] {
+  --bg: #3C1950;
+  --fg: #F5E8EA;
+  --accent: #F0CDD2;
+  --surface: #4A2161;
+  --line: rgba(245, 232, 234, 0.1);
+  --line-strong: rgba(245, 232, 234, 0.28);
+  --muted: rgba(245, 232, 234, 0.55);
+  --muted-2: rgba(245, 232, 234, 0.35);
+  --selection-fg: #3C1950;
+  --accent-bright: var(--accent);
+  --shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+}
+
+/* HUD — hand-mode theme. Auto-applied when toggleHandMode() flips. */
+[data-theme="hud"] {
+  --bg: #0A0F14;
+  --fg: #E6F8FF;
+  --accent: #4FDFFF;
+  --accent-bright: #8BEBFF;
+  --surface: #11181F;
+  --line: rgba(79, 223, 255, 0.16);
+  --line-strong: rgba(79, 223, 255, 0.4);
+  --muted: rgba(230, 248, 255, 0.55);
+  --muted-2: rgba(230, 248, 255, 0.35);
+  --selection-fg: #0A0F14;
+  --shadow: 0 30px 60px rgba(0, 0, 0, 0.55);
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--selection-fg);
+}

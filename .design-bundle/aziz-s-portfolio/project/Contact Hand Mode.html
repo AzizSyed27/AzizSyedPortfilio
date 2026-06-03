@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Contact — Hand Mode</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A0F14;            /* Titanium Black */
+    --bg-2: #0D141C;
+    --panel: rgba(15, 26, 36, 0.74);
+    --panel-solid: #0E1822;
+    --fg: #E8F6FB;
+    --accent: #4FDFFF;        /* Arc Blue */
+    --accent-bright: #8BEBFF;
+    --line: rgba(79, 223, 255, 0.16);
+    --line-strong: rgba(79, 223, 255, 0.40);
+    --muted: rgba(232, 246, 251, 0.58);
+    --muted-2: rgba(232, 246, 251, 0.36);
+    --f-display: "Instrument Serif", serif;
+    --f-body: "Bricolage Grotesque", -apple-system, sans-serif;
+    --f-mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--f-body);
+    cursor: crosshair;
+  }
+  .field-bg {
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(120% 90% at 75% 12%, rgba(79,223,255,0.10) 0%, transparent 55%),
+      radial-gradient(100% 80% at 12% 95%, rgba(79,223,255,0.07) 0%, transparent 60%),
+      var(--bg);
+  }
+  .field-bg::before {
+    content: ""; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(var(--line) 0.5px, transparent 0.5px),
+      linear-gradient(90deg, var(--line) 0.5px, transparent 0.5px);
+    background-size: 46px 46px;
+    -webkit-mask-image: radial-gradient(130% 110% at 50% 40%, #000 30%, transparent 88%);
+    mask-image: radial-gradient(130% 110% at 50% 40%, #000 30%, transparent 88%);
+    opacity: 0.6;
+  }
+  .grain {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.05;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  /* HUD chrome */
+  .hud-corner { position: fixed; width: 58px; height: 58px; z-index: 40; pointer-events: none; }
+  .hud-corner::before, .hud-corner::after { content: ""; position: absolute; background: var(--accent); opacity: 0.8; }
+  .hud-corner::before { width: 22px; height: 1.5px; }
+  .hud-corner::after { width: 1.5px; height: 22px; }
+  .c-tl { top: 22px; left: 22px; } .c-tl::before, .c-tl::after { top: 0; left: 0; }
+  .c-tr { top: 22px; right: 22px; } .c-tr::before { top: 0; right: 0; } .c-tr::after { top: 0; right: 0; }
+  .c-bl { bottom: 22px; left: 22px; } .c-bl::before { bottom: 0; left: 0; } .c-bl::after { bottom: 0; left: 0; }
+  .c-br { bottom: 22px; right: 22px; } .c-br::before { bottom: 0; right: 0; } .c-br::after { bottom: 0; right: 0; }
+
+  .top-readout {
+    position: fixed; top: 30px; left: 64px; right: 64px; z-index: 41;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--muted); pointer-events: none;
+  }
+  .top-readout .title { color: var(--fg); }
+  .top-readout .title b { color: var(--accent-bright); font-weight: 500; }
+  .top-readout .right { text-align: right; line-height: 1.7; }
+  .top-readout .right .live { color: var(--accent); }
+  .live-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background: var(--accent); margin-right:6px; vertical-align: 1px; animation: blink 1.4s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.25;} }
+
+  .bottom-readout {
+    position: fixed; bottom: 30px; left: 64px; right: 64px; z-index: 41;
+    display: flex; justify-content: space-between; align-items: flex-end;
+    font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted-2); pointer-events: none;
+  }
+  .bottom-readout .affordance { color: var(--accent); }
+  .back-link {
+    pointer-events: auto; color: var(--muted); text-decoration: none;
+    border: 0.5px solid var(--line-strong); border-radius: 999px; padding: 7px 14px;
+    transition: color .2s, border-color .2s, background .2s;
+  }
+  .back-link:hover { color: var(--fg); border-color: var(--accent); background: rgba(79,223,255,0.08); }
+
+  /* Content */
+  .wrap {
+    position: relative; z-index: 10;
+    max-width: 1180px; margin: 0 auto;
+    padding: 120px 64px 110px;
+  }
+  .eyebrow { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .display {
+    font-family: var(--f-display); font-weight: 400;
+    font-size: clamp(56px, 9vw, 132px); line-height: 0.92; letter-spacing: -0.025em;
+    margin-bottom: 28px;
+  }
+  .display em { font-style: italic; color: var(--accent); }
+  .lede {
+    font-family: var(--f-display); font-size: clamp(24px, 3vw, 38px);
+    line-height: 1.15; letter-spacing: -0.015em; max-width: 24ch; color: var(--fg);
+    margin-bottom: 60px;
+  }
+
+  .contact-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 64px; align-items: start; }
+
+  /* ── FORM (speech-to-text fields) ── */
+  .contact-form { display: flex; flex-direction: column; gap: 28px; }
+  .field { display: flex; flex-direction: column; gap: 9px; }
+  .field-head { display: flex; justify-content: space-between; align-items: center; }
+  .field-head label { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+
+  .listening { display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+  .listening .rec { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); position: relative; }
+  .listening .rec::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 1px solid var(--accent); opacity: 0.5; animation: pulse 1.5s ease-out infinite; }
+  @keyframes pulse { 0%{ transform: scale(0.5); opacity: 0.7; } 100%{ transform: scale(1.5); opacity: 0; } }
+  .wave { display: inline-flex; align-items: center; gap: 2px; height: 13px; }
+  .wave i { width: 2px; background: var(--accent); border-radius: 1px; height: 4px; animation: wave 0.9s ease-in-out infinite; }
+  .wave i:nth-child(1){ animation-delay: 0s; } .wave i:nth-child(2){ animation-delay: .12s; }
+  .wave i:nth-child(3){ animation-delay: .24s; } .wave i:nth-child(4){ animation-delay: .36s; }
+  .wave i:nth-child(5){ animation-delay: .48s; } .wave i:nth-child(6){ animation-delay: .60s; }
+  @keyframes wave { 0%,100%{ height: 4px; } 50%{ height: 13px; } }
+
+  .field-box {
+    border: 0.5px solid var(--line-strong); border-radius: 8px;
+    background: rgba(79,223,255,0.04); padding: 14px 16px;
+    font-family: var(--f-display); font-size: 21px; line-height: 1.35; color: var(--fg);
+    min-height: 54px; position: relative;
+  }
+  .field-box.area { min-height: 124px; }
+  .field-box .caret { display: inline-block; width: 9px; height: 1.05em; background: var(--accent); vertical-align: -3px; margin-left: 2px; animation: blink 0.9s steps(1) infinite; }
+  .field-box .interim { color: var(--muted); }
+
+  /* ── SEND BAY — flick to launch ── */
+  .send-bay {
+    margin-top: 6px; position: relative; overflow: hidden;
+    border: 0.5px dashed var(--line-strong); border-radius: 10px;
+    background: rgba(79,223,255,0.04);
+    padding: 22px 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    min-height: 116px;
+  }
+  /* launch rails */
+  .send-bay::before, .send-bay::after {
+    content: ""; position: absolute; top: 0; bottom: 0; width: 0.5px;
+    background: linear-gradient(to top, transparent, var(--accent) 60%, transparent);
+    opacity: 0.28;
+  }
+  .send-bay::before { left: 32%; } .send-bay::after { left: 40%; }
+
+  .launch-zone { position: relative; width: 150px; height: 80px; flex: none; }
+  .msg-puck {
+    position: absolute; left: 0; bottom: 6px; z-index: 3;
+    padding: 9px 14px; border: 0.5px solid var(--accent); border-radius: 8px;
+    background: rgba(79,223,255,0.10);
+    font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg);
+    display: inline-flex; align-items: center; gap: 8px;
+    animation: launch 2.6s cubic-bezier(0.3,0,0.3,1) infinite;
+    box-shadow: 0 0 16px -4px var(--accent);
+  }
+  .msg-puck .pk-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  /* motion trail streaks rising from the puck */
+  .trail { position: absolute; left: 8px; bottom: 6px; width: 92px; height: 74px; z-index: 1; pointer-events: none; }
+  .trail span { position: absolute; bottom: 0; width: 1.5px; border-radius: 1px;
+    background: linear-gradient(to top, var(--accent), transparent);
+    animation: streak 2.6s ease-in infinite; opacity: 0; }
+  .trail span:nth-child(1){ left: 14px; height: 40px; animation-delay: .1s; }
+  .trail span:nth-child(2){ left: 34px; height: 56px; animation-delay: .35s; }
+  .trail span:nth-child(3){ left: 52px; height: 34px; animation-delay: .55s; }
+  .trail span:nth-child(4){ left: 70px; height: 48px; animation-delay: .2s; }
+  @keyframes launch {
+    0%   { transform: translateY(0) scale(1); opacity: 1; }
+    62%  { transform: translateY(0) scale(1); opacity: 1; }
+    78%  { transform: translateY(-44px) scale(0.96); opacity: 0.9; }
+    96%  { transform: translateY(-86px) scale(0.7); opacity: 0; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  @keyframes streak {
+    0%, 60% { opacity: 0; transform: translateY(0); }
+    74% { opacity: 0.6; }
+    100% { opacity: 0; transform: translateY(-30px); }
+  }
+  .launch-btn { text-align: right; }
+  .launch-btn .lb-main {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--bg); background: var(--accent); border: 0.5px solid var(--accent);
+    border-radius: 999px; padding: 11px 20px; cursor: crosshair;
+    box-shadow: 0 0 22px -6px var(--accent); transition: transform .2s;
+  }
+  .launch-btn .lb-main:hover { transform: translateY(-3px); }
+  .launch-btn .lb-arrow { font-size: 14px; animation: liftarrow 1.6s ease-in-out infinite; }
+  @keyframes liftarrow { 0%,100%{ transform: translateY(0); } 50%{ transform: translateY(-3px); } }
+  .launch-btn .lb-sub { display: block; margin-top: 10px; font-family: var(--f-mono); font-size: 9px;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); }
+
+  /* ── RIGHT COLUMN — details with pinch tags ── */
+  .detail { border-top: 0.5px solid var(--line); padding: 16px 0; }
+  .detail:last-of-type { border-bottom: 0.5px solid var(--line); }
+  .detail .d-label { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .detail .d-row { display: flex; align-items: center; gap: 14px 16px; flex-wrap: wrap; }
+  .detail .d-value { flex: 1 1 auto; min-width: 0; word-break: break-word; font-family: var(--f-display); font-size: 26px; letter-spacing: -0.01em; color: var(--fg); }
+  .detail .links { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+  .detail .link-row { display: flex; align-items: center; gap: 14px; }
+  .detail .link-row a { font-family: var(--f-display); font-size: 22px; color: var(--fg); text-decoration: none; }
+  .detail .link-row a:hover { color: var(--accent); }
+
+  .pinch-tag {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--accent); border: 0.5px solid var(--line-strong); border-radius: 999px; padding: 4px 10px;
+    background: rgba(79,223,255,0.05); white-space: nowrap;
+  }
+  .pinch-glyph { position: relative; width: 11px; height: 11px; display: inline-block; }
+  .pinch-glyph::before, .pinch-glyph::after {
+    content: ""; position: absolute; top: 50%; width: 5px; height: 5px;
+    border: 1px solid var(--accent); border-radius: 50%; transform: translateY(-50%);
+    animation: pinch 1.8s ease-in-out infinite;
+  }
+  .pinch-glyph::before { left: 0; } .pinch-glyph::after { right: 0; animation-delay: .0s; }
+  @keyframes pinch {
+    0%,100% { transform: translate(0,-50%); }
+    50% { transform: translate(3px,-50%); }
+  }
+  .pinch-glyph::after { animation-name: pinch-r; }
+  @keyframes pinch-r {
+    0%,100% { transform: translate(0,-50%); }
+    50% { transform: translate(-3px,-50%); }
+  }
+
+  .coming {
+    margin-top: 32px; padding: 18px; border: 0.5px dashed var(--line-strong); border-radius: 8px;
+  }
+  .coming .eyebrow { color: var(--accent); margin-bottom: 8px; display: block; }
+  .coming .ctext { font-family: var(--f-display); font-size: 22px; line-height: 1.2; color: var(--fg); }
+
+  @media (max-width: 980px) {
+    .wrap { padding: 110px 40px 100px; }
+    .contact-grid { grid-template-columns: 1fr; gap: 44px; }
+    .top-readout, .bottom-readout { left: 24px; right: 24px; }
+  }
+  @media (max-width: 560px) {
+    .send-bay { flex-direction: column; align-items: stretch; gap: 16px; }
+    .launch-btn { text-align: left; }
+  }
+</style>
+</head>
+<body>
+  <div class="field-bg"></div>
+  <div class="grain"></div>
+
+  <div class="hud-corner c-tl"></div>
+  <div class="hud-corner c-tr"></div>
+  <div class="hud-corner c-bl"></div>
+  <div class="hud-corner c-br"></div>
+
+  <div class="top-readout">
+    <div class="title">HAND MODE // CONTACT &nbsp;—&nbsp; <b>/REACH-OUT</b></div>
+    <div class="right">
+      <div><span class="live-dot"></span><span class="live">TRACKING · OPEN PALM</span></div>
+      <div id="coords">voice input: armed · gestures: live</div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="eyebrow" style="margin-bottom:16px;">05 · CONTACT</div>
+    <h1 class="display">Let's <em>talk</em>.</h1>
+    <p class="lede">Speak to fill a field, flick to send, pinch to copy. No keyboard required.</p>
+
+    <div class="contact-grid">
+      <!-- LEFT — speech-to-text form -->
+      <form class="contact-form" onsubmit="return false;">
+        <div class="field">
+          <div class="field-head">
+            <label>01 · Name</label>
+            <span class="listening">
+              <span class="rec"></span> Listening
+              <span class="wave"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+            </span>
+          </div>
+          <div class="field-box">Jordan Avery<span class="caret"></span></div>
+        </div>
+
+        <div class="field">
+          <div class="field-head">
+            <label>02 · Email</label>
+            <span class="listening">
+              <span class="rec"></span> Listening
+              <span class="wave"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+            </span>
+          </div>
+          <div class="field-box">jordan.avery@northlight.studio<span class="caret"></span></div>
+        </div>
+
+        <div class="field">
+          <div class="field-head">
+            <label>03 · What's on your mind</label>
+            <span class="listening">
+              <span class="rec"></span> Listening
+              <span class="wave"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+            </span>
+          </div>
+          <div class="field-box area">Hey Aziz — we're hiring a front-end engineer and your hand-tracking work stopped me in my tracks. <span class="interim">are you open to a quick call next week</span><span class="caret"></span></div>
+        </div>
+
+        <!-- SEND — flick to launch -->
+        <div class="send-bay">
+          <div class="launch-zone">
+            <div class="trail"><span></span><span></span><span></span><span></span></div>
+            <div class="msg-puck"><span class="pk-dot"></span> MSG</div>
+          </div>
+          <div class="launch-btn">
+            <span class="lb-main">Flick to launch <span class="lb-arrow">↑</span></span>
+            <span class="lb-sub">flick up · message away</span>
+          </div>
+        </div>
+      </form>
+
+      <!-- RIGHT — details with pinch tags -->
+      <div>
+        <div class="detail">
+          <div class="d-label">Email</div>
+          <div class="d-row">
+            <span class="d-value">azizsyed2016@gmail.com</span>
+            <span class="pinch-tag"><span class="pinch-glyph"></span> Pinch to copy</span>
+          </div>
+        </div>
+
+        <div class="detail">
+          <div class="d-label">Phone</div>
+          <div class="d-row">
+            <span class="d-value">+1 (647) 539-8171</span>
+            <span class="pinch-tag"><span class="pinch-glyph"></span> Pinch to copy</span>
+          </div>
+        </div>
+
+        <div class="detail">
+          <div class="d-label">Where</div>
+          <div class="d-row">
+            <span class="d-value">Scarborough, Ontario · Canada</span>
+          </div>
+        </div>
+
+        <div class="detail">
+          <div class="d-label">Online</div>
+          <div class="d-row">
+            <div class="links">
+              <div class="link-row">
+                <a href="https://github.com/AzizSyed27">github</a>
+                <span class="pinch-tag"><span class="pinch-glyph"></span> Pinch to open</span>
+              </div>
+              <div class="link-row">
+                <a href="https://linkedin.com/in/azizsyed27">linkedin</a>
+                <span class="pinch-tag"><span class="pinch-glyph"></span> Pinch to open</span>
+              </div>
+              <div class="link-row">
+                <a href="https://azizsyed.ca">azizsyed.ca</a>
+                <span class="pinch-tag"><span class="pinch-glyph"></span> Pinch to open</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="coming">
+          <span class="eyebrow">↑ HAND MODE</span>
+          <div class="ctext">Voice fills the form, a flick sends it, and a pinch grabs any detail — all without the keyboard.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-readout">
+    <a class="back-link" href="portfolio.html">← back to site</a>
+    <div class="affordance">speak to fill · flick ↑ to send · pinch to grab</div>
+    <div>MODE: HAND · CHANNEL: CONTACT</div>
+  </div>
+</body>
+</html>

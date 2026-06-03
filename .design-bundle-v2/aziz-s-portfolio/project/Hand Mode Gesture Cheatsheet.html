@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hand Mode — Gesture Cheat-Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A0F14; --fg: #E8F6FB; --accent: #4FDFFF; --accent-bright: #8BEBFF;
+    --panel: rgba(11, 19, 28, 0.82); --line: rgba(79,223,255,0.16); --line-strong: rgba(79,223,255,0.40);
+    --muted: rgba(232,246,251,0.55); --muted-2: rgba(232,246,251,0.34);
+    --live: #2FE6C0;
+    --f-display: "Instrument Serif", serif; --f-body: "Bricolage Grotesque", -apple-system, sans-serif; --f-mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+
+  .frame { position: relative; width: 100%; height: 100%; overflow: hidden;
+    background: radial-gradient(120% 90% at 72% 14%, rgba(79,223,255,0.06), transparent 55%), var(--bg);
+    color: var(--fg); font-family: var(--f-body); }
+
+  /* ░░ mock page behind ░░ */
+  .pg { position: absolute; inset: 0; z-index: 1; padding: 26px 40px; opacity: 0.42; filter: saturate(0.7) brightness(0.85); }
+  .pg-top { display: flex; align-items: center; justify-content: space-between; padding-bottom: 18px; border-bottom: 0.5px solid var(--line); }
+  .pg-brand { display: flex; align-items: flex-start; gap: 11px; }
+  .pg-mark { font-family: var(--f-display); font-style: italic; font-size: 26px; line-height: 0.8; }
+  .pg-meta { font-family: var(--f-mono); font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); line-height: 1.5; padding-top: 2px; }
+  .pg-meta b { display: block; color: var(--fg); font-weight: 500; }
+  .pg-nav { display: flex; gap: 15px; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .pg-nav .on { color: var(--fg); }
+  .pg-pill { display: inline-flex; align-items: center; gap: 8px; font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+    border: 0.5px solid var(--live); border-radius: 999px; padding: 5px 11px; }
+  .pg-pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--live); }
+  .pg-hero { margin-top: 60px; }
+  .pg-eyebrow { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+  .pg-display { font-family: var(--f-display); font-weight: 400; font-size: 64px; line-height: 0.98; letter-spacing: -0.025em; max-width: 15ch; }
+  .pg-display em { font-style: italic; color: var(--accent); }
+
+  /* HUD corners */
+  .ov-corner { position: absolute; width: 26px; height: 26px; z-index: 6; }
+  .ov-corner::before, .ov-corner::after { content: ""; position: absolute; background: var(--accent); opacity: 0.7; }
+  .ov-corner::before { width: 13px; height: 1.5px; } .ov-corner::after { width: 1.5px; height: 13px; }
+  .ov-corner.tl { top: 18px; left: 18px; } .ov-corner.tl::before, .ov-corner.tl::after { top: 0; left: 0; }
+  .ov-corner.tr { top: 18px; right: 18px; } .ov-corner.tr::before { top: 0; right: 0; } .ov-corner.tr::after { top: 0; right: 0; }
+  .ov-corner.bl { bottom: 18px; left: 18px; } .ov-corner.bl::before { bottom: 0; left: 0; } .ov-corner.bl::after { bottom: 0; left: 0; }
+  .ov-corner.br { bottom: 18px; right: 18px; } .ov-corner.br::before { bottom: 0; right: 0; } .ov-corner.br::after { bottom: 0; right: 0; }
+
+  /* ░░ cheat-sheet panel ░░ */
+  .sheet { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 5;
+    width: 720px; background: var(--panel); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 0.5px solid var(--line-strong); border-radius: 14px; padding: 30px 34px 28px;
+    box-shadow: 0 40px 90px -30px rgba(0,0,0,0.8), inset 0 0 0 0.5px rgba(79,223,255,0.05); font-family: var(--f-mono); }
+  .sheet-corner { position: absolute; width: 14px; height: 14px; }
+  .sheet-corner::before, .sheet-corner::after { content: ""; position: absolute; background: var(--accent); opacity: 0.7; }
+  .sheet-corner::before { width: 10px; height: 1.5px; } .sheet-corner::after { width: 1.5px; height: 10px; }
+  .sheet-corner.a { top: 10px; left: 10px; } .sheet-corner.a::before, .sheet-corner.a::after { top: 0; left: 0; }
+  .sheet-corner.b { top: 10px; right: 10px; } .sheet-corner.b::before { top: 0; right: 0; } .sheet-corner.b::after { top: 0; right: 0; }
+  .sheet-corner.c { bottom: 10px; left: 10px; } .sheet-corner.c::before { bottom: 0; left: 0; } .sheet-corner.c::after { bottom: 0; left: 0; }
+  .sheet-corner.d { bottom: 10px; right: 10px; } .sheet-corner.d::before { bottom: 0; right: 0; } .sheet-corner.d::after { bottom: 0; right: 0; }
+
+  .sheet-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+    padding-bottom: 18px; margin-bottom: 8px; border-bottom: 0.5px solid var(--line); }
+  .sheet-title { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--fg); }
+  .sheet-title b { color: var(--accent); }
+  .sheet-hint { font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .sheet-hint kbd { color: var(--accent); border: 0.5px solid var(--line-strong); border-radius: 3px; padding: 1px 5px; }
+
+  .sheet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 36px; margin-top: 16px; }
+  .ges { display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 0.5px dashed var(--line); }
+  .ges .gi { width: 26px; height: 26px; }
+  .ges .gi svg { width: 26px; height: 26px; display: block; }
+  .ges .gi svg * { stroke: var(--accent); fill: none; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
+  .ges .gi svg .fill { fill: var(--accent); stroke: none; }
+  .ges .g-name { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg); }
+  .ges .g-act { font-size: 10.5px; letter-spacing: 0.04em; color: var(--accent); white-space: nowrap; }
+  .ges .g-act::before { content: "· "; color: var(--muted-2); }
+
+  .sheet-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; padding-top: 14px; border-top: 0.5px solid var(--line);
+    font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-2); }
+  .sheet-foot .dot { color: var(--live); }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel">
+    const NAV = ["Index", "About", "Services", "Work", "Contact", "Log"];
+
+    // tiny line-glyphs per gesture
+    const G = {
+      palm: <svg viewBox="0 0 24 24"><path d="M7 13V6.5a1.3 1.3 0 0 1 2.6 0V12M9.6 12V5.2a1.3 1.3 0 0 1 2.6 0V12M12.2 12V5.6a1.3 1.3 0 0 1 2.6 0V12M14.8 12V7a1.3 1.3 0 0 1 2.6 0v6.5c0 3.4-2.2 5.8-5.4 5.8-2 0-3.3-.8-4.4-2.3L5 14.6a1.3 1.3 0 0 1 2-1.6Z"/></svg>,
+      pinch: <svg viewBox="0 0 24 24"><path d="M8 8.5 11.5 12M16 8.5 12.5 12"/><circle cx="12" cy="13" r="0.6" className="fill"/><path d="M7 16c0 2.5 2.2 4.5 5 4.5s5-2 5-4.5"/></svg>,
+      fist: <svg viewBox="0 0 24 24"><path d="M6 11.5c0-1 .8-1.8 1.8-1.8h7.4c1 0 1.8.8 1.8 1.8v3c0 2.7-2.2 4.8-5.5 4.8S6 17.2 6 14.5Z"/><path d="M8 9.7l.6-1.4M11 9.4V7.7M14 9.5l-.3-1.6"/><path d="M19 12h2M19 15l1.8.6" className=""/></svg>,
+      swipe: <svg viewBox="0 0 24 24"><path d="M4 12h13"/><path d="M13 8l4 4-4 4"/><path d="M19 7v10" opacity="0.5"/></svg>,
+      spread: <svg viewBox="0 0 24 24"><path d="M10 12 6 12M6 12l2.5-2.5M6 12l2.5 2.5"/><path d="M14 12 18 12M18 12l-2.5-2.5M18 12l-2.5 2.5"/></svg>,
+      rotate: <svg viewBox="0 0 24 24"><path d="M6 12a6 6 0 0 1 10.5-4"/><path d="M18 12a6 6 0 0 1-10.5 4"/><path d="M16.5 4v4h-4M7.5 20v-4h4"/></svg>,
+      pull: <svg viewBox="0 0 24 24"><path d="M11 12H5M5 12l2.5-2.5M5 12l2.5 2.5"/><path d="M13 12h6M19 12l-2.5-2.5M19 12l-2.5 2.5"/><path d="M12 7v10" opacity="0.4"/></svg>,
+      flick: <svg viewBox="0 0 24 24"><path d="M5 16c3-1 5-3 6-6"/><path d="M11 10l1.5-3 3 1.5"/><path d="M14 17l5-5" opacity="0.6"/></svg>,
+      menu: <svg viewBox="0 0 24 24"><path d="M7 14V8.5a1.3 1.3 0 0 1 2.6 0M9.6 8.8V7.4a1.3 1.3 0 0 1 2.6 0V9M12.2 9V7.8a1.3 1.3 0 0 1 2.6 0V9.4"/><path d="M7 14c-1.5-1-3-.6-3 .6 0 .8 1 2 2.4 3.2C7.8 19 9.5 20 12 20c3.2 0 5.4-2.4 5.4-5.8V9.6a1.3 1.3 0 0 0-2.6 0V14"/></svg>,
+    };
+
+    const GESTURES = [
+      ["palm", "Open Palm", "move cursor"],
+      ["pinch", "Pinch", "select"],
+      ["fist", "Fist + Move", "scroll"],
+      ["swipe", "Swipe", "change page"],
+      ["spread", "Two-Hand Spread", "zoom"],
+      ["rotate", "Two-Hand Rotate", "rotate 3D"],
+      ["pull", "Pull Apart", "expand project"],
+      ["flick", "Flick", "dismiss"],
+      ["menu", "Palm Up", "menu"],
+    ];
+
+    function MockPage() {
+      return (
+        <div className="pg">
+          <div className="pg-top">
+            <div className="pg-brand"><div className="pg-mark">AZ</div><div className="pg-meta"><b>Aziz Syed</b>Software Engineer</div></div>
+            <div className="pg-nav">{NAV.map((n, i) => <span key={n} className={i === 0 ? "on" : ""}>{n}</span>)}</div>
+            <div className="pg-pill"><i></i> Hand Ctrl · Live</div>
+          </div>
+          <div className="pg-hero">
+            <div className="pg-eyebrow">Spatial control · engaged</div>
+            <h1 className="pg-display">I build software that <em>thinks</em>, sees, and <em>responds</em>.</h1>
+          </div>
+        </div>
+      );
+    }
+
+    function Sheet() {
+      return (
+        <div className="sheet">
+          <span className="sheet-corner a" /><span className="sheet-corner b" /><span className="sheet-corner c" /><span className="sheet-corner d" />
+          <div className="sheet-head">
+            <div className="sheet-title">GESTURES · <b>/REFERENCE</b></div>
+            <div className="sheet-hint">toggle <kbd>H</kbd> · hold <kbd>?</kbd></div>
+          </div>
+          <div className="sheet-grid">
+            {GESTURES.map(([icon, name, act]) => (
+              <div className="ges" key={name}>
+                <span className="gi">{G[icon]}</span>
+                <span className="g-name">{name}</span>
+                <span className="g-act">{act}</span>
+              </div>
+            ))}
+          </div>
+          <div className="sheet-foot">
+            <span><span className="dot">●</span> tracking active · open palm</span>
+            <span>9 gestures · v3.0</span>
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      return (
+        <DesignCanvas>
+          <DCSection id="ges" title="Hand Mode · Gesture Cheat-Sheet" subtitle="Translucent reference overlay — toggled with H, page content unchanged">
+            <DCArtboard id="sheet" label="Gestures · /reference" width={1180} height={720}>
+              <div className="frame">
+                <MockPage />
+                <div className="ov-corner tl" /><div className="ov-corner tr" /><div className="ov-corner bl" /><div className="ov-corner br" />
+                <Sheet />
+              </div>
+            </DCArtboard>
+          </DCSection>
+        </DesignCanvas>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
