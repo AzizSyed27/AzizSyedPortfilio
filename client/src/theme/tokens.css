@@ -2,9 +2,10 @@
    Switching themes = swap data-theme on <html>. Values mirror the
    design bundle's theme.js exactly. */
 
-/* Amber Smoke — default */
+/* Amber Smoke — default. Selectors use :root[data-theme] so per-theme rules
+   beat any plain :root block in other stylesheets (avoids import-order ties). */
 :root,
-[data-theme="amber"] {
+:root[data-theme="amber"] {
   --bg: #F2E0D0;
   --fg: #1A1F2A;
   --accent: #6E88B0;
@@ -18,7 +19,7 @@
   --shadow: 0 30px 60px rgba(26, 31, 42, 0.12);
 }
 
-[data-theme="pistachio"] {
+:root[data-theme="pistachio"] {
   --bg: #200F07;
   --fg: #F0EBE0;
   --accent: #C5E384;
@@ -32,7 +33,7 @@
   --shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
 }
 
-[data-theme="matcha"] {
+:root[data-theme="matcha"] {
   --bg: #F4F6F1;
   --fg: #1F1F1F;
   --accent: #7BAF85;
@@ -46,7 +47,7 @@
   --shadow: 0 30px 60px rgba(31, 31, 31, 0.1);
 }
 
-[data-theme="moss"] {
+:root[data-theme="moss"] {
   --bg: #F8F5F2;
   --fg: #1F2A24;
   --accent: #385144;
@@ -60,7 +61,7 @@
   --shadow: 0 30px 60px rgba(31, 42, 36, 0.12);
 }
 
-[data-theme="dreamy"] {
+:root[data-theme="dreamy"] {
   --bg: #EAEBED;
   --fg: #0A1A22;
   --accent: #006989;
@@ -74,7 +75,7 @@
   --shadow: 0 30px 60px rgba(10, 26, 34, 0.12);
 }
 
-[data-theme="chartreuse"] {
+:root[data-theme="chartreuse"] {
   --bg: #00272B;
   --fg: #E8F4F5;
   --accent: #E0FF4F;
@@ -88,7 +89,7 @@
   --shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
 }
 
-[data-theme="robin"] {
+:root[data-theme="robin"] {
   --bg: #2E382E;
   --fg: #E8EEE8;
   --accent: #50C9CE;
@@ -102,7 +103,7 @@
   --shadow: 0 30px 60px rgba(0, 0, 0, 0.35);
 }
 
-[data-theme="strawberry"] {
+:root[data-theme="strawberry"] {
   --bg: #3C1950;
   --fg: #F5E8EA;
   --accent: #F0CDD2;
@@ -117,7 +118,7 @@
 }
 
 /* HUD — hand-mode theme. Auto-applied when toggleHandMode() flips. */
-[data-theme="hud"] {
+:root[data-theme="hud"] {
   --bg: #0A0F14;
   --fg: #E6F8FF;
   --accent: #4FDFFF;

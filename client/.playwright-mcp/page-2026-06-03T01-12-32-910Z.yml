@@ -1,0 +1,41 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: AZ
+      - generic [ref=e7]:
+        - generic [ref=e8]: Aziz Syed
+        - text: Software Engineer
+        - text: Scarborough, ON
+    - navigation [ref=e9]:
+      - button "01 Index" [ref=e10]:
+        - generic [ref=e11]: "01"
+        - generic [ref=e12]: Index
+      - button "02 About" [ref=e13]:
+        - generic [ref=e14]: "02"
+        - generic [ref=e15]: About
+      - button "03 Services" [ref=e16]:
+        - generic [ref=e17]: "03"
+        - generic [ref=e18]: Services
+      - button "04 Work" [ref=e19]:
+        - generic [ref=e20]: "04"
+        - generic [ref=e21]: Work
+      - button "05 Contact" [ref=e22]:
+        - generic [ref=e23]: "05"
+        - generic [ref=e24]: Contact
+      - button "06 Log" [ref=e25]:
+        - generic [ref=e26]: "06"
+        - generic [ref=e27]: Log
+    - generic [ref=e28]:
+      - generic [ref=e29]: 21:12:32 EST · v3.0
+      - generic [ref=e30]:
+        - button "Theme Select ▾" [ref=e32]:
+          - generic [ref=e34]: Theme Select
+          - generic [ref=e35]: ▾
+        - button "Hand Ctrl · Standby" [ref=e36]:
+          - generic [ref=e38]: Hand Ctrl · Standby
+  - generic [ref=e39]: Loading…
+  - contentinfo [ref=e40]:
+    - generic [ref=e41]: © 2026 Aziz Syed · Built with care
+    - generic [ref=e42]: v3.0 · Spatial preview · Keys 1–6 navigate · H toggles cheat sheet · [ ] cycles themes
+    - link "github.com/AzizSyed27" [ref=e44] [cursor=pointer]:
+      - /url: https://github.com/AzizSyed27
