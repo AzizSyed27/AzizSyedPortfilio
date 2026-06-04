@@ -1,100 +1,150 @@
-// R3F gallery scene. Lazy-loaded; pulls in three + drei.
-// When the user drops a GLTF into /public/models/e46.glb, the E46Model
-// renders the real model — otherwise a primitive wireframe stands in.
-// rotateModel / zoomModel actions plug straight into OrbitControls.
+// R3F gallery scene — renders the BMW M3 GTR GLTF inside Gallery3D's
+// .g3d-stage slot on Home. Lazy-loaded; preloads the GLB at module evaluation
+// so by the time <Canvas> mounts the model is already in cache.
+// Phase-2 hand input plugs into the same rotateModel / zoomModel actions
+// via GalleryContext.
 
-import { Suspense, useEffect, useRef } from "react";
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Edges, Environment, useGLTF } from "@react-three/drei";
+import { ContactShadows, OrbitControls, useGLTF } from "@react-three/drei";
+import * as THREE from "three";
 import { useGallery } from "../intents/GalleryContext";
 
-function E46Placeholder() {
+const MODEL_URL = "/models/low_poly_bmw_m3-gtr.glb";
+const TARGET_SIZE = 5; // longest model axis, in scene units
+
+// Kick off the fetch the moment this module is evaluated — paired with the
+// lazy import in Gallery3D, this means the GLB starts loading the instant
+// the Home page is shown.
+useGLTF.preload(MODEL_URL);
+
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+function LoadingCube() {
   const ref = useRef();
   useFrame((_, dt) => {
-    if (ref.current) ref.current.rotation.y += dt * 0.4;
+    if (ref.current) ref.current.rotation.y += dt * 0.6;
   });
   return (
     <mesh ref={ref}>
-      <boxGeometry args={[3.2, 0.9, 1.6]} />
+      <boxGeometry args={[2, 0.7, 1.3]} />
       <meshStandardMaterial color="#4FDFFF" wireframe />
-      <Edges color="#8BEBFF" />
     </mesh>
   );
 }
 
-function E46Real({ url }) {
-  const { scene } = useGLTF(url);
-  return <primitive object={scene} scale={1.2} />;
-}
+function CarModel() {
+  const groupRef = useRef();
+  const { scene } = useGLTF(MODEL_URL);
 
-function E46Model() {
-  // If the user has placed /models/e46.glb we load it; otherwise primitive.
-  // useGLTF will throw if the file is missing; Suspense + ErrorBoundary not
-  // needed when we conditionally render based on a fetch check.
-  const url = "/models/e46.glb";
+  // Recenter + uniform-scale the GLB so its longest axis is TARGET_SIZE.
+  // Done once, in a layout effect, before the first paint.
+  const fitted = useMemo(() => {
+    const root = scene.clone(true);
+    const box = new THREE.Box3().setFromObject(root);
+    const size = new THREE.Vector3();
+    const center = new THREE.Vector3();
+    box.getSize(size);
+    box.getCenter(center);
+    const max = Math.max(size.x, size.y, size.z) || 1;
+    const k = TARGET_SIZE / max;
+    root.position.sub(center).multiplyScalar(k);
+    root.scale.setScalar(k);
+    root.traverse((obj) => {
+      if (obj.isMesh) {
+        obj.castShadow = false;
+        obj.receiveShadow = false;
+      }
+    });
+    return root;
+  }, [scene]);
+
+  const reduced =
+    typeof matchMedia !== "undefined" &&
+    matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  useFrame((_, dt) => {
+    if (!reduced && groupRef.current) groupRef.current.rotation.y += dt * 0.35;
+  });
+
   return (
-    <Suspense fallback={<E46Placeholder />}>
-      <CheckedGltf url={url} />
-    </Suspense>
+    <group ref={groupRef}>
+      <primitive object={fitted} />
+    </group>
   );
-}
-
-function CheckedGltf({ url }) {
-  const ref = useRef();
-  const ok = useRef(null);
-  useEffect(() => {
-    let cancelled = false;
-    fetch(url, { method: "HEAD" }).then((r) => {
-      if (!cancelled) ok.current = r.ok;
-    }).catch(() => { ok.current = false; });
-    return () => { cancelled = true; };
-  }, [url]);
-  if (ok.current === false) return <E46Placeholder />;
-  if (ok.current === null)  return <E46Placeholder />;
-  return <E46Real url={url} />;
 }
 
 function Lights() {
   return (
     <>
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[5, 5, 5]} intensity={1} />
+      <ambientLight intensity={0.55} />
+      <hemisphereLight args={["#ffffff", "#202020", 0.35]} />
+      <directionalLight position={[5, 8, 5]} intensity={0.9} />
     </>
   );
 }
 
-function Controls() {
+function ControlsBridge() {
   const controlsRef = useRef();
   const { registerHandlers } = useGallery();
+
   useEffect(() => {
     registerHandlers({
       rotate: (dx, dy) => {
         const c = controlsRef.current;
         if (!c) return;
-        c.azimuthAngle = (c.azimuthAngle ?? 0) + dx * 0.01;
-        c.polarAngle   = Math.max(0.1, Math.min(Math.PI - 0.1, (c.polarAngle ?? Math.PI / 2) + dy * 0.01));
+        c.setAzimuthalAngle(c.getAzimuthalAngle() + dx * 0.01);
+        c.setPolarAngle(clamp(c.getPolarAngle() + dy * 0.01, 0.6, 1.55));
         c.update();
       },
       zoom: (factor) => {
         const c = controlsRef.current;
-        if (!c?.object) return;
-        c.object.position.multiplyScalar(factor);
+        if (!c || !c.object) return;
+        const cam = c.object;
+        const target = c.target;
+        const offset = cam.position.clone().sub(target);
+        const dist = offset.length();
+        const next = clamp(dist * factor, 1.2, 14);
+        offset.setLength(next);
+        cam.position.copy(target).add(offset);
         c.update();
       },
     });
   }, [registerHandlers]);
-  return <OrbitControls ref={controlsRef} enableDamping dampingFactor={0.08} />;
+
+  return (
+    <OrbitControls
+      ref={controlsRef}
+      enableDamping
+      dampingFactor={0.08}
+      autoRotate
+      autoRotateSpeed={0.6}
+      enablePan={false}
+      minDistance={1.2}
+      maxDistance={14}
+      minPolarAngle={0.6}
+      maxPolarAngle={1.55}
+      target={[0, 0.2, 0]}
+    />
+  );
 }
 
 export function GalleryScene() {
   return (
-    <Canvas style={{ width: "100%", height: "100%", minHeight: 440 }} camera={{ position: [4, 2, 6], fov: 45 }}>
+    <Canvas
+      dpr={[1, 1.5]}
+      gl={{ alpha: true, antialias: true }}
+      camera={{ position: [3.8, 1.6, 4.2], fov: 38, near: 0.05, far: 100 }}
+      style={{ background: "transparent", width: "100%", height: "100%" }}
+    >
       <Lights />
-      <Suspense fallback={null}>
-        <Environment preset="city" />
+      <Suspense fallback={<LoadingCube />}>
+        <CarModel />
       </Suspense>
-      <E46Model />
-      <Controls />
+      <ContactShadows position={[0, -0.4, 0]} opacity={0.4} blur={2.5} far={3} />
+      <ControlsBridge />
     </Canvas>
   );
 }
+
+export default GalleryScene;

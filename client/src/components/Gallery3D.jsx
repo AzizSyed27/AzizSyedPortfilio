@@ -1,4 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
+
+const GalleryScene = lazy(() =>
+  import("../three/GalleryScene").then((m) => ({ default: m.GalleryScene })),
+);
 
 const GALLERY_OBJECTS = [
   {
@@ -36,23 +40,34 @@ export function Gallery3D({ hero = false }) {
   const hoverRef = useRef(false);
   const tiltRef = useRef({ x: -8, y: 0 });
 
+  const is3D = active === "e46";
+
+  // CSS auto-sway for SVG variants. Skip writes when the R3F canvas is mounted
+  // — OrbitControls owns rotation in that case and a CSS transform on the
+  // wrapper would rotate the whole canvas as a DOM element.
   useEffect(() => {
     let raf;
     const loop = (t) => {
-      if (!hoverRef.current) {
-        const yaw = Math.sin(t / 2200) * 20;
-        const pitch = -8 + Math.cos(t / 2700) * 3.5;
-        tiltRef.current = { x: pitch, y: yaw };
+      if (!is3D) {
+        if (!hoverRef.current) {
+          const yaw = Math.sin(t / 2200) * 20;
+          const pitch = -8 + Math.cos(t / 2700) * 3.5;
+          tiltRef.current = { x: pitch, y: yaw };
+        }
+        const el = objRef.current;
+        if (el) el.style.transform = `rotateX(${tiltRef.current.x.toFixed(2)}deg) rotateY(${tiltRef.current.y.toFixed(2)}deg)`;
+      } else {
+        const el = objRef.current;
+        if (el && el.style.transform) el.style.transform = "";
       }
-      const el = objRef.current;
-      if (el) el.style.transform = `rotateX(${tiltRef.current.x.toFixed(2)}deg) rotateY(${tiltRef.current.y.toFixed(2)}deg)`;
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, []);
+  }, [is3D]);
 
   const onMove = (e) => {
+    if (is3D) return; // OrbitControls handles pointer when canvas is active
     hoverRef.current = true;
     const el = stageRef.current;
     if (!el) return;
@@ -80,11 +95,20 @@ export function Gallery3D({ hero = false }) {
             <div className="dim">render: webgl · 60fps</div>
           </div>
           <div className="g3d-axis">x · y · z</div>
-          <div className="g3d-stage">
-            <div className="g3d-object" ref={objRef}>
-              <GalleryArt kind={obj.art} />
+          <div
+            className="g3d-stage"
+            style={is3D ? { position: "absolute", inset: 0, width: "auto", height: "auto", maxWidth: "none", minWidth: 0 } : undefined}
+          >
+            <div className="g3d-object" ref={objRef} style={is3D ? { position: "absolute", inset: 0 } : undefined}>
+              {is3D ? (
+                <Suspense fallback={null}>
+                  <GalleryScene />
+                </Suspense>
+              ) : (
+                <GalleryArt kind={obj.art} />
+              )}
             </div>
-            <div className="g3d-shadow" />
+            {!is3D && <div className="g3d-shadow" />}
           </div>
           <div className="g3d-affordance">drag to rotate · pinch to zoom</div>
         </div>
