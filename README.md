@@ -1,68 +1,61 @@
 # Aziz Syed — Portfolio
 
-The source for [azizsyed-porfolio.onrender.com](https://azizsyed-porfolio.onrender.com).
+Live: [azizsyed-porfolio.onrender.com](https://azizsyed-porfolio.onrender.com)
 
-Originally built for COMP229 (May 2024). Currently mid-rebuild into a new design
-with two distinct goals:
+A redesign of my personal portfolio. The original was a 5-page Vite + React build for COMP229 Assignment 1; this version is a redesigned spatial portfolio with a working build log, 8 swappable color themes + an HUD theme, in-place project "exploded view" overlays, a 3D gallery, and an interactive tech-stack constellation.
 
-1. **A proper visual redesign** — editorial typography, 9 switchable color
-   palettes, a 3D model gallery on the home page, an interactive tech-stack
-   constellation, exploded-view overlays per project, and a build log.
-2. **Optional hand-tracking control** — a forthcoming mode where you can
-   navigate the whole site with hand gestures via your webcam (MediaPipe).
-   Tony Stark, on a student budget.
+It's also the substrate for an ongoing experiment: optional **hand-tracking control**, where you steer the page with gestures via your webcam. Phase 1 (shipped) is the redesigned site driven by mouse and keyboard. Phase 2 (next) drops in the MediaPipe pipeline behind the same action layer.
 
-The redesign was mocked up in [Claude Design](https://claude.ai/design) and is
-being ported into React. The handoff bundle lives at `.design-bundle/` for
-reference.
+## Stack
 
-## Status
+- React 19 + React Router 7
+- Vite 5 (SWC fast refresh)
+- `three` + `@react-three/fiber` + `@react-three/drei` — 3D gallery
+- `framer-motion` — transitions
+- `@emailjs/browser` — contact form
+- Plain JS, no TypeScript
+- Deployed on Render
 
-**Phase 1 — mouse + keyboard (in progress, mostly shipped)**
+## Pages
 
-- React 19 + Vite + React Router 7, plain JavaScript.
-- 6 routes (Home, About, Services, Work, Contact, Log).
-- 9 themes with live switching via a dropdown or `[` / `]` keys.
-- Keyboard navigation: `1`–`6` jumps routes, `H` toggles the gesture cheat
-  sheet, `Esc` closes overlays.
-- React Three Fiber gallery (E46 GLTF), capability radar, project flip-board,
-  contact beacon with live local clock, interactive tech-stack constellation.
-- EmailJS-backed contact form.
+```
+01 Index     02 About     03 Services
+04 Work      05 Contact   06 Log
+```
 
-**Phase 2 — hand tracking (not started)**
+Keys `1`–`6` navigate. `H` toggles the gesture cheat sheet. `[` and `]` cycle through the 9 color palettes. `Esc` closes any open overlay.
 
-A MediaPipe pipeline will dispatch the same in-app actions that mouse and
-keyboard do today. The architecture is already shaped for it (every
-interaction routes through a single action layer); `src/hand/` is an empty
-placeholder for the gesture recognizers.
-
-## Run locally
+## Run it locally
 
 ```bash
 cd client
 npm install
-npm run dev        # http://localhost:5173
+npm run dev          # http://localhost:5173
 ```
 
-EmailJS credentials go in `client/.env.local` (see `client/.env.example`).
-Without them the rest of the site works; only the contact form's send button
-shows an error.
+Contact form needs three EmailJS env vars in `client/.env.local` — see `client/.env.example`. The rest of the site works without them.
 
-```bash
-npm run build      # production build → client/dist
-npm run lint
+## Project structure
+
+```
+client/
+  src/
+    pages/         the 6 routes
+    components/    header, shell primitives, hero band, capability radar, …
+    overlays/      cheat sheet, exploded view, boot sequence, HUD reticle
+    intents/       the action layer + context providers
+    theme/         9 palette token sets, ThemeProvider, design.css
+    three/         R3F scene for the 3D gallery
+    content/       projects, capabilities, log entries, bio (editable as data)
+    hand/          empty placeholder for the Phase 2 MediaPipe port
+  public/
+    models/        e46.glb and friends
+.design-bundle/    Claude Design handoff this build is matching
 ```
 
-## Stack
+The Phase 1 brief lives in `portfolio-phase1-implementation-plan.md`. Architectural ground rules — for the action layer, the overlay-vs-route boundary, the theme system specificity gotcha — are in `CLAUDE.md`.
 
-React 19 · React Router 7 · Vite 5 · Framer Motion · React Three Fiber + drei ·
-EmailJS · plain CSS with CSS-variable themes
+## Status
 
-## Notes
-
-- `portfolio-phase1-implementation-plan.md` — the brief that governs scope.
-- `CLAUDE.md` — architecture notes for working in the codebase.
-- `.design-bundle/` — the Claude Design handoff (HTML/CSS/JS prototypes the
-  React port is matching).
-- Deploy is via Render (auto-deploy on push to `main`). Build config lives in
-  Render's dashboard.
+- Phase 1 — site is feature-complete on mouse + keyboard. Theme switching, overlays, 3D scene, contact form, and the constellation are all wired. A few content slots (3 featured-project write-ups, 4 About photos) await final assets.
+- Phase 2 — outlined; not started.
