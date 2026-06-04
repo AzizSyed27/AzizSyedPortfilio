@@ -1,22 +1,46 @@
-// R3F gallery scene — renders the BMW M3 GTR GLTF inside Gallery3D's
-// .g3d-stage slot on Home. Lazy-loaded; preloads the GLB at module evaluation
-// so by the time <Canvas> mounts the model is already in cache.
+// R3F gallery scene — generic GLTF viewer driven by a preset object.
+// Mounted inside Gallery3D's .g3d-stage slot on Home. Lazy-loaded;
+// preloads every preset's GLB at module evaluation so switching between
+// models is instant after the first.
+//
 // Phase-2 hand input plugs into the same rotateModel / zoomModel actions
 // via GalleryContext.
 
-import { Suspense, useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { ContactShadows, OrbitControls, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { useGallery } from "../intents/GalleryContext";
 
-const MODEL_URL = "/models/low_poly_bmw_m3-gtr.glb";
-const TARGET_SIZE = 5; // longest model axis, in scene units
+export const SCENE_PRESETS = {
+  e46: {
+    url: "/models/low_poly_bmw_m3-gtr.glb",
+    targetSize: 5,
+    cameraPos: [3.8, 1.6, 4.2],
+    cameraFov: 38,
+    target: [0, 0.2, 0],
+    polar: [0.6, 1.55],
+    distance: [1.2, 14],
+    autoRotateSpeed: 0.35,
+    contactShadow: { y: -0.4, opacity: 0.4, blur: 2.5, far: 3 },
+  },
+  fisherboy: {
+    url: "/models/fisherboy.glb",
+    targetSize: 3.2,
+    cameraPos: [3.3, 1.5, 4.5],
+    cameraFov: 36,
+    target: [0, 0, 0],
+    polar: [0.5, 1.5],
+    distance: [1.2, 12],
+    autoRotateSpeed: 0.22,
+    contactShadow: { y: -1.6, opacity: 0.35, blur: 2.0, far: 2.5 },
+  },
+};
 
-// Kick off the fetch the moment this module is evaluated — paired with the
-// lazy import in Gallery3D, this means the GLB starts loading the instant
-// the Home page is shown.
-useGLTF.preload(MODEL_URL);
+// Kick off the fetch the moment this module is evaluated — paired with
+// the lazy import in Gallery3D, this means every GLB starts loading the
+// instant the Home page is shown.
+Object.values(SCENE_PRESETS).forEach((p) => useGLTF.preload(p.url));
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
@@ -33,12 +57,13 @@ function LoadingCube() {
   );
 }
 
-function CarModel() {
+function GLTFModel({ url, targetSize, autoRotateSpeed }) {
   const groupRef = useRef();
-  const { scene } = useGLTF(MODEL_URL);
+  const { scene } = useGLTF(url);
 
-  // Recenter + uniform-scale the GLB so its longest axis is TARGET_SIZE.
-  // Done once, in a layout effect, before the first paint.
+  // Recenter + uniform-scale the GLB so its longest axis is targetSize.
+  // Cloned so a fresh scale is computed per preset (and so unmount doesn't
+  // mutate the cached source).
   const fitted = useMemo(() => {
     const root = scene.clone(true);
     const box = new THREE.Box3().setFromObject(root);
@@ -47,7 +72,7 @@ function CarModel() {
     box.getSize(size);
     box.getCenter(center);
     const max = Math.max(size.x, size.y, size.z) || 1;
-    const k = TARGET_SIZE / max;
+    const k = targetSize / max;
     root.position.sub(center).multiplyScalar(k);
     root.scale.setScalar(k);
     root.traverse((obj) => {
@@ -57,14 +82,16 @@ function CarModel() {
       }
     });
     return root;
-  }, [scene]);
+  }, [scene, targetSize]);
 
   const reduced =
     typeof matchMedia !== "undefined" &&
     matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   useFrame((_, dt) => {
-    if (!reduced && groupRef.current) groupRef.current.rotation.y += dt * 0.35;
+    if (!reduced && groupRef.current) {
+      groupRef.current.rotation.y += dt * autoRotateSpeed;
+    }
   });
 
   return (
@@ -84,9 +111,11 @@ function Lights() {
   );
 }
 
-function ControlsBridge() {
+function ControlsBridge({ preset }) {
   const controlsRef = useRef();
   const { registerHandlers } = useGallery();
+  const [minD, maxD] = preset.distance;
+  const [polarMin, polarMax] = preset.polar;
 
   useEffect(() => {
     registerHandlers({
@@ -94,7 +123,7 @@ function ControlsBridge() {
         const c = controlsRef.current;
         if (!c) return;
         c.setAzimuthalAngle(c.getAzimuthalAngle() + dx * 0.01);
-        c.setPolarAngle(clamp(c.getPolarAngle() + dy * 0.01, 0.6, 1.55));
+        c.setPolarAngle(clamp(c.getPolarAngle() + dy * 0.01, polarMin, polarMax));
         c.update();
       },
       zoom: (factor) => {
@@ -103,14 +132,13 @@ function ControlsBridge() {
         const cam = c.object;
         const target = c.target;
         const offset = cam.position.clone().sub(target);
-        const dist = offset.length();
-        const next = clamp(dist * factor, 1.2, 14);
+        const next = clamp(offset.length() * factor, minD, maxD);
         offset.setLength(next);
         cam.position.copy(target).add(offset);
         c.update();
       },
     });
-  }, [registerHandlers]);
+  }, [registerHandlers, minD, maxD, polarMin, polarMax]);
 
   return (
     <OrbitControls
@@ -120,29 +148,35 @@ function ControlsBridge() {
       autoRotate
       autoRotateSpeed={0.6}
       enablePan={false}
-      minDistance={1.2}
-      maxDistance={14}
-      minPolarAngle={0.6}
-      maxPolarAngle={1.55}
-      target={[0, 0.2, 0]}
+      minDistance={minD}
+      maxDistance={maxD}
+      minPolarAngle={polarMin}
+      maxPolarAngle={polarMax}
+      target={preset.target}
     />
   );
 }
 
-export function GalleryScene() {
+export function GalleryScene({ preset = SCENE_PRESETS.e46 }) {
+  const cs = preset.contactShadow;
   return (
     <Canvas
+      key={preset.url} // clean remount when switching models, so camera re-fits
       dpr={[1, 1.5]}
       gl={{ alpha: true, antialias: true }}
-      camera={{ position: [3.8, 1.6, 4.2], fov: 38, near: 0.05, far: 100 }}
+      camera={{ position: preset.cameraPos, fov: preset.cameraFov, near: 0.05, far: 100 }}
       style={{ background: "transparent", width: "100%", height: "100%" }}
     >
       <Lights />
       <Suspense fallback={<LoadingCube />}>
-        <CarModel />
+        <GLTFModel
+          url={preset.url}
+          targetSize={preset.targetSize}
+          autoRotateSpeed={preset.autoRotateSpeed}
+        />
       </Suspense>
-      <ContactShadows position={[0, -0.4, 0]} opacity={0.4} blur={2.5} far={3} />
-      <ControlsBridge />
+      <ContactShadows position={[0, cs.y, 0]} opacity={cs.opacity} blur={cs.blur} far={cs.far} />
+      <ControlsBridge preset={preset} />
     </Canvas>
   );
 }

@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { SCENE_PRESETS } from "../three/GalleryScene";
 
 const GalleryScene = lazy(() =>
   import("../three/GalleryScene").then((m) => ({ default: m.GalleryScene })),
@@ -6,25 +7,27 @@ const GalleryScene = lazy(() =>
 
 const GALLERY_OBJECTS = [
   {
-    id: "e46",     label: "BMW E46",    code: "OBJ/01",
+    id: "e46", modelId: "e46",
+    label: "BMW E46", code: "OBJ/01",
     tag: "MyE46 · React Three Fiber",
     note: "The car I keep rebuilding in code because I can't (yet) afford to in the driveway.",
     art: "car",
   },
   {
-    id: "hand",    label: "hand mesh", code: "OBJ/02",
-    tag: "ASL Hand Coach · MediaPipe",
-    note: "21 keypoints per frame — the same mesh that'll one day let you steer this page.",
-    art: "hand",
+    id: "fisherboy", modelId: "fisherboy",
+    label: "fisherboy", code: "OBJ/02",
+    tag: "HiddenHooks · PostGIS",
+    note: "Me, with a fishing rod. The why behind HiddenHooks — 100,000 water bodies and one very specific question.",
+    art: "person",
   },
   {
-    id: "terrain", label: "terrain",   code: "OBJ/03",
+    id: "terrain", label: "terrain", code: "OBJ/03",
     tag: "HiddenHooks · PostGIS",
     note: "100K+ Ontario water bodies, flattened into a heightfield I can actually reason about.",
     art: "terrain",
   },
   {
-    id: "graph",   label: "agent graph", code: "OBJ/04",
+    id: "graph", label: "agent graph", code: "OBJ/04",
     tag: "Debug pipeline · Gemini",
     note: "Three agents passing a bug between them until one of them finally admits it's the bug.",
     art: "graph",
@@ -40,7 +43,7 @@ export function Gallery3D({ hero = false }) {
   const hoverRef = useRef(false);
   const tiltRef = useRef({ x: -8, y: 0 });
 
-  const is3D = active === "e46";
+  const is3D = !!obj.modelId;
 
   // CSS auto-sway for SVG variants. Skip writes when the R3F canvas is mounted
   // — OrbitControls owns rotation in that case and a CSS transform on the
@@ -102,7 +105,7 @@ export function Gallery3D({ hero = false }) {
             <div className="g3d-object" ref={objRef} style={is3D ? { position: "absolute", inset: 0 } : undefined}>
               {is3D ? (
                 <Suspense fallback={null}>
-                  <GalleryScene />
+                  <GalleryScene preset={SCENE_PRESETS[obj.modelId]} />
                 </Suspense>
               ) : (
                 <GalleryArt kind={obj.art} />
@@ -155,17 +158,34 @@ function GalleryArt({ kind, mini = false }) {
       </svg>
     );
   }
-  if (kind === "hand") {
-    const pts = [[100,96],[72,82],[56,60],[48,40],[44,22],[78,70],[74,42],[72,22],[72,6],[96,68],[98,40],[100,20],[100,4],[116,70],[122,44],[126,26],[128,12],[134,76],[146,58],[154,46],[160,36]];
-    const bones = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[0,9],[9,10],[10,11],[11,12],[0,13],[13,14],[14,15],[15,16],[0,17],[17,18],[18,19],[19,20],[5,9],[9,13],[13,17]];
+  if (kind === "person") {
+    // Schematic stick figure + fishing rod. Used only as the thumbnail icon
+    // for the fisherboy slot; the full slot renders the GLTF model.
     return (
       <svg viewBox="0 0 200 120" className="g3d-svg">
-        <g {...faint}>{bones.map((b, i) => (
-          <line key={i} x1={pts[b[0]][0]} y1={pts[b[0]][1]} x2={pts[b[1]][0]} y2={pts[b[1]][1]} />
-        ))}</g>
-        {pts.map((p, i) => (
-          <circle key={i} cx={p[0]} cy={p[1]} r={mini ? 2 : 2.6} fill="var(--accent)" stroke="none" />
-        ))}
+        <g {...faint}>
+          <line x1="20" y1="106" x2="180" y2="106" />
+        </g>
+        <g {...common}>
+          {/* head */}
+          <circle cx="92" cy="20" r="7" />
+          {/* torso */}
+          <line x1="92" y1="27" x2="92" y2="64" />
+          {/* arms — right arm angles up to the rod */}
+          <line x1="92" y1="36" x2="76" y2="60" />
+          <line x1="92" y1="36" x2="112" y2="46" />
+          {/* legs */}
+          <line x1="92" y1="64" x2="78" y2="100" />
+          <line x1="92" y1="64" x2="106" y2="100" />
+          {/* fishing rod from right hand, angled up-right */}
+          <line x1="112" y1="46" x2="178" y2="14" />
+        </g>
+        <g {...faint}>
+          {/* fishing line dangling from rod tip */}
+          <path d="M178 14 Q180 50 168 90" />
+          {/* small hook glyph */}
+          <circle cx="166" cy="92" r="1.6" fill="var(--accent)" stroke="none" />
+        </g>
       </svg>
     );
   }
