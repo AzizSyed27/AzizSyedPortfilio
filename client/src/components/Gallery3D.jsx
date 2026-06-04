@@ -21,10 +21,11 @@ const GALLERY_OBJECTS = [
     art: "person",
   },
   {
-    id: "terrain", label: "terrain", code: "OBJ/03",
-    tag: "HiddenHooks · PostGIS",
-    note: "100K+ Ontario water bodies, flattened into a heightfield I can actually reason about.",
-    art: "terrain",
+    id: "forest", modelId: "forest",
+    label: "forest", code: "OBJ/03",
+    tag: "HiddenHooks · trip planner",
+    note: "Trails, not parking lots. HiddenHooks plans a hike to every fishing spot — built because I'd rather walk to the water with friends than drive to it.",
+    art: "forest",
   },
   {
     id: "graph", label: "agent graph", code: "OBJ/04",
@@ -189,15 +190,27 @@ function GalleryArt({ kind, mini = false }) {
       </svg>
     );
   }
-  if (kind === "terrain") {
+  if (kind === "forest") {
+    // Schematic low-poly forest thumbnail — three triangle trees standing on a
+    // faint trail. Used only as the OBJ/03 thumb icon; full slot renders GLTF.
     return (
       <svg viewBox="0 0 200 120" className="g3d-svg">
-        <g {...common}>{[0,1,2,3,4].map((r) => (
-          <path key={r} d={`M16 ${50 + r * 12} L60 ${30 + r * 12} L100 ${46 + r * 12} L140 ${26 + r * 12} L184 ${44 + r * 12}`} />
-        ))}</g>
-        <g {...faint}>{[0,1,2,3,4,5].map((c) => (
-          <line key={c} x1={16 + c * 33.6} y1={50} x2={16 + c * 33.6} y2={98} opacity="0.5" />
-        ))}</g>
+        <g {...faint}>
+          {/* horizon / trail */}
+          <line x1="16" y1="98" x2="184" y2="98" />
+          <path d="M30 102 Q 80 96, 130 102 T 180 100" />
+        </g>
+        <g {...common}>
+          {/* big tree */}
+          <path d="M60 96 L88 96 L74 48 Z" />
+          <line x1="74" y1="96" x2="74" y2="108" />
+          {/* mid tree */}
+          <path d="M108 96 L132 96 L120 60 Z" />
+          <line x1="120" y1="96" x2="120" y2="106" />
+          {/* small tree */}
+          <path d="M148 98 L168 98 L158 72 Z" />
+          <line x1="158" y1="98" x2="158" y2="106" />
+        </g>
       </svg>
     );
   }

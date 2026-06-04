@@ -35,6 +35,17 @@ export const SCENE_PRESETS = {
     autoRotateSpeed: 0.22,
     contactShadow: { y: -1.6, opacity: 0.35, blur: 2.0, far: 2.5 },
   },
+  forest: {
+    url: "/models/Low_Poly_Forest.glb",
+    targetSize: 8,
+    cameraPos: [5.0, 3.5, 5.5],
+    cameraFov: 40,
+    target: [0, 0.5, 0],
+    polar: [0.5, 1.4],
+    distance: [3, 18],
+    autoRotateSpeed: 0.15,
+    contactShadow: { y: -1.5, opacity: 0.3, blur: 3.0, far: 4 },
+  },
 };
 
 // Kick off the fetch the moment this module is evaluated — paired with
