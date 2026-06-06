@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { SCENE_PRESETS } from "../three/GalleryScene";
 
 const GalleryScene = lazy(() =>
@@ -37,13 +37,42 @@ const GALLERY_OBJECTS = [
 ];
 
 export function Gallery3D({ hero = false }) {
-  const [active, setActive] = useState("e46");
+  const [active, setActive] = useState(GALLERY_OBJECTS[0].id);
   const obj = GALLERY_OBJECTS.find((o) => o.id === active) || GALLERY_OBJECTS[0];
-  const thumbs = GALLERY_OBJECTS.filter((o) => o.id !== "e46");
   const stageRef = useRef(null);
   const objRef = useRef(null);
   const hoverRef = useRef(false);
   const tiltRef = useRef({ x: -8, y: 0 });
+  const stripRef = useRef(null);
+  const [edges, setEdges] = useState({ left: false, right: GALLERY_OBJECTS.length > 3 });
+
+  const recomputeEdges = useCallback(() => {
+    const el = stripRef.current;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    setEdges({
+      left: el.scrollLeft > 1,
+      right: el.scrollLeft < max - 1,
+    });
+  }, []);
+
+  useLayoutEffect(() => {
+    recomputeEdges();
+    const el = stripRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return undefined;
+    const ro = new ResizeObserver(() => recomputeEdges());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [recomputeEdges]);
+
+  const scrollByStep = (dir) => {
+    const el = stripRef.current;
+    if (!el) return;
+    const firstThumb = el.querySelector(".g3d-thumb");
+    const gap = parseFloat(getComputedStyle(el).columnGap || getComputedStyle(el).gap) || 14;
+    const step = (firstThumb?.getBoundingClientRect().width || el.clientWidth / 3) + gap;
+    el.scrollBy({ left: dir * step, behavior: "smooth" });
+  };
 
   const is3D = !!obj.modelId;
 
@@ -82,7 +111,7 @@ export function Gallery3D({ hero = false }) {
     tiltRef.current = { x: -dy * 12 - 4, y: dx * 24 };
   };
   const onLeave = () => { hoverRef.current = false; };
-  const pick = (id) => setActive((cur) => (cur === id ? "e46" : id));
+  const pick = (id) => setActive(id);
 
   return (
     <div className={`gallery3d-wrap ${hero ? "in-hero" : ""}`} style={{ marginTop: hero ? 0 : 8 }}>
@@ -117,13 +146,29 @@ export function Gallery3D({ hero = false }) {
           </div>
           <div className="g3d-affordance">drag to rotate · pinch to zoom</div>
         </div>
-        <div className="g3d-thumbs">
-          {thumbs.map((o) => (
-            <button key={o.id} className="g3d-thumb" data-active={active === o.id ? "1" : "0"} onClick={() => pick(o.id)} data-cursor="hover">
-              <div className="g3d-thumb-art"><GalleryArt kind={o.art} mini /></div>
-              <span>{o.label}</span>
-            </button>
-          ))}
+        <div className="g3d-thumb-row">
+          <button
+            className="g3d-thumb-arrow prev"
+            onClick={() => scrollByStep(-1)}
+            disabled={!edges.left}
+            data-cursor="hover"
+            aria-label="Previous models"
+          >‹</button>
+          <div className="g3d-thumbs" ref={stripRef} onScroll={recomputeEdges}>
+            {GALLERY_OBJECTS.map((o) => (
+              <button key={o.id} className="g3d-thumb" data-active={active === o.id ? "1" : "0"} onClick={() => pick(o.id)} data-cursor="hover">
+                <div className="g3d-thumb-art"><GalleryArt kind={o.art} mini /></div>
+                <span>{o.label}</span>
+              </button>
+            ))}
+          </div>
+          <button
+            className="g3d-thumb-arrow next"
+            onClick={() => scrollByStep(1)}
+            disabled={!edges.right}
+            data-cursor="hover"
+            aria-label="Next models"
+          >›</button>
         </div>
         <div className="memory-core">
           <div className="mc-head">
