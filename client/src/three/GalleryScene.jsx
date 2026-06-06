@@ -46,6 +46,17 @@ export const SCENE_PRESETS = {
     autoRotateSpeed: 0.15,
     contactShadow: { y: -1.5, opacity: 0.3, blur: 3.0, far: 4 },
   },
+  court: {
+    url: "/models/basketball_court__low-poly.glb",
+    targetSize: 10,
+    cameraPos: [6.0, 5.0, 7.5],
+    cameraFov: 38,
+    target: [0, 0.4, 0],
+    polar: [0.4, 1.45],
+    distance: [3, 22],
+    autoRotateSpeed: 0.18,
+    contactShadow: { y: -0.5, opacity: 0.25, blur: 3.0, far: 5 },
+  },
 };
 
 // Kick off the fetch the moment this module is evaluated — paired with

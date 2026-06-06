@@ -28,10 +28,11 @@ const GALLERY_OBJECTS = [
     art: "forest",
   },
   {
-    id: "graph", label: "agent graph", code: "OBJ/04",
-    tag: "Debug pipeline · Gemini",
-    note: "Three agents passing a bug between them until one of them finally admits it's the bug.",
-    art: "graph",
+    id: "court", modelId: "court",
+    label: "basketball court", code: "OBJ/04",
+    tag: "Personal · the ballast",
+    note: "The reason I leave the desk and the reason I come back to it sharper. Sports have carried weight in my life as long as the code has — they're the thing that keeps the rest in proportion.",
+    art: "court",
   },
 ];
 
@@ -214,19 +215,37 @@ function GalleryArt({ kind, mini = false }) {
       </svg>
     );
   }
-  const nodes = [[40,30],[100,18],[160,38],[30,86],[92,72],[150,92],[112,108]];
-  const edges = [[0,1],[1,2],[0,3],[0,4],[1,4],[2,5],[4,5],[4,6],[3,6],[5,6]];
-  return (
-    <svg viewBox="0 0 200 120" className="g3d-svg">
-      <g {...faint}>{edges.map((e, i) => (
-        <line key={i} x1={nodes[e[0]][0]} y1={nodes[e[0]][1]} x2={nodes[e[1]][0]} y2={nodes[e[1]][1]} />
-      ))}</g>
-      {nodes.map((n, i) => (
-        <g key={i}>
-          <circle cx={n[0]} cy={n[1]} r={mini ? 4 : 6} fill="var(--bg)" stroke="var(--accent)" strokeWidth={stroke} />
-          <circle cx={n[0]} cy={n[1]} r={mini ? 1.6 : 2.4} fill="var(--accent)" stroke="none" />
+  if (kind === "court") {
+    // Schematic basketball-court thumbnail — outer rectangle, half-court line,
+    // two keys with hoop circles, center circle. OBJ/04 thumb icon only;
+    // full slot renders the GLTF.
+    return (
+      <svg viewBox="0 0 200 120" className="g3d-svg">
+        <g {...faint}>
+          {/* outer court */}
+          <rect x="18" y="22" width="164" height="76" rx="2" />
         </g>
-      ))}
-    </svg>
-  );
+        <g {...common}>
+          {/* half-court line */}
+          <line x1="100" y1="22" x2="100" y2="98" />
+          {/* center circle */}
+          <circle cx="100" cy="60" r="9" />
+          {/* left key */}
+          <rect x="18" y="44" width="32" height="32" />
+          <circle cx="50" cy="60" r="9" />
+          {/* right key */}
+          <rect x="150" y="44" width="32" height="32" />
+          <circle cx="150" cy="60" r="9" />
+        </g>
+        <g {...common}>
+          {/* hoops — small filled circles at each end */}
+          <circle cx="22" cy="60" r="2.2" fill="var(--accent)" stroke="none" />
+          <circle cx="178" cy="60" r="2.2" fill="var(--accent)" stroke="none" />
+        </g>
+      </svg>
+    );
+  }
+  // Fallback — shouldn't be reached now that every gallery item has a known
+  // art kind. Render an empty SVG so callers don't break.
+  return <svg viewBox="0 0 200 120" className="g3d-svg" />;
 }
