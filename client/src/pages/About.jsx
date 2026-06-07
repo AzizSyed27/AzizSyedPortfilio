@@ -7,16 +7,33 @@ import trail from "../assets/person-pics/portfolio_trails.jpeg";
 import car from "../assets/person-pics/portfolio_whip.jpeg";
 import fishing from "../assets/person-pics/portfolio_hooked.jpeg";
 import pets from "../assets/person-pics/portfolio_pets.jpeg";
+import boat from "../assets/person-pics/portfolio_boat.jpeg";
+import catCar from "../assets/person-pics/portfolio_cat_car.jpeg";
+import mech from "../assets/person-pics/portfolio_mech.jpeg";
+import scenicFishing from "../assets/person-pics/portfolio_scenic_fishing.jpeg";
+import motorCat from "../assets/person-pics/portfolio_cat_moto.jpeg";
+import cat from "../assets/person-pics/portfolio_cat.jpeg";
 import resumePdf from "../assets/Aziz_Syed_Resume.pdf";
 
-// 4 of these 6 await user-supplied photos; renders as labeled placeholders.
-const PHOTOS = [
-  { cls: "pf-1", src: portraitB, caption: "PORTRAIT.JPG" },
-  { cls: "pf-2", src: gym,      caption: "SETUP.JPG" },
-  { cls: "pf-3", src: car,      caption: "DRIVE.JPG" },
-  { cls: "pf-4", src: trail, caption: "OUTDOORS.JPG" },
-  { cls: "pf-5", src: fishing,      caption: "FISHING.JPG" },
-  { cls: "pf-6", src: pets,      caption: "PETS.JPG" },
+// The photo cluster cycles between two sets via the loop arrow pinned to its
+// corner. Each set fills the same six tilted slots (pf-1 … pf-6).
+const PHOTO_SETS = [
+  [
+    { cls: "pf-1", src: portraitB, caption: "PORTRAIT.JPG" },
+    { cls: "pf-2", src: gym,       caption: "GYM.JPG" },
+    { cls: "pf-3", src: car,       caption: "DRIVE.JPG" },
+    { cls: "pf-4", src: trail,     caption: "OUTDOORS.JPG" },
+    { cls: "pf-5", src: fishing,   caption: "FISHING.JPG" },
+    { cls: "pf-6", src: pets,      caption: "PETS.JPG" },
+  ],
+  [
+    { cls: "pf-1", src: motorCat,     caption: "MOTOR-CAT.JPG" },
+    { cls: "pf-2", src: boat,          caption: "BOAT.JPG" },
+    { cls: "pf-3", src: catCar,        caption: "CO-PILOT.JPG" },
+    { cls: "pf-4", src: mech,          caption: "ENGINE.JPG" },
+    { cls: "pf-5", src: scenicFishing, caption: "SHORELINE.JPG" },
+    { cls: "pf-6", src: cat,     caption: "PORTRAIT.JPG" }, // reused to pad set 2 to six
+  ],
 ];
 
 function PhotoSlot({ cls, src, caption }) {
@@ -67,6 +84,10 @@ function TimelineItem({ when, what, where, desc, details, defaultOpen }) {
 }
 
 export default function About() {
+  const [set, setSet] = useState(0);
+  const photos = PHOTO_SETS[set];
+  const cycle = () => setSet((s) => (s + 1) % PHOTO_SETS.length);
+
   return (
     <div className="page-enter">
       <Section num="02" label="About · /aziz">
@@ -75,7 +96,11 @@ export default function About() {
         </h2>
         <div className="about-grid">
           <div className="photo-cluster">
-            {PHOTOS.map((p) => <PhotoSlot key={p.cls} {...p} />)}
+            {photos.map((p) => <PhotoSlot key={`${set}-${p.cls}`} {...p} />)}
+            <button className="photo-cycle" onClick={cycle} data-cursor="hover" aria-label="Next photo set">
+              <span className="pc-count">{String(set + 1).padStart(2, "0")} / {String(PHOTO_SETS.length).padStart(2, "0")}</span>
+              <span className="pc-arr" aria-hidden="true">›</span>
+            </button>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
             <p className="lede">

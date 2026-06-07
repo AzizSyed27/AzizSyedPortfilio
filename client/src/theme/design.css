@@ -1265,8 +1265,30 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
 .photo-file:hover {
   transform: rotate(0deg) scale(1.03) translateY(-4px);
   box-shadow: 0 30px 60px -24px rgba(0,0,0,0.5);
-  z-index: 5;
+  z-index: 20; /* above every base layer (max .pf-1 z-index:6) so the hovered photo always rises to front */
 }
+
+.photo-cycle {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  z-index: 30; /* above all photo-files, including a hovered one (20) */
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  background: var(--surface);
+  border: 0.5px solid var(--line-strong);
+  border-radius: 8px;
+  color: var(--fg);
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  cursor: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.photo-cycle:hover { border-color: var(--accent); background: var(--bg); }
+.photo-cycle .pc-arr { font-size: 16px; line-height: 1; }
 
 /* Loose overlapping stack — each file is a different size / tilt */
 .pf-1 { width: 50%; left: 0;     top: 0;     transform: rotate(-7deg); z-index: 6; }
