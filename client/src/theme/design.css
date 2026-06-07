@@ -1232,7 +1232,7 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
 }
 .photo-cluster {
   position: relative;
-  aspect-ratio: 5 / 4;
+  aspect-ratio: 1 / 1;
   width: 100%;
 }
 .photo-file {
@@ -1245,6 +1245,18 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
   box-shadow: 0 18px 40px -22px rgba(0,0,0,0.45);
   transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.35s, z-index 0s;
   cursor: none;
+  /* Blossom in on mount — replays on every set switch via the key-driven
+     remount in About.jsx. Animates the individual `scale` property so it
+     composes with each .pf-N's `transform: rotate(...)` tilt and leaves the
+     hover transform untouched. */
+  animation: pf-blossom 0.5s cubic-bezier(0.34, 1.4, 0.5, 1) both;
+}
+@keyframes pf-blossom {
+  from { scale: 0; opacity: 0; }
+  to   { scale: 1; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .photo-file { animation: none; }
 }
 .photo-file image-slot {
   border-radius: 3px;
@@ -1290,13 +1302,14 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
 .photo-cycle:hover { border-color: var(--accent); background: var(--bg); }
 .photo-cycle .pc-arr { font-size: 16px; line-height: 1; }
 
-/* Loose overlapping stack — each file is a different size / tilt */
-.pf-1 { width: 50%; left: 0;     top: 0;     transform: rotate(-7deg); z-index: 6; }
-.pf-2 { width: 47%; right: 2%;   top: 5%;    transform: rotate(5deg);  z-index: 5; }
-.pf-3 { width: 46%; left: 6%;    top: 30%;   transform: rotate(4deg);  z-index: 4; }
-.pf-4 { width: 49%; right: 0;    top: 34%;   transform: rotate(-5deg); z-index: 3; }
-.pf-5 { width: 47%; left: 1%;    bottom: 0;  transform: rotate(-4deg); z-index: 2; }
-.pf-6 { width: 45%; right: 4%;   bottom: 1%; transform: rotate(6deg);  z-index: 1; }
+/* Loose overlapping stack — each file is a different size / tilt.
+   animation-delay staggers the blossom into a cascade. */
+.pf-1 { width: 50%; left: 0;     top: 0;     transform: rotate(-7deg); z-index: 6; animation-delay: 0s;   }
+.pf-2 { width: 47%; right: 2%;   top: 4%;    transform: rotate(5deg);  z-index: 5; animation-delay: .05s; }
+.pf-3 { width: 46%; left: 6%;    top: 38%;   transform: rotate(4deg);  z-index: 4; animation-delay: .10s; }
+.pf-4 { width: 49%; right: 0;    top: 30%;   transform: rotate(-5deg); z-index: 3; animation-delay: .15s; }
+.pf-5 { width: 47%; left: 1%;    bottom: 0;  transform: rotate(-4deg); z-index: 2; animation-delay: .20s; }
+.pf-6 { width: 45%; right: 4%;   bottom: 1%; transform: rotate(6deg);  z-index: 1; animation-delay: .25s; }
 .pf-1 image-slot { aspect-ratio: 3 / 4; }
 .pf-2 image-slot { aspect-ratio: 4 / 3; }
 .pf-3 image-slot { aspect-ratio: 1 / 1; }

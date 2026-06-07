@@ -27,12 +27,12 @@ const PHOTO_SETS = [
     { cls: "pf-6", src: pets,      caption: "PETS.JPG" },
   ],
   [
-    { cls: "pf-1", src: motorCat,     caption: "MOTOR-CAT.JPG" },
-    { cls: "pf-2", src: boat,          caption: "BOAT.JPG" },
-    { cls: "pf-3", src: catCar,        caption: "CO-PILOT.JPG" },
-    { cls: "pf-4", src: mech,          caption: "ENGINE.JPG" },
-    { cls: "pf-5", src: scenicFishing, caption: "SHORELINE.JPG" },
-    { cls: "pf-6", src: cat,     caption: "PORTRAIT.JPG" }, // reused to pad set 2 to six
+    { cls: "pf-1", src: motorCat,       caption: "MOTOR-CAT.JPG" },
+    { cls: "pf-2", src: boat,           caption: "BOAT.JPG" },
+    { cls: "pf-3", src: catCar,         caption: "CO-PILOT.JPG" },
+    { cls: "pf-4", src: mech,           caption: "ENGINE.JPG" },
+    { cls: "pf-5", src: scenicFishing,  caption: "SHORELINE.JPG" },
+  { cls: "pf-6", src: cat,              caption: "PORTRAIT.JPG" }, // reused to pad set 2 to six
   ],
 ];
 
