@@ -34,6 +34,13 @@ const GALLERY_OBJECTS = [
     note: "The reason I leave the desk and the reason I come back to it sharper. Sports have carried weight in my life as long as the code has — they're the thing that keeps the rest in proportion.",
     art: "court",
   },
+  {
+    id: "cat", modelId: "cat",
+    label: "cat", code: "OBJ/05",
+    tag: "Personal · the co-pilot",
+    note: "My cat, in PS1-era polygons — out of respect for a creature who has never once respected a deadline. The original rubber-duck debugger, if the duck judged you.",
+    art: "cat",
+  },
 ];
 
 export function Gallery3D({ hero = false }) {
@@ -286,6 +293,34 @@ function GalleryArt({ kind, mini = false }) {
           {/* hoops — small filled circles at each end */}
           <circle cx="22" cy="60" r="2.2" fill="var(--accent)" stroke="none" />
           <circle cx="178" cy="60" r="2.2" fill="var(--accent)" stroke="none" />
+        </g>
+      </svg>
+    );
+  }
+  if (kind === "cat") {
+    // Schematic low-poly cat head — triangle ears, head outline, eyes, snout,
+    // whiskers. OBJ/05 thumb icon only; the full slot renders the GLTF.
+    return (
+      <svg viewBox="0 0 200 120" className="g3d-svg">
+        <g {...faint}>
+          <line x1="40" y1="106" x2="160" y2="106" />
+        </g>
+        <g {...common}>
+          {/* ears */}
+          <path d="M74 36 L66 12 L92 30 Z" />
+          <path d="M126 36 L134 12 L108 30 Z" />
+          {/* head — faceted low-poly outline */}
+          <path d="M74 36 L92 30 L108 30 L126 36 L134 60 L118 86 L82 86 L66 60 Z" />
+          {/* eyes */}
+          <path d="M84 54 L92 54" />
+          <path d="M108 54 L116 54" />
+          {/* snout */}
+          <path d="M96 66 L100 72 L104 66" />
+        </g>
+        <g {...faint}>
+          {/* whiskers */}
+          <path d="M104 70 L132 64 M104 73 L132 76" />
+          <path d="M96 70 L68 64 M96 73 L68 76" />
         </g>
       </svg>
     );

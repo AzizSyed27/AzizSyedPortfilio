@@ -10,6 +10,7 @@ import { Suspense, useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { ContactShadows, OrbitControls, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
+import { clone as skeletonClone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { useGallery } from "../intents/GalleryContext";
 
 export const SCENE_PRESETS = {
@@ -57,6 +58,17 @@ export const SCENE_PRESETS = {
     autoRotateSpeed: 0.18,
     contactShadow: { y: -0.5, opacity: 0.25, blur: 3.0, far: 5 },
   },
+  cat: {
+    url: "/models/cat_-_ps1_low_poly_rigged.glb",
+    targetSize: 3.0,
+    cameraPos: [3.6, 1.7, 4.8],
+    cameraFov: 36,
+    target: [0, 0.1, 0],
+    polar: [0.5, 1.5],
+    distance: [1.5, 14],
+    autoRotateSpeed: 0.3,
+    contactShadow: { y: -0.85, opacity: 0.35, blur: 2.0, far: 2.5 },
+  },
 };
 
 // Kick off the fetch the moment this module is evaluated — paired with
@@ -79,6 +91,32 @@ function LoadingCube() {
   );
 }
 
+// THREE.Box3.setFromObject uses each mesh's REST-pose geometry box, which for a
+// rigged/skinned GLB can be wildly off from how the mesh actually renders once
+// posed by its skeleton. This walks the posed vertices (applyBoneTransform) so
+// the fit reflects what's on screen. Used only when a skinned mesh is present.
+function posedBox(root) {
+  root.updateMatrixWorld(true);
+  const box = new THREE.Box3();
+  const v = new THREE.Vector3();
+  root.traverse((o) => {
+    if (o.isSkinnedMesh && o.skeleton && o.geometry?.attributes?.position) {
+      o.skeleton.update();
+      const pos = o.geometry.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        v.fromBufferAttribute(pos, i);
+        o.applyBoneTransform(i, v);
+        o.localToWorld(v);
+        box.expandByPoint(v);
+      }
+    } else if (o.isMesh && o.geometry) {
+      o.geometry.computeBoundingBox();
+      box.union(o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld));
+    }
+  });
+  return box;
+}
+
 function GLTFModel({ url, targetSize, autoRotateSpeed }) {
   const groupRef = useRef();
   const { scene } = useGLTF(url);
@@ -87,8 +125,23 @@ function GLTFModel({ url, targetSize, autoRotateSpeed }) {
   // Cloned so a fresh scale is computed per preset (and so unmount doesn't
   // mutate the cached source).
   const fitted = useMemo(() => {
-    const root = scene.clone(true);
-    const box = new THREE.Box3().setFromObject(root);
+    // Detect skinned meshes on the source. SkinnedMesh needs SkeletonUtils.clone
+    // (plain Object3D.clone doesn't rebind the skeleton to the cloned bones, so
+    // both the render pose and any bounding-box measurement come out wrong).
+    let skinned = false;
+    scene.traverse((obj) => { if (obj.isSkinnedMesh) skinned = true; });
+    const root = skinned ? skeletonClone(scene) : scene.clone(true);
+    root.traverse((obj) => {
+      if (obj.isMesh) {
+        obj.castShadow = false;
+        obj.receiveShadow = false;
+      }
+    });
+    // Skinned models need a pose-aware box; static meshes are fine with the
+    // cheaper setFromObject.
+    const box = skinned
+      ? posedBox(root)
+      : new THREE.Box3().setFromObject(root);
     const size = new THREE.Vector3();
     const center = new THREE.Vector3();
     box.getSize(size);
@@ -97,12 +150,6 @@ function GLTFModel({ url, targetSize, autoRotateSpeed }) {
     const k = targetSize / max;
     root.position.sub(center).multiplyScalar(k);
     root.scale.setScalar(k);
-    root.traverse((obj) => {
-      if (obj.isMesh) {
-        obj.castShadow = false;
-        obj.receiveShadow = false;
-      }
-    });
     return root;
   }, [scene, targetSize]);
 
