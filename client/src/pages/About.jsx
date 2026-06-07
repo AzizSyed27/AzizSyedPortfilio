@@ -2,16 +2,21 @@ import { useState } from "react";
 import { Section } from "../components/Section";
 import portraitA from "../assets/person-pics/aziz_top_shot.jpeg";
 import portraitB from "../assets/person-pics/aziz_top_shot_2.jpeg";
+import gym from "../assets/person-pics/portfolio_gym.jpeg";
+import trail from "../assets/person-pics/portfolio_trails.jpeg";
+import car from "../assets/person-pics/portfolio_whip.jpeg";
+import fishing from "../assets/person-pics/portfolio_hooked.jpeg";
+import pets from "../assets/person-pics/portfolio_pets.jpeg";
 import resumePdf from "../assets/Aziz_Syed_Resume.pdf";
 
 // 4 of these 6 await user-supplied photos; renders as labeled placeholders.
 const PHOTOS = [
   { cls: "pf-1", src: portraitB, caption: "PORTRAIT.JPG" },
-  { cls: "pf-2", src: null,      caption: "SETUP.JPG" },
-  { cls: "pf-3", src: null,      caption: "DRIVE.JPG" },
-  { cls: "pf-4", src: portraitA, caption: "OUTDOORS.JPG" },
-  { cls: "pf-5", src: null,      caption: "HOBBIES.JPG" },
-  { cls: "pf-6", src: null,      caption: "SPORTS.JPG" },
+  { cls: "pf-2", src: gym,      caption: "SETUP.JPG" },
+  { cls: "pf-3", src: car,      caption: "DRIVE.JPG" },
+  { cls: "pf-4", src: trail, caption: "OUTDOORS.JPG" },
+  { cls: "pf-5", src: fishing,      caption: "FISHING.JPG" },
+  { cls: "pf-6", src: pets,      caption: "PETS.JPG" },
 ];
 
 function PhotoSlot({ cls, src, caption }) {
