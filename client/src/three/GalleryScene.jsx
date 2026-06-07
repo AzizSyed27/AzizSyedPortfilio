@@ -8,7 +8,7 @@
 
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { ContactShadows, OrbitControls, useGLTF } from "@react-three/drei";
+import { ContactShadows, OrbitControls, useAnimations, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { clone as skeletonClone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { useGallery } from "../intents/GalleryContext";
@@ -69,6 +69,17 @@ export const SCENE_PRESETS = {
     autoRotateSpeed: 0.3,
     contactShadow: { y: -0.85, opacity: 0.35, blur: 2.0, far: 2.5 },
   },
+  coding: {
+    url: "/models/coding.glb",
+    targetSize: 4.5,
+    cameraPos: [3.5, 2.0, 5.5],
+    cameraFov: 38,
+    target: [0, 0.2, 0],
+    polar: [0.5, 1.5],
+    distance: [2, 16],
+    autoRotateSpeed: 0.15,
+    contactShadow: { y: -1.0, opacity: 0.3, blur: 2.5, far: 4 },
+  },
 };
 
 // Kick off the fetch the moment this module is evaluated — paired with
@@ -119,11 +130,13 @@ function posedBox(root) {
 
 function GLTFModel({ url, targetSize, autoRotateSpeed }) {
   const groupRef = useRef();
-  const { scene } = useGLTF(url);
+  const { scene, animations } = useGLTF(url);
 
   // Recenter + uniform-scale the GLB so its longest axis is targetSize.
   // Cloned so a fresh scale is computed per preset (and so unmount doesn't
-  // mutate the cached source).
+  // mutate the cached source). The fit lives on a wrapper group (see render),
+  // NOT on the clone's own transform, so an animation clip targeting nodes
+  // never fights the centering.
   const fitted = useMemo(() => {
     // Detect skinned meshes on the source. SkinnedMesh needs SkeletonUtils.clone
     // (plain Object3D.clone doesn't rebind the skeleton to the cloned bones, so
@@ -148,10 +161,17 @@ function GLTFModel({ url, targetSize, autoRotateSpeed }) {
     box.getCenter(center);
     const max = Math.max(size.x, size.y, size.z) || 1;
     const k = targetSize / max;
-    root.position.sub(center).multiplyScalar(k);
-    root.scale.setScalar(k);
-    return root;
+    const offset = center.multiplyScalar(-k);
+    return { root, scale: k, offset: offset.toArray() };
   }, [scene, targetSize]);
+
+  // Play any baked animation clips (looping). No-op for models without clips.
+  const { actions } = useAnimations(animations, groupRef);
+  useEffect(() => {
+    const playing = Object.values(actions).filter(Boolean);
+    playing.forEach((a) => a.reset().play());
+    return () => playing.forEach((a) => a.stop());
+  }, [actions]);
 
   const reduced =
     typeof matchMedia !== "undefined" &&
@@ -165,7 +185,9 @@ function GLTFModel({ url, targetSize, autoRotateSpeed }) {
 
   return (
     <group ref={groupRef}>
-      <primitive object={fitted} />
+      <group scale={fitted.scale} position={fitted.offset}>
+        <primitive object={fitted.root} />
+      </group>
     </group>
   );
 }

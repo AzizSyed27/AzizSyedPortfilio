@@ -41,6 +41,13 @@ const GALLERY_OBJECTS = [
     note: "My cat, in PS1-era polygons — out of respect for a creature who has never once respected a deadline. The original rubber-duck debugger, if the duck judged you.",
     art: "cat",
   },
+  {
+    id: "coding", modelId: "coding",
+    label: "coding", code: "OBJ/06",
+    tag: "This site · you are here",
+    note: "Me, mid-commit — the animated one, because this is the state you'll most reliably find me in. Everything else in this gallery got built from this chair.",
+    art: "coding",
+  },
 ];
 
 export function Gallery3D({ hero = false }) {
@@ -321,6 +328,47 @@ function GalleryArt({ kind, mini = false }) {
           {/* whiskers */}
           <path d="M104 70 L132 64 M104 73 L132 76" />
           <path d="M96 70 L68 64 M96 73 L68 76" />
+        </g>
+      </svg>
+    );
+  }
+  if (kind === "coding") {
+    // Schematic desk + monitor (code lines on screen) with a small seated
+    // figure. OBJ/06 thumb icon only; the full slot renders the animated GLTF.
+    return (
+      <svg viewBox="0 0 200 120" className="g3d-svg">
+        <g {...faint}>
+          {/* desk surface + floor */}
+          <line x1="28" y1="92" x2="172" y2="92" />
+          <line x1="40" y1="100" x2="160" y2="100" />
+        </g>
+        <g {...common}>
+          {/* monitor */}
+          <rect x="96" y="34" width="58" height="38" rx="2" />
+          <line x1="125" y1="72" x2="125" y2="80" />
+          <line x1="113" y1="80" x2="137" y2="80" />
+        </g>
+        <g {...faint}>
+          {/* code lines on screen */}
+          <line x1="104" y1="44" x2="124" y2="44" />
+          <line x1="104" y1="52" x2="140" y2="52" />
+          <line x1="112" y1="60" x2="132" y2="60" />
+        </g>
+        <g {...common}>
+          {/* seated figure at the desk */}
+          <circle cx="64" cy="46" r="8" />
+          <path d="M64 54 L64 76" />
+          {/* arm reaching to the desk/keyboard */}
+          <path d="M64 60 L86 70" />
+          {/* seated legs */}
+          <path d="M64 76 L80 76 L80 92" />
+          <path d="M64 76 L56 92" />
+          {/* chair back */}
+          <path d="M50 58 L50 92" {...faint} />
+        </g>
+        <g {...common}>
+          {/* keyboard on the desk */}
+          <rect x="78" y="84" width="34" height="7" rx="1" />
         </g>
       </svg>
     );
