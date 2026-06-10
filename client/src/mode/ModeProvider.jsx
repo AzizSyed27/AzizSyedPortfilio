@@ -2,30 +2,49 @@ import { createContext, useCallback, useContext, useMemo, useRef, useState } fro
 
 const ModeContext = createContext(null);
 
+const prefersReduced = () =>
+  typeof matchMedia !== "undefined" &&
+  matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// Boot-sequence timeline (toggle-on). Two phases play during `calibrating`
+// before the site goes `live`. ModeProvider is the single owner of the clock so
+// there's no drift; BootSequence reads `bootPhase` and is purely presentational.
+// (Phase 2 will replace these timers with real calibration-progress callbacks.)
+export const CLI_MS = 1600;
+export const HUD_MS = 2400;
+
 export function ModeProvider({ children, defaultMode = "mouse" }) {
   const [mode, setMode] = useState(defaultMode);
   const [handState, setHandState] = useState("standby");
-  const handTimer = useRef(null);
+  const [bootPhase, setBootPhase] = useState(null); // 'cli' | 'hud' | null
+  const timers = useRef([]);
 
-  const advanceHand = useCallback(() => {
-    clearTimeout(handTimer.current);
-    setHandState((s) => {
-      if (s === "standby") {
-        handTimer.current = setTimeout(() => setHandState("live"), 1600);
-        return "calibrating";
-      }
-      if (s === "calibrating") return "live";
-      return "standby";
-    });
+  const clearTimers = useCallback(() => {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
   }, []);
 
+  // Single toggle: standby → boot (cli → hud) → live → standby.
   const toggleHandMode = useCallback(() => {
-    advanceHand();
-  }, [advanceHand]);
+    clearTimers();
+    setHandState((s) => {
+      if (s !== "standby") { setBootPhase(null); return "standby"; }
+      // engage
+      const cli = prefersReduced() ? 0 : CLI_MS;
+      const hud = prefersReduced() ? 0 : HUD_MS;
+      setBootPhase("cli");
+      timers.current.push(setTimeout(() => setBootPhase("hud"), cli));
+      timers.current.push(setTimeout(() => { setBootPhase(null); setHandState("live"); }, cli + hud));
+      return "calibrating";
+    });
+  }, [clearTimers]);
+
+  // Back-compat alias (some callers used advanceHand).
+  const advanceHand = toggleHandMode;
 
   const value = useMemo(
-    () => ({ mode, setMode, handState, advanceHand, toggleHandMode }),
-    [mode, handState, advanceHand, toggleHandMode],
+    () => ({ mode, setMode, handState, bootPhase, advanceHand, toggleHandMode }),
+    [mode, handState, bootPhase, advanceHand, toggleHandMode],
   );
   return <ModeContext.Provider value={value}>{children}</ModeContext.Provider>;
 }
