@@ -7,17 +7,19 @@ import DecryptedText from "../components/DecryptedText";
 // fragments (preview, metrics, stack, architecture, case study) connected to
 // the preview hub by leader lines, with depth parallax on mouse move.
 //
-// On open it "Stark-expands" out of the card that was clicked (FLIP on an
-// .exp-viewport wrapper; origin optional, falls back to growing from center),
-// then the text decodes/scrambles in across the fragments. Colors come from the
-// active theme — no longer hardwired to HUD — so when hand mode flips the site
-// to the HUD palette, this scene follows.
+// The page stays mounted and is blurred behind the overlay (.exp-backdrop). On
+// open the fragments fly in one-by-one from the clicked card (origin optional —
+// falls back to popping in place), then the text decodes/scrambles in per panel.
+// Colors come from the active theme — no longer hardwired to HUD — so when hand
+// mode flips the site to the HUD palette, this scene follows.
 
 // data-depth drives both the parallax magnitude and the leader-line layout
 // (preview is the hub; the other four are spokes).
 const DEPTH = { preview: 0.25, stats: 1.5, tags: 1.0, arch: 0.65, case: 1.25 };
 
-const GROW_MS = 600;
+// Entrance timing: each fragment flies in over POP_MS, staggered by POP_STAGGER.
+const POP_MS = 420;
+const POP_STAGGER = 130;
 
 const prefersReduced = () =>
   typeof matchMedia !== "undefined" &&
@@ -52,7 +54,6 @@ function Decrypt({ text, delay = 0, className, bold = false }) {
 
 export function ExplodedView({ id, origin, onClose }) {
   const project = PROJECTS_BY_ID[id];
-  const viewportRef = useRef(null);
   const sceneRef = useRef(null);
   const svgRef = useRef(null);
   const coordsRef = useRef(null);
@@ -97,32 +98,43 @@ export function ExplodedView({ id, origin, onClose }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  // Grow-from-card FLIP. Animate the viewport wrapper from the source card's
-  // rect (or, with no rect, from a centered scale-up) to fullscreen. The
-  // backdrop root stays transparent so the scene visibly erupts from the card.
+  // Entrance: each fragment flies in from the clicked card (desktop with an
+  // origin rect) or pops in place (small screens / no origin), staggered
+  // L01 → L05. fill:"backwards" holds each frag tiny-at-the-card during its
+  // stagger delay and applies nothing after finish — so the element reverts to
+  // its home (no inline transform) and the physics loop owns it uncontested.
+  // Physics stays gated on `grown`, set when the last fragment lands.
   useEffect(() => {
-    const vp = viewportRef.current;
-    if (!vp || prefersReduced()) { setGrown(true); return undefined; }
-    const W = window.innerWidth;
-    const H = window.innerHeight;
-    let fromTransform;
-    if (origin && origin.w > 0 && origin.h > 0) {
-      const s = origin.w / W;
-      const tx = origin.x + origin.w / 2 - (s * W) / 2;
-      const ty = origin.y + origin.h / 2 - (s * H) / 2;
-      fromTransform = `translate(${tx}px, ${ty}px) scale(${s})`;
-      vp.style.transformOrigin = "0 0";
-    } else {
-      fromTransform = "scale(0.62)";
-      vp.style.transformOrigin = "50% 50%";
-    }
-    const anim = vp.animate(
-      [{ transform: fromTransform, opacity: 0.35 }, { transform: "none", opacity: 1 }],
-      { duration: GROW_MS, easing: "cubic-bezier(.16,1,.3,1)", fill: "both" },
-    );
+    const scene = sceneRef.current;
+    if (!scene || prefersReduced()) { setGrown(true); return undefined; }
+    const frags = Array.from(scene.querySelectorAll(".frag"));
+    if (!frags.length) { setGrown(true); return undefined; }
+    const canFly =
+      typeof matchMedia !== "undefined" &&
+      matchMedia("(min-width: 981px) and (pointer: fine)").matches &&
+      !!origin && origin.w > 0 && origin.h > 0;
+    const cardCx = canFly ? origin.x + origin.w / 2 : 0;
+    const cardCy = canFly ? origin.y + origin.h / 2 : 0;
+
+    const anims = frags.map((el, i) => {
+      let from;
+      if (canFly) {
+        const r = el.getBoundingClientRect();
+        const dx = cardCx - (r.left + r.width / 2);
+        const dy = cardCy - (r.top + r.height / 2);
+        from = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) scale(0.18)`;
+      } else {
+        from = "scale(0.5)";
+      }
+      return el.animate(
+        [{ transform: from, opacity: 0 }, { transform: "none", opacity: 1 }],
+        { duration: POP_MS, delay: i * POP_STAGGER, easing: "cubic-bezier(.2,1.1,.3,1)", fill: "backwards" },
+      );
+    });
+
     let cancelled = false;
-    anim.finished.then(() => { if (!cancelled) setGrown(true); }).catch(() => {});
-    return () => { cancelled = true; anim.cancel(); };
+    anims[anims.length - 1].finished.then(() => { if (!cancelled) setGrown(true); }).catch(() => {});
+    return () => { cancelled = true; anims.forEach((a) => a.cancel()); };
   }, [id, origin]);
 
   // One loop, owned after the grow lands: depth parallax at rest + grab/throw
@@ -343,18 +355,19 @@ export function ExplodedView({ id, origin, onClose }) {
   if (!project) return null;
   const { num, title, tags = [], stats = [], arch = [], caseStudy, preview = {} } = project;
 
-  // Boot-up reveal: fragments decode in sequence after the grow lands. Per-
-  // fragment base delays (+ small intra-fragment cascade), passed to Decrypt as
-  // startDelay. Under reduced motion Decrypt renders final text immediately.
+  // Boot-up reveal: each fragment's text decodes right after that panel lands —
+  // startDelay = (its pop delay) + POP_MS — so the cascade tracks the fly-in.
+  // Chrome (title/bottom readouts) isn't a fragment: title shows with the
+  // backdrop, bottom after the last panel. Reduced motion → instant.
   const D = {
-    title: GROW_MS,
-    preview: GROW_MS + 140,
-    stats: GROW_MS + 260,
-    tags: GROW_MS + 380,
-    arch: GROW_MS + 500,
-    caseT: GROW_MS + 620,
-    caseB: GROW_MS + 720,
-    bottom: GROW_MS + 900,
+    title: 120,
+    preview: 0 * POP_STAGGER + POP_MS,
+    stats: 1 * POP_STAGGER + POP_MS,
+    tags: 2 * POP_STAGGER + POP_MS,
+    arch: 3 * POP_STAGGER + POP_MS,
+    caseT: 4 * POP_STAGGER + POP_MS,
+    caseB: 4 * POP_STAGGER + POP_MS + 40,
+    bottom: 4 * POP_STAGGER + POP_MS + 100,
   };
 
   return (
@@ -365,8 +378,8 @@ export function ExplodedView({ id, origin, onClose }) {
       aria-labelledby="exp-title"
       onClick={onClose}
     >
-      <div className="exp-viewport" ref={viewportRef}>
-        <div className="field" aria-hidden="true" />
+      <div className="exp-viewport">
+        <div className="exp-backdrop" aria-hidden="true" />
         <div className="grain" aria-hidden="true" />
 
         <div className="hud-corner c-tl" aria-hidden="true" />
@@ -497,27 +510,18 @@ export function ExplodedView({ id, origin, onClose }) {
           position: fixed; inset: 0; z-index: 220; overflow: hidden;
           color: var(--fg); font-family: var(--f-body);
         }
-        /* The wrapper that the grow-from-card FLIP animates. Holds the opaque
-           field, so the backdrop root stays transparent and the scene erupts
-           from the card. */
-        .exploded-view .exp-viewport { position: absolute; inset: 0; will-change: transform, opacity; }
-        .exploded-view .field {
+        .exploded-view .exp-viewport { position: absolute; inset: 0; }
+        /* Blurs the live page behind the overlay + a translucent theme scrim for
+           contrast. A faint accent glow keeps a touch of the HUD feel. */
+        .exploded-view .exp-backdrop {
           position: absolute; inset: 0; z-index: 0;
           background:
             radial-gradient(120% 90% at 70% 18%, var(--a10) 0%, transparent 55%),
-            radial-gradient(100% 80% at 20% 90%, color-mix(in srgb, var(--accent) 7%, transparent) 0%, transparent 60%),
-            var(--bg);
+            color-mix(in srgb, var(--bg) 55%, transparent);
+          backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+          animation: exp-fade 0.25s ease-out both;
         }
-        .exploded-view .field::before {
-          content: ""; position: absolute; inset: 0;
-          background-image:
-            linear-gradient(var(--line) 0.5px, transparent 0.5px),
-            linear-gradient(90deg, var(--line) 0.5px, transparent 0.5px);
-          background-size: 46px 46px;
-          -webkit-mask-image: radial-gradient(120% 100% at 50% 45%, #000 30%, transparent 85%);
-          mask-image: radial-gradient(120% 100% at 50% 45%, #000 30%, transparent 85%);
-          opacity: 0.6;
-        }
+        @keyframes exp-fade { from { opacity: 0; } to { opacity: 1; } }
         .exploded-view .grain {
           position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0.05;
           background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
@@ -598,8 +602,9 @@ export function ExplodedView({ id, origin, onClose }) {
         }
         .exploded-view h3.frag-h { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); font-weight: 400; }
 
-        .exploded-view #exp-frag-preview { left: 6%; top: 24%; width: 34%; height: 46%; padding: 12px; }
-        .exploded-view .preview-shot, .exploded-view .preview-fallback { width: 100%; height: 100%; border-radius: 5px; overflow: hidden; position: relative; }
+        .exploded-view #exp-frag-preview { left: 6%; top: 20%; width: 40%; padding: 12px; }
+        /* 16:9 frame so screenshots (1920×1080) fit without distortion. */
+        .exploded-view .preview-shot, .exploded-view .preview-fallback { width: 100%; aspect-ratio: 16 / 9; height: auto; border-radius: 5px; overflow: hidden; position: relative; }
         .exploded-view .preview-shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .exploded-view .preview-fallback {
           background:
@@ -653,6 +658,7 @@ export function ExplodedView({ id, origin, onClose }) {
         }
         @media (prefers-reduced-motion: reduce) {
           .exploded-view .live-dot { animation: none; }
+          .exploded-view .exp-backdrop { animation: none; }
         }
       `}</style>
     </div>
