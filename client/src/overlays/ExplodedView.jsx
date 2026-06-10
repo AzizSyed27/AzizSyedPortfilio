@@ -58,6 +58,38 @@ export function ExplodedView({ id, origin, onClose }) {
   const coordsRef = useRef(null);
   const [grown, setGrown] = useState(false);
 
+  // Grab/throw physics state — mirrors StackConstellation's S.current shape so a
+  // future hand-pointer can drive the same seam (pointer + grabbed). The rAF
+  // loop owns `bodies`; pointer handlers write `grabbed`/`target`.
+  const physRef = useRef({
+    pointer: { x: 0, y: 0, vx: 0, vy: 0, svx: 0, svy: 0 },
+    grabbed: null, grabDX: 0, grabDY: 0, targetX: 0, targetY: 0,
+    bodies: [], canGrab: false,
+  });
+
+  // Grab a fragment on pointerdown (desktop/unscaled only). Scene is unscaled at
+  // ≥981px, so pointer deltas are already in .scene layout px — no conversion.
+  const onFragDown = (e) => {
+    const P = physRef.current;
+    if (!P.canGrab) return;
+    const scene = sceneRef.current;
+    const b = P.bodies.find((x) => x.id === e.currentTarget.id);
+    if (!scene || !b) return;
+    e.preventDefault();
+    const r = scene.getBoundingClientRect();
+    const x = e.clientX - r.left;
+    const y = e.clientY - r.top;
+    P.grabbed = b.id;
+    P.grabDX = x - b.x;
+    P.grabDY = y - b.y;
+    P.targetX = b.x;
+    P.targetY = b.y;
+    P.pointer.x = x; P.pointer.y = y;
+    P.pointer.vx = P.pointer.vy = P.pointer.svx = P.pointer.svy = 0;
+    b.state = "grabbed";
+    b.el.setAttribute("data-grabbed", "");
+  };
+
   // Esc closes.
   useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape") onClose(); };
@@ -93,22 +125,53 @@ export function ExplodedView({ id, origin, onClose }) {
     return () => { cancelled = true; anim.cancel(); };
   }, [id, origin]);
 
-  // Leader lines + depth parallax — only after the grow lands, so the rAF is the
-  // sole owner of .frag transforms (no contention with the FLIP). Ported from
-  // the handoff IIFE. Static under reduced motion (grown is set immediately).
+  // One loop, owned after the grow lands: depth parallax at rest + grab/throw
+  // physics (ported from StackConstellation.tick) + leader lines. Everything is
+  // in .scene layout coords (offset* are transform-independent) so body coords
+  // map 1:1 to the viewBox-less leaders SVG. Static under reduced motion.
   useEffect(() => {
     if (!grown) return undefined;
     const scene = sceneRef.current;
     const svg = svgRef.current;
     if (!scene || !svg) return undefined;
     const SVGNS = "http://www.w3.org/2000/svg";
+    const reduced = prefersReduced();
+    const canGrab =
+      !reduced &&
+      typeof matchMedia !== "undefined" &&
+      matchMedia("(min-width: 981px) and (pointer: fine)").matches;
+    const P = physRef.current;
+    P.canGrab = canGrab;
+    P.grabbed = null;
+    const clampN = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
-    const frags = Array.from(scene.querySelectorAll(".frag")).map((el) => ({
-      el, depth: parseFloat(el.dataset.depth) || 0, ox: 0, oy: 0, tx: 0, ty: 0,
-    }));
-    const hub = frags.find((f) => f.el.id === "exp-frag-preview");
-    if (!hub) return undefined;
-    const spokes = frags.filter((f) => f !== hub);
+    // Build bodies in layout space.
+    const measure = (b) => {
+      b.homeX = b.el.offsetLeft + b.el.offsetWidth / 2;
+      b.homeY = b.el.offsetTop + b.el.offsetHeight / 2;
+      b.hw = b.el.offsetWidth / 2;
+      b.hh = b.el.offsetHeight / 2;
+    };
+    const bodies = Array.from(scene.querySelectorAll(".frag")).map((el) => {
+      const b = {
+        el, id: el.id, depth: parseFloat(el.dataset.depth) || 0,
+        homeX: 0, homeY: 0, hw: 30, hh: 12,
+        x: 0, y: 0, vx: 0, vy: 0, ox: 0, oy: 0, throwT: 0, state: "rest",
+      };
+      measure(b);
+      b.x = b.homeX; b.y = b.homeY;
+      return b;
+    });
+    P.bodies = bodies;
+    const hub = bodies.find((b) => b.id === "exp-frag-preview") || bodies[0];
+    const spokes = bodies.filter((b) => b !== hub);
+
+    let W = scene.offsetWidth, H = scene.offsetHeight;
+    const ro = new ResizeObserver(() => {
+      W = scene.offsetWidth; H = scene.offsetHeight;
+      bodies.forEach(measure);
+    });
+    ro.observe(scene);
 
     const lines = spokes.map((sp) => {
       const poly = document.createElementNS(SVGNS, "polyline");
@@ -124,26 +187,16 @@ export function ExplodedView({ id, origin, onClose }) {
     core.setAttribute("class", "core"); core.setAttribute("r", "3");
     svg.appendChild(core);
 
-    const reduced = prefersReduced();
-    let mx = 0.5, my = 0.5, cmx = 0.5, cmy = 0.5, raf = 0;
-
-    const centerOf = (el) => {
-      const r = el.getBoundingClientRect();
-      const sr = scene.getBoundingClientRect();
-      return { x: r.left + r.width / 2 - sr.left, y: r.top + r.height / 2 - sr.top };
-    };
-    const edgeToward = (el, target) => {
-      const r = el.getBoundingClientRect();
-      const sr = scene.getBoundingClientRect();
-      const cx = r.left + r.width / 2 - sr.left;
-      const cy = r.top + r.height / 2 - sr.top;
-      const dx = target.x - cx, dy = target.y - cy;
-      const hw = r.width / 2, hh = r.height / 2;
-      const sx = dx === 0 ? Infinity : hw / Math.abs(dx);
-      const sy = dy === 0 ? Infinity : hh / Math.abs(dy);
+    // Edge point of a body's box facing (tx,ty), in layout coords.
+    const edgeToward = (b, tx, ty) => {
+      const dx = tx - b.x, dy = ty - b.y;
+      const sx = dx === 0 ? Infinity : b.hw / Math.abs(dx);
+      const sy = dy === 0 ? Infinity : b.hh / Math.abs(dy);
       const s = Math.min(sx, sy);
-      return { x: cx + dx * s, y: cy + dy * s };
+      return { x: b.x + dx * s, y: b.y + dy * s };
     };
+
+    let mx = 0.5, my = 0.5, cmx = 0.5, cmy = 0.5, raf = 0;
 
     const frame = () => {
       cmx += (mx - cmx) * 0.08;
@@ -151,27 +204,83 @@ export function ExplodedView({ id, origin, onClose }) {
       const px = cmx - 0.5;
       const py = cmy - 0.5;
 
-      frags.forEach((f) => {
-        f.tx = -px * f.depth * 46;
-        f.ty = -py * f.depth * 30;
-        f.ox += (f.tx - f.ox) * 0.12;
-        f.oy += (f.ty - f.oy) * 0.12;
-        const lift = f.depth * 6;
-        const rot = px * f.depth * 2.2;
-        f.el.style.transform =
-          `translate3d(${f.ox.toFixed(2)}px, ${(f.oy - lift).toFixed(2)}px, 0) rotate(${rot.toFixed(2)}deg)`;
-      });
+      for (const b of bodies) {
+        const tx = -px * b.depth * 46;
+        const ty = -py * b.depth * 30;
+        b.ox += (tx - b.ox) * 0.12;
+        b.oy += (ty - b.oy) * 0.12;
+        const restX = b.homeX + b.ox;
+        const restY = b.homeY + b.oy;
 
-      const hc = centerOf(hub.el);
-      core.setAttribute("cx", hc.x); core.setAttribute("cy", hc.y);
+        if (b.state === "grabbed") {
+          const nx = b.x + (P.targetX - b.x) * 0.5;
+          const ny = b.y + (P.targetY - b.y) * 0.5;
+          b.vx = nx - b.x; b.vy = ny - b.y;
+          b.x = nx; b.y = ny;
+        } else if (b.state === "thrown") {
+          b.throwT--;
+          b.vx *= 0.985; b.vy *= 0.985;
+          b.x += b.vx; b.y += b.vy;
+          if (b.x < b.hw) { b.x = b.hw; b.vx *= -0.7; }
+          if (b.x > W - b.hw) { b.x = W - b.hw; b.vx *= -0.7; }
+          if (b.y < b.hh) { b.y = b.hh; b.vy *= -0.7; }
+          if (b.y > H - b.hh) { b.y = H - b.hh; b.vy *= -0.7; }
+          if (b.throwT <= 0) b.state = "settling";
+        } else if (b.state === "settling") {
+          b.vx = (b.vx + (restX - b.x) * 0.12) * 0.82;
+          b.vy = (b.vy + (restY - b.y) * 0.12) * 0.82;
+          b.x += b.vx; b.y += b.vy;
+          if (Math.hypot(restX - b.x, restY - b.y) < 0.6 && Math.hypot(b.vx, b.vy) < 0.3) {
+            b.state = "rest";
+          }
+        } else {
+          b.x = restX; b.y = restY; b.vx = 0; b.vy = 0;
+        }
+      }
 
+      // Collision separation — only when a participant is active, so the resting
+      // layout never drifts. Push along the lesser-penetration axis.
+      for (let i = 0; i < bodies.length; i++) {
+        for (let j = i + 1; j < bodies.length; j++) {
+          const a = bodies[i], b = bodies[j];
+          const aA = a.state === "thrown" || a.state === "grabbed";
+          const bA = b.state === "thrown" || b.state === "grabbed";
+          if (!aA && !bA) continue;
+          const dx = b.x - a.x, dy = b.y - a.y;
+          const minx = (a.hw + b.hw) * 0.9;
+          const miny = (a.hh + b.hh) * 0.9;
+          if (Math.abs(dx) < minx && Math.abs(dy) < miny) {
+            const ox = (minx - Math.abs(dx)) * (dx < 0 ? -1 : 1);
+            const oy = (miny - Math.abs(dy)) * (dy < 0 ? -1 : 1);
+            const wake = (bd) => { if (bd.state === "rest") bd.state = "settling"; };
+            if (Math.abs(ox) < Math.abs(oy)) {
+              if (a.state !== "grabbed") { a.x -= ox * 0.5; a.vx -= ox * 0.05; wake(a); }
+              if (b.state !== "grabbed") { b.x += ox * 0.5; b.vx += ox * 0.05; wake(b); }
+            } else {
+              if (a.state !== "grabbed") { a.y -= oy * 0.5; a.vy -= oy * 0.05; wake(a); }
+              if (b.state !== "grabbed") { b.y += oy * 0.5; b.vy += oy * 0.05; wake(b); }
+            }
+          }
+        }
+      }
+
+      for (const b of bodies) {
+        const rot = px * b.depth * 2.2;
+        b.el.style.transform =
+          `translate3d(${(b.x - b.homeX).toFixed(2)}px, ${(b.y - b.homeY).toFixed(2)}px, 0) rotate(${rot.toFixed(2)}deg)`;
+      }
+
+      core.setAttribute("cx", hub.x); core.setAttribute("cy", hub.y);
       lines.forEach(({ sp, poly, nodeA, nodeB }) => {
-        const a = edgeToward(sp.el, hc);
-        const b = edgeToward(hub.el, a);
+        const a = edgeToward(sp, hub.x, hub.y);
+        const b = edgeToward(hub, sp.x, sp.y);
         const midx = (a.x + b.x) / 2;
         poly.setAttribute("points", `${a.x},${a.y} ${midx},${a.y} ${b.x},${b.y}`);
         nodeA.setAttribute("cx", a.x); nodeA.setAttribute("cy", a.y);
         nodeB.setAttribute("cx", b.x); nodeB.setAttribute("cy", b.y);
+        const lit = !!P.grabbed && (sp.id === P.grabbed || hub.id === P.grabbed);
+        const cls = lit ? "lead-dash lead-active" : "lead-dash";
+        if (poly.getAttribute("class") !== cls) poly.setAttribute("class", cls);
       });
 
       if (coordsRef.current) {
@@ -181,22 +290,53 @@ export function ExplodedView({ id, origin, onClose }) {
       if (!reduced) raf = requestAnimationFrame(frame);
     };
 
-    const onMove = (e) => {
-      mx = e.clientX / window.innerWidth;
-      my = e.clientY / window.innerHeight;
+    const onMoveMouse = (e) => { mx = e.clientX / window.innerWidth; my = e.clientY / window.innerHeight; };
+    const onPointerMove = (e) => {
+      const r = scene.getBoundingClientRect();
+      const x = e.clientX - r.left, y = e.clientY - r.top;
+      P.pointer.vx = x - P.pointer.x;
+      P.pointer.vy = y - P.pointer.y;
+      P.pointer.svx = 0.45 * P.pointer.svx + 0.55 * P.pointer.vx;
+      P.pointer.svy = 0.45 * P.pointer.svy + 0.55 * P.pointer.vy;
+      P.pointer.x = x; P.pointer.y = y;
+      if (P.grabbed) { P.targetX = x - P.grabDX; P.targetY = y - P.grabDY; }
     };
-    const onResize = () => { if (reduced) frame(); };
+    const onPointerUp = () => {
+      if (!P.grabbed) return;
+      const b = bodies.find((x) => x.id === P.grabbed);
+      if (b) {
+        const vx = Math.abs(P.pointer.svx) > Math.abs(b.vx) ? P.pointer.svx : b.vx;
+        const vy = Math.abs(P.pointer.svy) > Math.abs(b.vy) ? P.pointer.svy : b.vy;
+        b.vx = clampN(vx * 1.5, -40, 40);
+        b.vy = clampN(vy * 1.5, -40, 40);
+        b.throwT = Math.hypot(b.vx, b.vy) > 1.5 ? 140 : 0;
+        b.state = b.throwT > 0 ? "thrown" : "settling";
+        b.el.removeAttribute("data-grabbed");
+      }
+      P.grabbed = null;
+    };
 
-    if (!reduced) window.addEventListener("mousemove", onMove);
+    if (!reduced) window.addEventListener("mousemove", onMoveMouse);
+    if (canGrab) {
+      window.addEventListener("pointermove", onPointerMove);
+      window.addEventListener("pointerup", onPointerUp);
+    }
+    const onResize = () => { if (reduced) frame(); };
     window.addEventListener("resize", onResize);
     raf = requestAnimationFrame(frame);
 
     return () => {
       cancelAnimationFrame(raf);
-      if (!reduced) window.removeEventListener("mousemove", onMove);
+      ro.disconnect();
+      if (!reduced) window.removeEventListener("mousemove", onMoveMouse);
+      if (canGrab) {
+        window.removeEventListener("pointermove", onPointerMove);
+        window.removeEventListener("pointerup", onPointerUp);
+      }
       window.removeEventListener("resize", onResize);
       lines.forEach(({ poly, nodeA, nodeB }) => { poly.remove(); nodeA.remove(); nodeB.remove(); });
       core.remove();
+      P.bodies = []; P.grabbed = null; P.canGrab = false;
     };
   }, [id, grown]);
 
@@ -253,11 +393,11 @@ export function ExplodedView({ id, origin, onClose }) {
           <div className="scene" ref={sceneRef}>
             <svg className="leaders" ref={svgRef} />
 
-            <div className="frag" id="exp-frag-preview" data-depth={DEPTH.preview}>
+            <div className="frag" id="exp-frag-preview" data-depth={DEPTH.preview} onPointerDown={onFragDown}>
               <div className="frag-label"><Decrypt text="L01 · PREVIEW.LAYER" delay={D.preview} /></div>
               {preview.image ? (
                 <div className="preview-shot">
-                  <img src={preview.image} alt={`${title} screenshot`} />
+                  <img src={preview.image} alt={`${title} screenshot`} draggable={false} />
                   <div className="preview-meta">
                     <Decrypt text={preview.metaLeft || ""} delay={D.preview + 30} />
                     <Decrypt text={preview.dims || ""} delay={D.preview + 60} />
@@ -274,7 +414,7 @@ export function ExplodedView({ id, origin, onClose }) {
               )}
             </div>
 
-            <div className="frag" id="exp-frag-stats" data-depth={DEPTH.stats}>
+            <div className="frag" id="exp-frag-stats" data-depth={DEPTH.stats} onPointerDown={onFragDown}>
               <div className="frag-label"><Decrypt text="L02 · METRICS" delay={D.stats} /></div>
               <span className="frag-idx"><Decrypt text="02 / 05" delay={D.stats} /></span>
               <div className="stat-row">
@@ -287,7 +427,7 @@ export function ExplodedView({ id, origin, onClose }) {
               </div>
             </div>
 
-            <div className="frag" id="exp-frag-tags" data-depth={DEPTH.tags}>
+            <div className="frag" id="exp-frag-tags" data-depth={DEPTH.tags} onPointerDown={onFragDown}>
               <div className="frag-label"><Decrypt text="L03 · STACK" delay={D.tags} /></div>
               <span className="frag-idx"><Decrypt text="03 / 05" delay={D.tags} /></span>
               <h3 className="frag-h"><Decrypt text="Runtime dependencies" delay={D.tags + 30} /></h3>
@@ -301,7 +441,7 @@ export function ExplodedView({ id, origin, onClose }) {
               </div>
             </div>
 
-            <div className="frag" id="exp-frag-arch" data-depth={DEPTH.arch}>
+            <div className="frag" id="exp-frag-arch" data-depth={DEPTH.arch} onPointerDown={onFragDown}>
               <div className="frag-label"><Decrypt text="L04 · ARCHITECTURE" delay={D.arch} /></div>
               <span className="frag-idx"><Decrypt text="04 / 05" delay={D.arch} /></span>
               <h3 className="frag-h"><Decrypt text="Request path" delay={D.arch + 30} /></h3>
@@ -319,7 +459,7 @@ export function ExplodedView({ id, origin, onClose }) {
             </div>
 
             {caseStudy && (
-              <div className="frag" id="exp-frag-case" data-depth={DEPTH.case}>
+              <div className="frag" id="exp-frag-case" data-depth={DEPTH.case} onPointerDown={onFragDown}>
                 <div className="frag-label"><Decrypt text="L05 · CASE STUDY" delay={D.caseT} /></div>
                 <span className="frag-idx"><Decrypt text="05 / 05" delay={D.caseT} /></span>
                 <div className="case-title"><Decrypt text={caseStudy.title} delay={D.caseT + 30} /></div>
@@ -426,6 +566,8 @@ export function ExplodedView({ id, origin, onClose }) {
         .exploded-view svg.leaders { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 11; pointer-events: none; overflow: visible; }
         .exploded-view svg.leaders polyline { stroke: var(--accent); stroke-width: 1; opacity: 0.55; fill: none; }
         .exploded-view svg.leaders .lead-dash { stroke-dasharray: 3 4; opacity: 0.4; }
+        .exploded-view svg.leaders .lead-active { stroke-width: 1.8; opacity: 0.9; animation: exp-leadpulse 0.9s ease-in-out infinite; }
+        @keyframes exp-leadpulse { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
         .exploded-view svg.leaders circle.node { fill: var(--bg); stroke: var(--accent); stroke-width: 1.2; }
         .exploded-view svg.leaders circle.core { fill: var(--accent); }
 
@@ -436,8 +578,15 @@ export function ExplodedView({ id, origin, onClose }) {
           border: 0.5px solid var(--line-strong); border-radius: 10px;
           box-shadow: 0 30px 60px -28px rgba(0,0,0,0.8);
           will-change: transform; transition: box-shadow .3s, border-color .3s;
+          user-select: none;
         }
         .exploded-view .frag:hover { border-color: var(--accent); box-shadow: 0 40px 80px -30px rgba(0,0,0,0.9), 0 0 0 1px var(--accent); z-index: 30; }
+        /* Grab affordance — only meaningful on unscaled desktop, harmless otherwise. */
+        @media (min-width: 981px) and (pointer: fine) { .exploded-view .frag { cursor: grab; } }
+        .exploded-view .frag[data-grabbed] {
+          z-index: 40; border-color: var(--accent); cursor: grabbing;
+          box-shadow: 0 0 0 1px var(--accent), 0 40px 80px -30px rgba(0,0,0,0.9);
+        }
         .exploded-view .frag-label {
           position: absolute; top: -9px; left: 14px;
           font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
