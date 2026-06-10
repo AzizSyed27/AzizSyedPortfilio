@@ -33,13 +33,22 @@ export function ThemeProvider({ children, defaultTheme = "amber" }) {
     return saved && THEME_META[saved] ? saved : defaultTheme;
   });
 
+  // A transient theme override (e.g. HUD while hand mode is on). It drives the
+  // visible theme but is NEVER persisted — only the user's chosen themeId is.
+  const [override, setOverride] = useState(null);
+
   useEffect(() => {
-    document.documentElement.dataset.theme = themeId;
+    document.documentElement.dataset.theme = override ?? themeId;
     window.localStorage.setItem(STORAGE_KEY, themeId);
-  }, [themeId]);
+  }, [themeId, override]);
 
   const setTheme = useCallback((id) => {
     if (THEME_META[id]) setThemeIdState(id);
+  }, []);
+
+  // null clears the override and restores the user's theme.
+  const setThemeOverride = useCallback((id) => {
+    setOverride(id && THEME_META[id] ? id : null);
   }, []);
 
   const cycleTheme = useCallback((dir = 1) => {
@@ -51,7 +60,10 @@ export function ThemeProvider({ children, defaultTheme = "amber" }) {
     });
   }, []);
 
-  const value = useMemo(() => ({ themeId, setTheme, cycleTheme }), [themeId, setTheme, cycleTheme]);
+  const value = useMemo(
+    () => ({ themeId, setTheme, cycleTheme, setThemeOverride }),
+    [themeId, setTheme, cycleTheme, setThemeOverride],
+  );
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 

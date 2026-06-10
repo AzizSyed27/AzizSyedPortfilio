@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 
 import { ThemeProvider } from "./theme/ThemeProvider";
 import { ModeProvider } from "./mode/ModeProvider";
+import { ThemeModeSync } from "./theme/ThemeModeSync";
 import { OverlayProvider } from "./intents/OverlayContext";
 import { GalleryProvider } from "./intents/GalleryContext";
 import { KeyboardController } from "./intents/KeyboardController";
@@ -47,6 +48,7 @@ export default function App() {
         <GalleryProvider>
           <OverlayProvider>
             <BrowserRouter>
+              <ThemeModeSync />
               <KeyboardController />
               <SpatialCursor mode="dot" />
               <div className="grain" aria-hidden="true" />

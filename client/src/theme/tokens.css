@@ -117,7 +117,8 @@
   --shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
 }
 
-/* HUD — hand-mode theme. Auto-applied when toggleHandMode() flips. */
+/* HUD — hand-mode theme. Driven at :root by ThemeModeSync when the hand-control
+   pill is on (a non-persisted override), so the whole site reads HUD. */
 :root[data-theme="hud"] {
   --bg: #0A0F14;
   --fg: #E6F8FF;

@@ -77,7 +77,7 @@ export function useActions() {
       // navigation
       goToPage, nextPage, prevPage, currentRouteId,
       // overlays
-      openProject: overlay.setOpenProjectId,
+      openProject: overlay.openProject,
       closeOverlay: overlay.closeAll,
       toggleCheatSheet: overlay.toggleCheatSheet,
       toggleThemeWheel: overlay.toggleThemeWheel,

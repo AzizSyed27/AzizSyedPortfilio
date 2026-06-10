@@ -1,75 +1,511 @@
-import { useEffect } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { PROJECTS_BY_ID } from "../content/projects";
+import DecryptedText from "../components/DecryptedText";
 
-export function ExplodedView({ id, onClose }) {
+// Per-project exploded view — a full-screen HUD scene ported from the Claude
+// Design handoff (.design-bundle/.../<project> Exploded.html). Five floating
+// fragments (preview, metrics, stack, architecture, case study) connected to
+// the preview hub by leader lines, with depth parallax on mouse move.
+//
+// On open it "Stark-expands" out of the card that was clicked (FLIP on an
+// .exp-viewport wrapper; origin optional, falls back to growing from center),
+// then the text decodes/scrambles in across the fragments. Colors come from the
+// active theme — no longer hardwired to HUD — so when hand mode flips the site
+// to the HUD palette, this scene follows.
+
+// data-depth drives both the parallax magnitude and the leader-line layout
+// (preview is the hub; the other four are spokes).
+const DEPTH = { preview: 0.25, stats: 1.5, tags: 1.0, arch: 0.65, case: 1.25 };
+
+const GROW_MS = 600;
+
+const prefersReduced = () =>
+  typeof matchMedia !== "undefined" &&
+  matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// HUD glyph set for the decode scramble.
+const HUD_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./<>#";
+
+// Thin adapter over DecryptedText: sequential decode that auto-starts in view,
+// deferred by `delay` so fragments cascade (L01 → L02 → …). Falls back to plain
+// text under reduced motion. `bold` wraps the result in <b> (replaces the old
+// ScrambleText `as="b"`).
+function Decrypt({ text, delay = 0, className, bold = false }) {
+  if (prefersReduced()) {
+    const plain = <span className={className}>{text}</span>;
+    return bold ? <b>{plain}</b> : plain;
+  }
+  const el = (
+    <DecryptedText
+      text={text}
+      animateOn="view"
+      sequential
+      speed={14}
+      startDelay={delay}
+      characters={HUD_CHARS}
+      parentClassName={className}
+      encryptedClassName="exp-enc"
+    />
+  );
+  return bold ? <b>{el}</b> : el;
+}
+
+export function ExplodedView({ id, origin, onClose }) {
   const project = PROJECTS_BY_ID[id];
+  const viewportRef = useRef(null);
+  const sceneRef = useRef(null);
+  const svgRef = useRef(null);
+  const coordsRef = useRef(null);
+  const [grown, setGrown] = useState(false);
 
+  // Esc closes.
   useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  // Grow-from-card FLIP. Animate the viewport wrapper from the source card's
+  // rect (or, with no rect, from a centered scale-up) to fullscreen. The
+  // backdrop root stays transparent so the scene visibly erupts from the card.
+  useEffect(() => {
+    const vp = viewportRef.current;
+    if (!vp || prefersReduced()) { setGrown(true); return undefined; }
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    let fromTransform;
+    if (origin && origin.w > 0 && origin.h > 0) {
+      const s = origin.w / W;
+      const tx = origin.x + origin.w / 2 - (s * W) / 2;
+      const ty = origin.y + origin.h / 2 - (s * H) / 2;
+      fromTransform = `translate(${tx}px, ${ty}px) scale(${s})`;
+      vp.style.transformOrigin = "0 0";
+    } else {
+      fromTransform = "scale(0.62)";
+      vp.style.transformOrigin = "50% 50%";
+    }
+    const anim = vp.animate(
+      [{ transform: fromTransform, opacity: 0.35 }, { transform: "none", opacity: 1 }],
+      { duration: GROW_MS, easing: "cubic-bezier(.16,1,.3,1)", fill: "both" },
+    );
+    let cancelled = false;
+    anim.finished.then(() => { if (!cancelled) setGrown(true); }).catch(() => {});
+    return () => { cancelled = true; anim.cancel(); };
+  }, [id, origin]);
+
+  // Leader lines + depth parallax — only after the grow lands, so the rAF is the
+  // sole owner of .frag transforms (no contention with the FLIP). Ported from
+  // the handoff IIFE. Static under reduced motion (grown is set immediately).
+  useEffect(() => {
+    if (!grown) return undefined;
+    const scene = sceneRef.current;
+    const svg = svgRef.current;
+    if (!scene || !svg) return undefined;
+    const SVGNS = "http://www.w3.org/2000/svg";
+
+    const frags = Array.from(scene.querySelectorAll(".frag")).map((el) => ({
+      el, depth: parseFloat(el.dataset.depth) || 0, ox: 0, oy: 0, tx: 0, ty: 0,
+    }));
+    const hub = frags.find((f) => f.el.id === "exp-frag-preview");
+    if (!hub) return undefined;
+    const spokes = frags.filter((f) => f !== hub);
+
+    const lines = spokes.map((sp) => {
+      const poly = document.createElementNS(SVGNS, "polyline");
+      poly.setAttribute("class", "lead-dash");
+      const nodeA = document.createElementNS(SVGNS, "circle");
+      nodeA.setAttribute("class", "node"); nodeA.setAttribute("r", "3.5");
+      const nodeB = document.createElementNS(SVGNS, "circle");
+      nodeB.setAttribute("class", "core"); nodeB.setAttribute("r", "2.2");
+      svg.appendChild(poly); svg.appendChild(nodeA); svg.appendChild(nodeB);
+      return { sp, poly, nodeA, nodeB };
+    });
+    const core = document.createElementNS(SVGNS, "circle");
+    core.setAttribute("class", "core"); core.setAttribute("r", "3");
+    svg.appendChild(core);
+
+    const reduced = prefersReduced();
+    let mx = 0.5, my = 0.5, cmx = 0.5, cmy = 0.5, raf = 0;
+
+    const centerOf = (el) => {
+      const r = el.getBoundingClientRect();
+      const sr = scene.getBoundingClientRect();
+      return { x: r.left + r.width / 2 - sr.left, y: r.top + r.height / 2 - sr.top };
+    };
+    const edgeToward = (el, target) => {
+      const r = el.getBoundingClientRect();
+      const sr = scene.getBoundingClientRect();
+      const cx = r.left + r.width / 2 - sr.left;
+      const cy = r.top + r.height / 2 - sr.top;
+      const dx = target.x - cx, dy = target.y - cy;
+      const hw = r.width / 2, hh = r.height / 2;
+      const sx = dx === 0 ? Infinity : hw / Math.abs(dx);
+      const sy = dy === 0 ? Infinity : hh / Math.abs(dy);
+      const s = Math.min(sx, sy);
+      return { x: cx + dx * s, y: cy + dy * s };
+    };
+
+    const frame = () => {
+      cmx += (mx - cmx) * 0.08;
+      cmy += (my - cmy) * 0.08;
+      const px = cmx - 0.5;
+      const py = cmy - 0.5;
+
+      frags.forEach((f) => {
+        f.tx = -px * f.depth * 46;
+        f.ty = -py * f.depth * 30;
+        f.ox += (f.tx - f.ox) * 0.12;
+        f.oy += (f.ty - f.oy) * 0.12;
+        const lift = f.depth * 6;
+        const rot = px * f.depth * 2.2;
+        f.el.style.transform =
+          `translate3d(${f.ox.toFixed(2)}px, ${(f.oy - lift).toFixed(2)}px, 0) rotate(${rot.toFixed(2)}deg)`;
+      });
+
+      const hc = centerOf(hub.el);
+      core.setAttribute("cx", hc.x); core.setAttribute("cy", hc.y);
+
+      lines.forEach(({ sp, poly, nodeA, nodeB }) => {
+        const a = edgeToward(sp.el, hc);
+        const b = edgeToward(hub.el, a);
+        const midx = (a.x + b.x) / 2;
+        poly.setAttribute("points", `${a.x},${a.y} ${midx},${a.y} ${b.x},${b.y}`);
+        nodeA.setAttribute("cx", a.x); nodeA.setAttribute("cy", a.y);
+        nodeB.setAttribute("cx", b.x); nodeB.setAttribute("cy", b.y);
+      });
+
+      if (coordsRef.current) {
+        coordsRef.current.textContent =
+          `x:${cmx.toFixed(3)} y:${cmy.toFixed(3)} · z-depth: 5 layers`;
+      }
+      if (!reduced) raf = requestAnimationFrame(frame);
+    };
+
+    const onMove = (e) => {
+      mx = e.clientX / window.innerWidth;
+      my = e.clientY / window.innerHeight;
+    };
+    const onResize = () => { if (reduced) frame(); };
+
+    if (!reduced) window.addEventListener("mousemove", onMove);
+    window.addEventListener("resize", onResize);
+    raf = requestAnimationFrame(frame);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      if (!reduced) window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("resize", onResize);
+      lines.forEach(({ poly, nodeA, nodeB }) => { poly.remove(); nodeA.remove(); nodeB.remove(); });
+      core.remove();
+    };
+  }, [id, grown]);
+
   if (!project) return null;
-  const layers = project.layers ?? DEFAULT_LAYERS;
+  const { num, title, tags = [], stats = [], arch = [], caseStudy, preview = {} } = project;
+
+  // Boot-up reveal: fragments decode in sequence after the grow lands. Per-
+  // fragment base delays (+ small intra-fragment cascade), passed to Decrypt as
+  // startDelay. Under reduced motion Decrypt renders final text immediately.
+  const D = {
+    title: GROW_MS,
+    preview: GROW_MS + 140,
+    stats: GROW_MS + 260,
+    tags: GROW_MS + 380,
+    arch: GROW_MS + 500,
+    caseT: GROW_MS + 620,
+    caseB: GROW_MS + 720,
+    bottom: GROW_MS + 900,
+  };
 
   return (
-    <div className="exploded" role="dialog" aria-modal="true" aria-labelledby="exp-title" onClick={onClose}>
-      <div className="exp-panel" onClick={(e) => e.stopPropagation()} data-theme="hud">
-        <div className="exp-head">
-          <span>{project.num} · EXPLODED VIEW</span>
-          <button className="exp-close" onClick={onClose} aria-label="Close">×</button>
+    <div
+      className="exploded-view"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="exp-title"
+      onClick={onClose}
+    >
+      <div className="exp-viewport" ref={viewportRef}>
+        <div className="field" aria-hidden="true" />
+        <div className="grain" aria-hidden="true" />
+
+        <div className="hud-corner c-tl" aria-hidden="true" />
+        <div className="hud-corner c-tr" aria-hidden="true" />
+        <div className="hud-corner c-bl" aria-hidden="true" />
+        <div className="hud-corner c-br" aria-hidden="true" />
+
+        <div className="top-readout" aria-hidden="true">
+          <div className="title" id="exp-title">
+            <Decrypt text="HAND MODE // EXPLODED VIEW —" delay={D.title} />{" "}
+            <Decrypt bold text={`${num} · ${title}`} delay={D.title + 60} />
+          </div>
+          <div className="right">
+            <div>
+              <span className="live-dot" />
+              <Decrypt className="live" text="TRACKING · OPEN PALM" delay={D.title + 100} />
+            </div>
+            <div ref={coordsRef}>x:0.500 y:0.500 · z-depth: 5 layers</div>
+          </div>
         </div>
-        <div className="exp-grid">
-          <div className="exp-stage">
-            {layers.map((layer, i) => (
-              <div className="exp-layer" key={layer.label} style={{ transform: `translateZ(${-i * 50}px) translateY(${i * 22}px)`, opacity: 1 - i * 0.06 }}>
-                <div className="exp-layer-tag">L/{String(i + 1).padStart(2, "0")} · {layer.label}</div>
-                <p>{layer.desc}</p>
+
+        {/* Clicks inside the scene shouldn't dismiss; only the backdrop closes. */}
+        <div className="stage" onClick={(e) => e.stopPropagation()}>
+          <div className="scene" ref={sceneRef}>
+            <svg className="leaders" ref={svgRef} />
+
+            <div className="frag" id="exp-frag-preview" data-depth={DEPTH.preview}>
+              <div className="frag-label"><Decrypt text="L01 · PREVIEW.LAYER" delay={D.preview} /></div>
+              {preview.image ? (
+                <div className="preview-shot">
+                  <img src={preview.image} alt={`${title} screenshot`} />
+                  <div className="preview-meta">
+                    <Decrypt text={preview.metaLeft || ""} delay={D.preview + 30} />
+                    <Decrypt text={preview.dims || ""} delay={D.preview + 60} />
+                  </div>
+                </div>
+              ) : (
+                <div className="preview-fallback">
+                  <div className="ph"><Decrypt text={`Drop ${title} screenshot`} delay={D.preview + 30} /></div>
+                  <div className="preview-meta">
+                    <Decrypt text={preview.metaLeft || ""} delay={D.preview + 50} />
+                    <Decrypt text={preview.dims || ""} delay={D.preview + 80} />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="frag" id="exp-frag-stats" data-depth={DEPTH.stats}>
+              <div className="frag-label"><Decrypt text="L02 · METRICS" delay={D.stats} /></div>
+              <span className="frag-idx"><Decrypt text="02 / 05" delay={D.stats} /></span>
+              <div className="stat-row">
+                {stats.map((s, i) => (
+                  <div className="stat-cell" key={i}>
+                    <div className="v"><Decrypt text={s.v} delay={D.stats + 40 + i * 30} /></div>
+                    <div className="l"><Decrypt text={s.l} delay={D.stats + 70 + i * 30} /></div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <div className="exp-meta">
-            <h2 id="exp-title" className="display">{project.title}</h2>
-            <p className="lede">{project.desc}</p>
-            <div className="exp-stats">
-              {project.stats?.map((s, i) => (
-                <div key={i}><b>{s.v}</b><span>{s.l}</span></div>
-              ))}
             </div>
-            <div className="exp-tags">
-              {project.tags?.map((t) => <span key={t}>{t}</span>)}
+
+            <div className="frag" id="exp-frag-tags" data-depth={DEPTH.tags}>
+              <div className="frag-label"><Decrypt text="L03 · STACK" delay={D.tags} /></div>
+              <span className="frag-idx"><Decrypt text="03 / 05" delay={D.tags} /></span>
+              <h3 className="frag-h"><Decrypt text="Runtime dependencies" delay={D.tags + 30} /></h3>
+              <div className="tags-wrap">
+                {tags.map((t, i) => (
+                  <span className="tag" key={t}>
+                    <b>{String(i + 1).padStart(2, "0")}</b>
+                    <Decrypt text={t} delay={D.tags + 60 + i * 30} />
+                  </span>
+                ))}
+              </div>
             </div>
-            {project.url && <a className="btn" href={`https://${project.url}`} target="_blank" rel="noreferrer">Visit {project.url} →</a>}
+
+            <div className="frag" id="exp-frag-arch" data-depth={DEPTH.arch}>
+              <div className="frag-label"><Decrypt text="L04 · ARCHITECTURE" delay={D.arch} /></div>
+              <span className="frag-idx"><Decrypt text="04 / 05" delay={D.arch} /></span>
+              <h3 className="frag-h"><Decrypt text="Request path" delay={D.arch + 30} /></h3>
+              <div className="arch-diagram">
+                {arch.map((n, i) => (
+                  <Fragment key={n.label}>
+                    {i > 0 && <div className="arch-link" />}
+                    <div className="arch-node">
+                      <Decrypt text={n.label} delay={D.arch + 60 + i * 30} />
+                      <small><Decrypt text={n.sub} delay={D.arch + 80 + i * 30} /></small>
+                    </div>
+                  </Fragment>
+                ))}
+              </div>
+            </div>
+
+            {caseStudy && (
+              <div className="frag" id="exp-frag-case" data-depth={DEPTH.case}>
+                <div className="frag-label"><Decrypt text="L05 · CASE STUDY" delay={D.caseT} /></div>
+                <span className="frag-idx"><Decrypt text="05 / 05" delay={D.caseT} /></span>
+                <div className="case-title"><Decrypt text={caseStudy.title} delay={D.caseT + 30} /></div>
+                <div className="case-body">
+                  {caseStudy.body.map((seg, i) =>
+                    typeof seg === "string"
+                      ? <Decrypt key={i} text={seg} delay={D.caseB + i * 25} />
+                      : <Decrypt key={i} bold text={seg.b} delay={D.caseB + i * 25} />,
+                  )}
+                </div>
+              </div>
+            )}
           </div>
+        </div>
+
+        <div className="bottom-readout">
+          <button className="back-link" onClick={onClose} type="button">
+            <Decrypt text="← back to work" delay={D.bottom} />
+          </button>
+          <div className="affordance" aria-hidden="true">
+            <Decrypt text="move cursor to orbit · layers separated on Z" delay={D.bottom + 40} />
+          </div>
+          <button className="exp-close" onClick={onClose} aria-label="Close exploded view" type="button">×</button>
         </div>
       </div>
+
       <style>{`
-        .exploded { position: fixed; inset: 0; z-index: 220; padding: 40px; display: grid; place-items: center; background: rgba(5,8,12,0.78); backdrop-filter: blur(6px); }
-        .exp-panel { width: min(1200px, 100%); height: min(720px, 90vh); display: grid; grid-template-rows: auto 1fr; background: var(--bg); color: var(--fg); border: 1px solid var(--line-strong); border-radius: 14px; box-shadow: 0 40px 100px rgba(0,0,0,0.6); overflow: hidden; }
-        .exp-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 22px; border-bottom: 1px solid var(--line); font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
-        .exp-close { background: transparent; border: 0; color: var(--fg); font-size: 26px; cursor: pointer; line-height: 1; }
-        .exp-grid { display: grid; grid-template-columns: 1.4fr 1fr; min-height: 0; }
-        .exp-stage { position: relative; padding: 40px; display: grid; gap: 18px; align-content: center; perspective: 900px; }
-        .exp-layer { padding: 14px 18px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); transition: transform 0.4s ease, opacity 0.4s ease; }
-        .exp-layer-tag { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
-        .exp-layer p { margin: 0; font-size: 13px; color: var(--muted); }
-        .exp-meta { padding: 40px; border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 18px; overflow-y: auto; }
-        .exp-meta .display { font-size: clamp(36px, 4vw, 56px); margin: 0; }
-        .exp-stats { display: flex; gap: 32px; padding-top: 14px; border-top: 1px solid var(--line); }
-        .exp-stats b { display: block; font-family: var(--f-display); font-size: 32px; color: var(--accent); }
-        .exp-stats span { font-family: var(--f-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
-        .exp-tags { display: flex; gap: 8px; flex-wrap: wrap; }
-        .exp-tags span { padding: 4px 10px; border: 1px solid var(--line-strong); border-radius: 999px; font-family: var(--f-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+        .exploded-view {
+          --p: color-mix(in srgb, var(--surface) 78%, transparent);
+          --a5: color-mix(in srgb, var(--accent) 5%, transparent);
+          --a6: color-mix(in srgb, var(--accent) 6%, transparent);
+          --a8: color-mix(in srgb, var(--accent) 8%, transparent);
+          --a10: color-mix(in srgb, var(--accent) 10%, transparent);
+          --a12: color-mix(in srgb, var(--accent) 12%, transparent);
+          position: fixed; inset: 0; z-index: 220; overflow: hidden;
+          color: var(--fg); font-family: var(--f-body);
+        }
+        /* The wrapper that the grow-from-card FLIP animates. Holds the opaque
+           field, so the backdrop root stays transparent and the scene erupts
+           from the card. */
+        .exploded-view .exp-viewport { position: absolute; inset: 0; will-change: transform, opacity; }
+        .exploded-view .field {
+          position: absolute; inset: 0; z-index: 0;
+          background:
+            radial-gradient(120% 90% at 70% 18%, var(--a10) 0%, transparent 55%),
+            radial-gradient(100% 80% at 20% 90%, color-mix(in srgb, var(--accent) 7%, transparent) 0%, transparent 60%),
+            var(--bg);
+        }
+        .exploded-view .field::before {
+          content: ""; position: absolute; inset: 0;
+          background-image:
+            linear-gradient(var(--line) 0.5px, transparent 0.5px),
+            linear-gradient(90deg, var(--line) 0.5px, transparent 0.5px);
+          background-size: 46px 46px;
+          -webkit-mask-image: radial-gradient(120% 100% at 50% 45%, #000 30%, transparent 85%);
+          mask-image: radial-gradient(120% 100% at 50% 45%, #000 30%, transparent 85%);
+          opacity: 0.6;
+        }
+        .exploded-view .grain {
+          position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0.05;
+          background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+        }
+
+        .exploded-view .hud-corner { position: absolute; width: 60px; height: 60px; z-index: 40; pointer-events: none; }
+        .exploded-view .hud-corner::before, .exploded-view .hud-corner::after { content: ""; position: absolute; background: var(--accent); opacity: 0.8; }
+        .exploded-view .hud-corner::before { width: 22px; height: 1.5px; }
+        .exploded-view .hud-corner::after { width: 1.5px; height: 22px; }
+        .exploded-view .c-tl { top: 22px; left: 22px; } .exploded-view .c-tl::before, .exploded-view .c-tl::after { top: 0; left: 0; }
+        .exploded-view .c-tr { top: 22px; right: 22px; } .exploded-view .c-tr::before { top: 0; right: 0; } .exploded-view .c-tr::after { top: 0; right: 0; }
+        .exploded-view .c-bl { bottom: 22px; left: 22px; } .exploded-view .c-bl::before { bottom: 0; left: 0; } .exploded-view .c-bl::after { bottom: 0; left: 0; }
+        .exploded-view .c-br { bottom: 22px; right: 22px; } .exploded-view .c-br::before { bottom: 0; right: 0; } .exploded-view .c-br::after { bottom: 0; right: 0; }
+
+        .exploded-view .top-readout {
+          position: absolute; top: 30px; left: 64px; right: 64px; z-index: 41;
+          display: flex; justify-content: space-between; align-items: flex-start;
+          font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.14em;
+          text-transform: uppercase; color: var(--muted); pointer-events: none;
+        }
+        .exploded-view .top-readout .title { color: var(--fg); }
+        .exploded-view .top-readout .title b { color: var(--accent-bright); font-weight: 500; }
+        .exploded-view .top-readout .right { text-align: right; line-height: 1.7; }
+        .exploded-view .top-readout .right .live { color: var(--accent); }
+        .exploded-view .live-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background: var(--accent); margin-right:6px; vertical-align: 1px; animation: exp-blink 1.4s ease-in-out infinite; }
+        @keyframes exp-blink { 0%,100%{opacity:1;} 50%{opacity:0.25;} }
+
+        .exploded-view .bottom-readout {
+          position: absolute; bottom: 30px; left: 64px; right: 64px; z-index: 41;
+          display: flex; justify-content: space-between; align-items: flex-end;
+          font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.12em;
+          text-transform: uppercase; color: var(--muted-2);
+        }
+        .exploded-view .affordance { color: var(--accent); pointer-events: none; }
+        .exploded-view .back-link {
+          color: var(--muted); background: transparent; font: inherit; text-transform: inherit; letter-spacing: inherit;
+          border: 0.5px solid var(--line-strong); border-radius: 999px; padding: 7px 14px; cursor: pointer;
+          transition: color .2s, border-color .2s, background .2s;
+        }
+        .exploded-view .back-link:hover { color: var(--fg); border-color: var(--accent); background: var(--a8); }
+        .exploded-view .exp-close { background: transparent; border: 0; color: var(--fg); font-size: 24px; line-height: 1; cursor: pointer; }
+
+        .exploded-view .stage { position: absolute; inset: 0; z-index: 10; }
+        .exploded-view .scene { position: absolute; inset: 0; }
+
+        .exploded-view svg.leaders { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 11; pointer-events: none; overflow: visible; }
+        .exploded-view svg.leaders polyline { stroke: var(--accent); stroke-width: 1; opacity: 0.55; fill: none; }
+        .exploded-view svg.leaders .lead-dash { stroke-dasharray: 3 4; opacity: 0.4; }
+        .exploded-view svg.leaders circle.node { fill: var(--bg); stroke: var(--accent); stroke-width: 1.2; }
+        .exploded-view svg.leaders circle.core { fill: var(--accent); }
+
+        .exploded-view .frag {
+          position: absolute; z-index: 12;
+          background: var(--p);
+          backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px);
+          border: 0.5px solid var(--line-strong); border-radius: 10px;
+          box-shadow: 0 30px 60px -28px rgba(0,0,0,0.8);
+          will-change: transform; transition: box-shadow .3s, border-color .3s;
+        }
+        .exploded-view .frag:hover { border-color: var(--accent); box-shadow: 0 40px 80px -30px rgba(0,0,0,0.9), 0 0 0 1px var(--accent); z-index: 30; }
+        .exploded-view .frag-label {
+          position: absolute; top: -9px; left: 14px;
+          font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+          color: var(--accent); background: var(--bg); padding: 2px 8px; border: 0.5px solid var(--line-strong); border-radius: 4px;
+        }
+        .exploded-view .frag-idx {
+          position: absolute; top: 10px; right: 12px;
+          font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--muted-2);
+        }
+        .exploded-view h3.frag-h { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); font-weight: 400; }
+
+        .exploded-view #exp-frag-preview { left: 6%; top: 24%; width: 34%; height: 46%; padding: 12px; }
+        .exploded-view .preview-shot, .exploded-view .preview-fallback { width: 100%; height: 100%; border-radius: 5px; overflow: hidden; position: relative; }
+        .exploded-view .preview-shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .exploded-view .preview-fallback {
+          background:
+            linear-gradient(135deg, var(--a12), transparent 60%),
+            repeating-linear-gradient(135deg, var(--a5) 0 12px, transparent 12px 24px),
+            var(--surface);
+          display: grid; place-items: center;
+        }
+        .exploded-view .preview-fallback .ph {
+          font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+          color: var(--accent); border: 0.5px dashed var(--line-strong); border-radius: 6px; padding: 10px 16px;
+        }
+        .exploded-view .preview-meta {
+          position: absolute; bottom: 10px; left: 12px; right: 12px; display: flex; justify-content: space-between;
+          font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+        }
+        .exploded-view .preview-shot .preview-meta { color: var(--fg); text-shadow: 0 1px 6px rgba(0,0,0,0.8); }
+
+        .exploded-view #exp-frag-stats { left: 60%; top: 13%; width: 33%; padding: 22px; }
+        .exploded-view .stat-row { display: flex; gap: 26px; align-items: flex-start; }
+        .exploded-view .stat-cell .v { font-family: var(--f-display); font-size: 40px; line-height: 1; letter-spacing: -0.02em; color: var(--fg); white-space: nowrap; }
+        .exploded-view .stat-cell .l { font-family: var(--f-mono); font-size: 9.5px; line-height: 1.4; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-top: 8px; max-width: 13ch; display: inline-block; }
+
+        .exploded-view #exp-frag-tags { left: 67%; top: 44%; width: 30%; padding: 18px 20px 20px; }
+        .exploded-view .tags-wrap { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+        .exploded-view .tag { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--fg); border: 0.5px solid var(--line-strong); border-radius: 999px; padding: 5px 11px; background: var(--a6); }
+        .exploded-view .tag b { color: var(--accent); font-weight: 400; margin-right: 4px; }
+
+        .exploded-view #exp-frag-arch { left: 13%; top: 74%; width: 33%; padding: 18px 20px; }
+        .exploded-view .arch-diagram { display: flex; align-items: center; gap: 0; margin-top: 10px; }
+        .exploded-view .arch-node { flex: 1; border: 0.5px solid var(--line-strong); border-radius: 6px; padding: 9px 6px; text-align: center; font-family: var(--f-mono); font-size: 8.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg); background: var(--a5); line-height: 1.4; }
+        .exploded-view .arch-node small { display: block; color: var(--muted-2); font-size: 7.5px; margin-top: 3px; }
+        .exploded-view .arch-link { flex: 0 0 18px; height: 1px; background: var(--accent); position: relative; opacity: 0.7; }
+        .exploded-view .arch-link::after { content: "›"; position: absolute; right: -2px; top: -8px; color: var(--accent); font-size: 11px; }
+
+        .exploded-view #exp-frag-case { left: 50%; top: 70%; width: 30%; padding: 20px 22px; }
+        .exploded-view .case-title { font-family: var(--f-display); font-size: 22px; line-height: 1.05; letter-spacing: -0.01em; margin-bottom: 8px; }
+        .exploded-view .case-body { font-size: 12.5px; line-height: 1.55; color: var(--muted); }
+        .exploded-view .case-body b { color: var(--fg); font-weight: 500; }
+
+        /* Not-yet-decoded glyphs (DecryptedText encryptedClassName) tint to the
+           accent so text resolves from accent-colored cipher into place. */
+        .exploded-view .exp-enc { color: var(--accent); opacity: 0.85; }
+
+        @media (max-width: 980px) {
+          .exploded-view .scene { transform: scale(0.62); transform-origin: center; }
+          .exploded-view .top-readout, .exploded-view .bottom-readout { left: 24px; right: 24px; }
+        }
+        @media (max-width: 640px) {
+          .exploded-view .scene { transform: scale(0.42); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .exploded-view .live-dot { animation: none; }
+        }
       `}</style>
     </div>
   );
 }
-
-const DEFAULT_LAYERS = [
-  { label: "Frontend", desc: "Client-side UI and interactions." },
-  { label: "API",      desc: "REST or GraphQL surface." },
-  { label: "Services", desc: "Business logic, domain services." },
-  { label: "Data",     desc: "Persistence layer (SQL/NoSQL)." },
-  { label: "Infra",    desc: "Deployment, monitoring, CI/CD." },
-];

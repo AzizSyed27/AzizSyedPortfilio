@@ -5,6 +5,13 @@ import { ProjectFlipBoard } from "../components/ProjectFlipBoard";
 import { FEATURED_PROJECTS, ARCHIVE_PROJECTS } from "../content/projects";
 import { useActions } from "../intents/actions";
 
+// Plain-object rect of an element — fed to openProject so the exploded view can
+// grow out of the card the user clicked (FLIP origin).
+const rectOf = (el) => {
+  const r = el.getBoundingClientRect();
+  return { x: r.left, y: r.top, w: r.width, h: r.height };
+};
+
 function ProjectCardTilt({ p }) {
   const actions = useActions();
   const ref = useRef(null);
@@ -34,7 +41,7 @@ function ProjectCardTilt({ p }) {
       onMouseMove={onMove}
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
-      onClick={() => actions.openProject(p.id)}
+      onClick={(e) => actions.openProject(p.id, rectOf(e.currentTarget))}
     >
       <div className="pc-codebadge">{p.num}</div>
       <div>
@@ -53,7 +60,7 @@ function ProjectCardTilt({ p }) {
       <button
         className="pc-explode"
         data-cursor="hover"
-        onClick={(e) => { e.stopPropagation(); actions.openProject(p.id); }}
+        onClick={(e) => { e.stopPropagation(); actions.openProject(p.id, rectOf(e.currentTarget.closest(".project-card"))); }}
         type="button"
       >
         <span className="pc-explode-icon" aria-hidden="true">⊹</span>

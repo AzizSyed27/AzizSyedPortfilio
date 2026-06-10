@@ -1,5 +1,12 @@
-// Featured projects — TODO: user will supply real copy + screenshots for
-// MyE46, ASL Hand Coach, HiddenHooks. PxP copy + screenshot already real.
+// Featured projects. Each carries the data the handoff exploded view renders
+// as floating fragments: preview (screenshot or fallback), stats (metrics),
+// tags (stack), arch (request-path nodes), and caseStudy (narrative).
+//
+// Screenshots are Vite-bundled assets — import them, don't reference a
+// public/ URL string. Projects without a real screenshot omit preview.image
+// and render the designed "Drop … screenshot" fallback. To add one: drop the
+// file in src/assets/project-pics/, import it here, set preview.image.
+import pxpShot from "../assets/project-pics/pxp-img.png";
 
 export const FEATURED_PROJECTS = [
   {
@@ -9,18 +16,27 @@ export const FEATURED_PROJECTS = [
     url: "ProjectsXProjects.ca",
     desc: "Full-stack nonprofit platform serving 125+ subscribers — donations, content, and supporter newsletters.",
     tags: ["React", "Spring Boot", "PostgreSQL", "Stripe", "Cloudflare"],
-    image: "/assets/project-pics/pxp-img.png",
+    preview: { image: pxpShot, metaLeft: "DONOR PORTAL · LIVE", dims: "1920×1080" },
     stats: [
-      { v: "$50K+", l: "in donations" },
-      { v: "99.6%", l: "payment success" },
+      { v: "$50K+", l: "Donations processed" },
+      { v: "99.6%", l: "Payment success rate" },
     ],
-    layers: [
-      { label: "React + Vite SPA",       desc: "Public pages, donation flows, supporter signups." },
-      { label: "Spring Boot REST API",   desc: "Content, media, subscriptions, payment intents." },
-      { label: "Stripe Checkout",        desc: "PCI-safe donation processing, webhook reconciliation." },
-      { label: "PostgreSQL + Flyway",    desc: "Versioned migrations, role-aware data access." },
-      { label: "Cloudflare R2 + Brevo",  desc: "Image hosting + transactional email." },
+    arch: [
+      { label: "CLIENT", sub: "React SPA" },
+      { label: "API", sub: "Spring Boot" },
+      { label: "DB", sub: "PostgreSQL" },
+      { label: "PAY", sub: "Stripe" },
     ],
+    caseStudy: {
+      title: "A platform that pays it forward.",
+      body: [
+        "Projects by the Projects is a full-stack nonprofit platform I built and run as CTO. It handles ",
+        { b: "donations, content, and supporter newsletters" },
+        " for 125+ subscribers, with Stripe checkout behind a Spring Boot API. Quietly in production, it has processed ",
+        { b: "$50K+ in donations" },
+        " at a 99.6% payment success rate.",
+      ],
+    },
   },
   {
     id: "mye46",
@@ -29,18 +45,27 @@ export const FEATURED_PROJECTS = [
     url: "MyE46.app",
     desc: "Agentic 3D car configurator. Plain-English mods, live budget-aware build updates, real-time part swapping.",
     tags: ["React Three Fiber", "Three.js", "Express", "Gemini API", "Zustand"],
-    placeholder: true,
+    preview: { metaLeft: "RENDER · R3F SCENE", dims: "1920×1080" },
     stats: [
-      { v: "600+", l: "users week one" },
-      { v: "15-30%", l: "GPU under load" },
+      { v: "600+", l: "Users week one" },
+      { v: "15–30%", l: "GPU under load" },
     ],
-    layers: [
-      { label: "R3F scene",         desc: "WebGL car model with swappable parts." },
-      { label: "Agent",             desc: "Plain-English mod requests → diffs in scene." },
-      { label: "Pricing engine",    desc: "Live budget calc per part swap." },
-      { label: "Express backend",   desc: "Persistence + share links." },
-      { label: "Adaptive renderer", desc: "LOD/quality scales with load." },
+    arch: [
+      { label: "CLIENT", sub: "R3F canvas" },
+      { label: "STATE", sub: "Zustand" },
+      { label: "API", sub: "Express" },
+      { label: "AGENT", sub: "Gemini" },
     ],
+    caseStudy: {
+      title: "Talk to your build.",
+      body: [
+        "MyE46 turns plain-English requests into live 3D mods. I built an ",
+        { b: "agentic layer over a React Three Fiber scene" },
+        " that swaps parts, tracks a running budget, and re-renders in real time. The hard part wasn't the AI — it was keeping the GPU calm: adaptive LOD dropped load from ",
+        { b: "90% to 15–30%" },
+        " under 200 concurrent users.",
+      ],
+    },
   },
   {
     id: "asl",
@@ -49,18 +74,27 @@ export const FEATURED_PROJECTS = [
     url: "ASLHandCoach.ca",
     desc: "Browser-based ASL trainer. Live camera input, 21 hand keypoints, sub-200ms ML inference.",
     tags: ["React", "TypeScript", "MediaPipe", "CNN", "Tailwind"],
-    placeholder: true,
+    preview: { metaLeft: "CAM 01 · 21 KEYPOINTS", dims: "640×480" },
     stats: [
-      { v: "90%", l: "recognition accuracy" },
-      { v: "36", l: "signs A–Z, 0–9" },
+      { v: "90%", l: "Recognition accuracy" },
+      { v: "<200ms", l: "Inference / frame" },
     ],
-    layers: [
-      { label: "Camera",      desc: "getUserMedia stream, mirrored canvas." },
-      { label: "MediaPipe",   desc: "Palm detector + 21-point landmark regression." },
-      { label: "Feature ext.",desc: "Joint angles, normalized, per-frame." },
-      { label: "CNN classifier", desc: "Sub-200ms inference, 36 sign classes." },
-      { label: "Coaching UI", desc: "Progress, drills, accuracy feedback." },
+    arch: [
+      { label: "CAMERA", sub: "getUserMedia" },
+      { label: "DETECT", sub: "CNN palm" },
+      { label: "LANDMARK", sub: "21 keypoints" },
+      { label: "CLASSIFY", sub: "A–Z · 0–9" },
     ],
+    caseStudy: {
+      title: "Learn to sign, in the browser.",
+      body: [
+        "ASL Hand Coach is a browser-based ASL trainer with ",
+        { b: "no install and no upload" },
+        " — everything runs on-device. A CNN palm detector feeds a 21-keypoint landmark regressor, classifying ",
+        { b: "36 signs at 90% accuracy" },
+        " with sub-200ms inference. It's also the seed of the hand-tracking nav I'm adding to this site.",
+      ],
+    },
   },
   {
     id: "hooks",
@@ -69,18 +103,27 @@ export const FEATURED_PROJECTS = [
     url: "HiddenHooks.ca",
     desc: "PostGIS engine ranking 100K+ Ontario water bodies. Geospatial ETL across 9 open-data sources, graph inference for fish presence.",
     tags: ["FastAPI", "PostGIS", "NetworkX", "Next.js", "Mapbox GL"],
-    placeholder: true,
+    preview: { metaLeft: "MAP · MAPBOX GL", dims: "1920×1080" },
     stats: [
-      { v: "3GB+", l: "geospatial data" },
-      { v: "100K+", l: "water bodies" },
+      { v: "100K+", l: "Water bodies ranked" },
+      { v: "3GB+", l: "Geospatial data" },
     ],
-    layers: [
-      { label: "Map UI",       desc: "Next.js + Mapbox GL, ranked overlays." },
-      { label: "FastAPI",      desc: "Query API + spatial filters." },
-      { label: "PostGIS",      desc: "GiST + KNN indexes over 100k water bodies." },
-      { label: "ETL pipeline", desc: "Shapefile/CSV/GeoTIFF across 9 sources." },
-      { label: "Graph engine", desc: "NetworkX inference for fish presence." },
+    arch: [
+      { label: "SOURCES", sub: "9 datasets" },
+      { label: "ETL", sub: "GeoPandas" },
+      { label: "POSTGIS", sub: "GiST + KNN" },
+      { label: "GRAPH", sub: "NetworkX" },
     ],
+    caseStudy: {
+      title: "Where are the fish, exactly?",
+      body: [
+        "HiddenHooks is a geospatial engine ranking ",
+        { b: "100,000+ Ontario water bodies" },
+        " by likely fish presence. I built a spatial ETL across 9 open-data sources into PostGIS (",
+        { b: "3GB+" },
+        "), then ran graph inference with NetworkX to propagate species likelihood across connected waterways — served to a Mapbox front-end via FastAPI.",
+      ],
+    },
   },
 ];
 
