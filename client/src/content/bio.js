@@ -9,5 +9,5 @@ export const BIO = {
   resumePath: "/src/assets/Aziz_Syed_Resume.pdf",
   tagline: "I build software that thinks, sees & responds.",
   blurb:
-    "I'm Aziz — I build computer-vision pipelines, agentic LLM systems, and 3D experiences that ship to real users.",
+    "I'm Aziz — I build data engineering pipelines, agentic LLM systems, and graceful technical experiences that ship to real users.",
 };
