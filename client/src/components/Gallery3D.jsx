@@ -7,6 +7,13 @@ const GalleryScene = lazy(() =>
 
 const GALLERY_OBJECTS = [
   {
+    id: "coding", modelId: "coding",
+    label: "coding", code: "OBJ/06",
+    tag: "This site · you are here",
+    note: "Me, mid-commit — the animated one, because this is the state you'll most reliably find me in. Everything else in this gallery got built from this chair.",
+    art: "coding",
+  },
+  {
     id: "e46", modelId: "e46",
     label: "BMW E46", code: "OBJ/01",
     tag: "MyE46 · React Three Fiber",
@@ -19,13 +26,6 @@ const GALLERY_OBJECTS = [
     tag: "HiddenHooks · PostGIS",
     note: "Me, with a fishing rod. The why behind HiddenHooks — 100,000 water bodies and one very specific question.",
     art: "person",
-  },
-  {
-    id: "forest", modelId: "forest",
-    label: "forest", code: "OBJ/03",
-    tag: "HiddenHooks · trip planner",
-    note: "Trails, not parking lots. HiddenHooks plans a hike to every fishing spot — built because I'd rather walk to the water with friends than drive to it.",
-    art: "forest",
   },
   {
     id: "court", modelId: "court",
@@ -42,11 +42,11 @@ const GALLERY_OBJECTS = [
     art: "cat",
   },
   {
-    id: "coding", modelId: "coding",
-    label: "coding", code: "OBJ/06",
-    tag: "This site · you are here",
-    note: "Me, mid-commit — the animated one, because this is the state you'll most reliably find me in. Everything else in this gallery got built from this chair.",
-    art: "coding",
+    id: "forest", modelId: "forest",
+    label: "forest", code: "OBJ/03",
+    tag: "HiddenHooks · trip planner",
+    note: "Trails, not parking lots. HiddenHooks plans a hike to every fishing spot — built because I'd rather walk to the water with friends than drive to it.",
+    art: "forest",
   },
 ];
 
