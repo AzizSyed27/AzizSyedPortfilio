@@ -34,15 +34,6 @@ function ContactDetails() {
         </div>
       </div>
       <div className="contact-detail">
-        <div className="label">Phone</div>
-        <div className="value" style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <a href={`tel:${BIO.phone.replace(/[^+\d]/g, "")}`} data-cursor="hover">{BIO.phone}</a>
-          <button className="btn ghost" style={{ padding: "4px 10px", fontSize: 11 }} onClick={() => copy(BIO.phone, "phone")}>
-            {copied === "phone" ? "Copied!" : "Copy"}
-          </button>
-        </div>
-      </div>
-      <div className="contact-detail">
         <div className="label">Where</div>
         <div className="value">{BIO.location} · Canada</div>
       </div>

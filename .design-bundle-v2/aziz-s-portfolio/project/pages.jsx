@@ -1119,10 +1119,7 @@ function ContactPage() {
               <div className="label">Email</div>
               <div className="value"><a href="mailto:azizsyed2016@gmail.com" data-cursor="hover">azizsyed2016@gmail.com</a></div>
             </div>
-            <div className="contact-detail">
-              <div className="label">Phone</div>
-              <div className="value"><a href="tel:+16475398171" data-cursor="hover">+1 (647) 539-8171</a></div>
-            </div>
+
             <div className="contact-detail">
               <div className="label">Where</div>
               <div className="value">Scarborough, Ontario · Canada</div>

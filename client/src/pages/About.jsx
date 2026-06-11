@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Section } from "../components/Section";
-import portraitA from "../assets/person-pics/aziz_top_shot.jpeg";
 import portraitB from "../assets/person-pics/aziz_top_shot_2.jpeg";
 import gym from "../assets/person-pics/portfolio_gym.jpeg";
 import trail from "../assets/person-pics/portfolio_trails.jpeg";

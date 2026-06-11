@@ -54,6 +54,7 @@ export function StackConstellation() {
     const field = fieldRef.current;
     const svg = svgRef.current;
     if (!field || !svg) return undefined;
+    const sc = S.current; // stable ref captured for the cleanup
     let raf;
 
     const measure = () => {
@@ -158,11 +159,11 @@ export function StackConstellation() {
         if (el.dataset.state !== ds) el.dataset.state = ds;
       }
 
-      drawLines(act, linkSet);
+      drawLines(act);
       raf = requestAnimationFrame(tick);
     };
 
-    const drawLines = (act, linkSet) => {
+    const drawLines = (act) => {
       const st = S.current;
       if (!act) {
         if (st.lineEls.length) { st.lineEls.forEach((l) => l.remove()); st.lineEls = []; }
@@ -194,8 +195,8 @@ export function StackConstellation() {
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
-      S.current.lineEls.forEach((l) => l.remove());
-      S.current.lineEls = [];
+      sc.lineEls.forEach((l) => l.remove());
+      sc.lineEls = [];
     };
   }, [view]);
 

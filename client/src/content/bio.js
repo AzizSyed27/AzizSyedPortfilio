@@ -3,7 +3,7 @@ export const BIO = {
   role: "Software Engineer",
   location: "Scarborough, ON",
   email: "azizsyed2016@gmail.com",
-  phone: "+1 (647) 539-8171",
+  phone: "+1 (647) 539-0000",
   github: "https://github.com/AzizSyed27",
   linkedin: "https://ca.linkedin.com/in/azizsyed",
   resumePath: "/src/assets/Aziz_Syed_Resume.pdf",
