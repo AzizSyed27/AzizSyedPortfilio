@@ -1,0 +1,133 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]: AZ
+        - generic [ref=e7]:
+          - generic [ref=e8]: Aziz Syed
+          - text: Software Engineer
+          - text: Scarborough, ON
+      - navigation [ref=e9]:
+        - button "01 Index" [ref=e10]:
+          - generic [ref=e11]: "01"
+          - generic [ref=e12]: Index
+        - button "02 About" [ref=e13]:
+          - generic [ref=e14]: "02"
+          - generic [ref=e15]: About
+        - button "03 Services" [ref=e16]:
+          - generic [ref=e17]: "03"
+          - generic [ref=e18]: Services
+        - button "04 Work" [ref=e19]:
+          - generic [ref=e20]: "04"
+          - generic [ref=e21]: Work
+        - button "05 Contact" [ref=e22]:
+          - generic [ref=e23]: "05"
+          - generic [ref=e24]: Contact
+        - button "06 Log" [active] [ref=e25]:
+          - generic [ref=e26]: "06"
+          - generic [ref=e27]: Log
+      - generic [ref=e28]:
+        - generic [ref=e29]: 17:53:29 EST · v3.0
+        - generic [ref=e30]:
+          - button "Theme Select ▾" [ref=e32]:
+            - generic [ref=e34]: Theme Select
+            - generic [ref=e35]: ▾
+          - button "Hand Ctrl · Live" [ref=e100]:
+            - generic [ref=e38]: Hand Ctrl · Live
+    - generic [ref=e291]:
+      - generic [ref=e292]: 06 Log · /build-journal
+      - generic [ref=e293]:
+        - heading "Build log." [level=2] [ref=e294]:
+          - text: Build
+          - emphasis [ref=e295]: log
+          - text: .
+        - paragraph [ref=e296]: A running tail of what I've shipped, learned, or broken lately.
+      - generic [ref=e297]:
+        - generic [ref=e303]: "aziz@portfolio: ~/build-journal — log --tail"
+        - generic [ref=e304]:
+          - generic [ref=e305]:
+            - generic [ref=e306]:
+              - generic [ref=e307]: 2026.05.21
+              - generic [ref=e308]: shipped
+            - generic [ref=e309]:
+              - generic [ref=e310]: › HiddenHooks v0.4
+              - paragraph [ref=e311]: Ranking model now incorporates 9th open-data source (provincial bathymetry). Top-100 rankings shift modestly; tail of long-tail water bodies improves a lot.
+          - generic [ref=e312]:
+            - generic [ref=e313]:
+              - generic [ref=e314]: 2026.05.14
+              - generic [ref=e315]: built
+            - generic [ref=e316]:
+              - generic [ref=e317]: › Hand-Coach drill mode
+              - paragraph [ref=e318]: "Added per-letter drill: target letter, 5-rep streak, scored accuracy. Average attempt time drops from 9s to 3.4s."
+          - generic [ref=e319]:
+            - generic [ref=e320]:
+              - generic [ref=e321]: 2026.05.02
+              - generic [ref=e322]: shipped
+            - generic [ref=e323]:
+              - generic [ref=e324]: › MyE46 sharing links
+              - paragraph [ref=e325]: Builds are now URL-encoded; share any config without an account. Adopted base64url + crc32 to keep links short and tamper-evident.
+          - generic [ref=e326]:
+            - generic [ref=e327]:
+              - generic [ref=e328]: 2026.04.27
+              - generic [ref=e329]: learned
+            - generic [ref=e330]:
+              - generic [ref=e331]: › Why my radar was lying
+              - paragraph [ref=e332]: Initial sweep period was 8s; real reactions land in 1.2s. Tightened to 7s and decoupled blip selection from sweep tick. Felt better immediately.
+          - generic [ref=e333]:
+            - generic [ref=e334]:
+              - generic [ref=e335]: 2026.04.18
+              - generic [ref=e336]: broke
+            - generic [ref=e337]:
+              - generic [ref=e338]: › Stripe webhook 502
+              - paragraph [ref=e339]: Render's free tier idle-sleeps. Webhooks were retrying every 15s into a cold start, hammering 502s. Moved to starter; cold starts gone.
+          - generic [ref=e340]:
+            - generic [ref=e341]:
+              - generic [ref=e342]: 2026.04.05
+              - generic [ref=e343]: shipped
+            - generic [ref=e344]:
+              - generic [ref=e345]: › PxP supporter newsletter
+              - paragraph [ref=e346]: Brevo SMTP wired up; first edition went to 125 subscribers with a 64% open rate, 11% click-through.
+          - generic [ref=e347]:
+            - generic [ref=e348]:
+              - generic [ref=e349]: 2026.03.28
+              - generic [ref=e350]: built
+            - generic [ref=e351]:
+              - generic [ref=e352]: › Constellation stack view
+              - paragraph [ref=e353]: Replaced the static tech-stack chips with a force-directed constellation. Grab-throw with springy walls. Took two evenings — worth it.
+          - generic [ref=e354]:
+            - generic [ref=e355]:
+              - generic [ref=e356]: 2026.03.15
+              - generic [ref=e357]: learned
+            - generic [ref=e358]:
+              - generic [ref=e359]: › Adaptive LOD groundwork
+              - paragraph [ref=e360]: Reading gl.info per-frame is cheap; reacting to it well isn't. Smoothed over 60-frame window before downgrading quality.
+          - generic [ref=e361]: $ tail -f build-journal.log
+    - contentinfo [ref=e40]:
+      - generic [ref=e41]: © 2026 Aziz Syed · Built with care
+      - generic [ref=e42]: v3.0 · Spatial preview · Keys 1–6 navigate · H toggles cheat sheet · [ ] cycles themes
+      - link "github.com/AzizSyed27" [ref=e44] [cursor=pointer]:
+        - /url: https://github.com/AzizSyed27
+  - generic:
+    - generic: HAND CTRL · LIVE
+  - generic [ref=e263]:
+    - generic [ref=e264]:
+      - generic [ref=e265]:
+        - text: SENSOR ·
+        - generic [ref=e267]: LIVE
+      - generic [ref=e268]: CAM 01
+    - generic [ref=e276]: ▸ no hand
+    - generic [ref=e277]:
+      - generic [ref=e278]:
+        - generic [ref=e279]: fps
+        - generic [ref=e280]: "29"
+      - generic [ref=e281]:
+        - generic [ref=e282]: landmarks
+        - generic [ref=e283]: "0"
+      - generic [ref=e284]:
+        - generic [ref=e285]: latency
+        - generic [ref=e286]: 18ms
+      - generic [ref=e287]:
+        - generic [ref=e288]: track
+        - generic [ref=e289]: scan
+  - generic:
+    - generic: x:0.43 y:0.08

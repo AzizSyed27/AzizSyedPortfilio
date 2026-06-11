@@ -1,16 +1,7 @@
-import { useEffect, useState } from "react";
-
+// Ambient hand-mode frame: corner brackets + a minimal status line. The
+// center-screen reticle (and its x/y readout) is owned by HandCursor — this
+// component is static chrome only.
 export function HudReticle() {
-  const [pos, setPos] = useState({ x: 0.5, y: 0.5 });
-
-  useEffect(() => {
-    const onMove = (e) => {
-      setPos({ x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight });
-    };
-    window.addEventListener("mousemove", onMove);
-    return () => window.removeEventListener("mousemove", onMove);
-  }, []);
-
   return (
     <div className="hud-overlay on" aria-hidden="true">
       <div className="hud-corner hud-tl" />
@@ -18,10 +9,7 @@ export function HudReticle() {
       <div className="hud-corner hud-bl" />
       <div className="hud-corner hud-br" />
       <div className="hud-readout">
-        <b>HAND CTRL · LIVE (mouse fallback)</b><br />
-        gesture: open palm<br />
-        confidence: 94%<br />
-        x:{pos.x.toFixed(3)} y:{pos.y.toFixed(3)}
+        <b>HAND CTRL · LIVE</b>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 
 import { ThemeProvider } from "./theme/ThemeProvider";
 import { ModeProvider } from "./mode/ModeProvider";
+import { HandPipelineProvider } from "./hand/HandPipelineProvider";
 import { ThemeModeSync } from "./theme/ThemeModeSync";
 import { OverlayProvider } from "./intents/OverlayContext";
 import { GalleryProvider } from "./intents/GalleryContext";
@@ -45,6 +46,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <ModeProvider>
+        <HandPipelineProvider>
         <GalleryProvider>
           <OverlayProvider>
             <BrowserRouter>
@@ -70,6 +72,7 @@ export default function App() {
             </BrowserRouter>
           </OverlayProvider>
         </GalleryProvider>
+        </HandPipelineProvider>
       </ModeProvider>
     </ThemeProvider>
   );

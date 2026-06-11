@@ -7,11 +7,11 @@ const prefersReduced = () =>
   typeof matchMedia !== "undefined" &&
   matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-// Boot-sequence timeline (toggle-on). Three phases play during `calibrating`
-// before the site goes `live`: black pre-roll → CLI → HUD visor. ModeProvider is
-// the single owner of the clock (durations imported from bootTimeline) so the
-// in-component animations can't drift. Phase 2 will replace these timers with
-// real calibration-progress callbacks.
+// Hand-mode lifecycle: standby → requesting (camera permission pending) →
+// calibrating (boot sequence) → live → standby. ModeProvider owns the boot
+// clock (durations imported from bootTimeline) so the in-component animations
+// can't drift; HandPipelineProvider drives the transitions — it calls
+// startBoot() once the camera is granted and abortHand() on any failure.
 
 export function ModeProvider({ children, defaultMode = "mouse" }) {
   const [mode, setMode] = useState(defaultMode);
@@ -31,27 +31,44 @@ export function ModeProvider({ children, defaultMode = "mouse" }) {
     setHandState("live");
   }, [clearTimers]);
 
-  // Single toggle: standby → boot (black → cli → hud) → live → standby.
-  const toggleHandMode = useCallback(() => {
+  // Full exit from any hand state back to mouse-only.
+  const abortHand = useCallback(() => {
     clearTimers();
+    setBootPhase(null);
+    setHandState("standby");
+  }, [clearTimers]);
+
+  // Camera granted → play the boot sequence (black → cli → hud), then live.
+  const startBoot = useCallback(() => {
+    clearTimers();
+    const black = prefersReduced() ? 0 : BLACK_MS;
+    const cli = prefersReduced() ? 0 : CLI_MS;
+    const hud = prefersReduced() ? 0 : HUD_MS;
+    setBootPhase("black");
+    setHandState("calibrating");
+    timers.current.push(setTimeout(() => setBootPhase("cli"), black));
+    timers.current.push(setTimeout(() => setBootPhase("hud"), black + cli));
+    timers.current.push(setTimeout(() => { setBootPhase(null); setHandState("live"); }, black + cli + hud));
+  }, [clearTimers]);
+
+  // Single toggle: standby → requesting (HandPipelineProvider takes it from
+  // there); any active state → full exit (camera released by the pipeline).
+  const toggleHandMode = useCallback(() => {
     setHandState((s) => {
-      if (s !== "standby") { setBootPhase(null); return "standby"; }
-      const black = prefersReduced() ? 0 : BLACK_MS;
-      const cli = prefersReduced() ? 0 : CLI_MS;
-      const hud = prefersReduced() ? 0 : HUD_MS;
-      setBootPhase("black");
-      timers.current.push(setTimeout(() => setBootPhase("cli"), black));
-      timers.current.push(setTimeout(() => setBootPhase("hud"), black + cli));
-      timers.current.push(setTimeout(() => { setBootPhase(null); setHandState("live"); }, black + cli + hud));
-      return "calibrating";
+      if (s !== "standby") {
+        clearTimers();
+        setBootPhase(null);
+        return "standby";
+      }
+      return "requesting";
     });
   }, [clearTimers]);
 
   const advanceHand = toggleHandMode;
 
   const value = useMemo(
-    () => ({ mode, setMode, handState, bootPhase, advanceHand, toggleHandMode, skipToLive }),
-    [mode, handState, bootPhase, advanceHand, toggleHandMode, skipToLive],
+    () => ({ mode, setMode, handState, bootPhase, advanceHand, toggleHandMode, startBoot, abortHand, skipToLive }),
+    [mode, handState, bootPhase, advanceHand, toggleHandMode, startBoot, abortHand, skipToLive],
   );
   return <ModeContext.Provider value={value}>{children}</ModeContext.Provider>;
 }

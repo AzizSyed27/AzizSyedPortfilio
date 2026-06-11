@@ -12,7 +12,11 @@ export function ThemeModeSync() {
   const { setThemeOverride } = useTheme();
 
   useEffect(() => {
-    setThemeOverride(handState !== "standby" ? "hud" : null);
+    // Only calibrating/live flip the theme — during 'requesting' the camera
+    // permission prompt is up and the page must stay visually untouched (a
+    // denial should never flash the HUD palette on and off).
+    const handActive = handState === "calibrating" || handState === "live";
+    setThemeOverride(handActive ? "hud" : null);
   }, [handState, setThemeOverride]);
 
   return null;

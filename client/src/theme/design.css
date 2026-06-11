@@ -2222,3 +2222,194 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
 @media (max-width: 760px) {
   .const-grid { grid-template-columns: 1fr; }
 }
+
+/* ───── Sensor PIP (Phase 2 M0) ─────
+   Ported from .design-bundle "Hand Mode Sensor PIP.html". Hardcoded HUD-blue
+   rgba values from the mockup are swapped for theme tokens so the PIP follows
+   all 9 palettes; #2FE6C0 is the design layer's existing live color (see
+   .hand-pill[data-state="live"]). Keyframes renamed blink→pipBlink,
+   scan→pipScan to keep the namespace clean. */
+
+.pip {
+  position: fixed; top: 84px; right: 30px; z-index: 9998; width: 232px;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: 0.5px solid var(--line-strong); border-radius: 10px; padding: 9px;
+  font-family: var(--f-mono);
+  box-shadow: 0 24px 50px -24px rgba(0, 0, 0, 0.8);
+}
+.pip-head { display: flex; align-items: center; justify-content: space-between; padding: 1px 3px 8px; }
+.pip-title { display: inline-flex; align-items: center; gap: 7px; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg); }
+.pip-title .rec {
+  width: 7px; height: 7px; border-radius: 50%; background: #2FE6C0;
+  box-shadow: 0 0 0 2px color-mix(in srgb, #2FE6C0 28%, transparent);
+  animation: pipBlink 1.4s ease-in-out infinite;
+}
+.pip-title b { color: var(--accent); font-weight: 500; }
+.pip-cam { font-size: 8px; letter-spacing: 0.1em; color: var(--muted-2); }
+
+.pip-video {
+  position: relative; aspect-ratio: 4 / 3; border-radius: 6px; overflow: hidden;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--fg) 6%, var(--bg)), var(--bg));
+  border: 0.5px solid var(--line);
+}
+.pip-video::before {
+  content: ""; position: absolute; inset: 0;
+  background-image: linear-gradient(var(--line) 0.5px, transparent 0.5px), linear-gradient(90deg, var(--line) 0.5px, transparent 0.5px);
+  background-size: 22px 22px; opacity: 0.5;
+}
+.pip-video .scan {
+  position: absolute; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-bright), transparent);
+  opacity: 0.6; animation: pipScan 3s linear infinite;
+}
+.pip-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; }
+
+/* video-corner brackets */
+.vc { position: absolute; width: 12px; height: 12px; z-index: 3; }
+.vc::before, .vc::after { content: ""; position: absolute; background: var(--accent-bright); }
+.vc::before { width: 9px; height: 1.5px; } .vc::after { width: 1.5px; height: 9px; }
+.vc.a { top: 5px; left: 5px; } .vc.a::before, .vc.a::after { top: 0; left: 0; }
+.vc.b { top: 5px; right: 5px; } .vc.b::before { top: 0; right: 0; } .vc.b::after { top: 0; right: 0; }
+.vc.c { bottom: 5px; left: 5px; } .vc.c::before { bottom: 0; left: 0; } .vc.c::after { bottom: 0; left: 0; }
+.vc.d { bottom: 5px; right: 5px; } .vc.d::before { bottom: 0; right: 0; } .vc.d::after { bottom: 0; right: 0; }
+.pip-gesture {
+  position: absolute; left: 7px; bottom: 7px; z-index: 3; font-size: 7.5px;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent);
+  background: color-mix(in srgb, var(--bg) 65%, transparent); padding: 1px 5px; border-radius: 3px;
+}
+
+.pip-readout { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; padding: 8px 3px 2px; }
+.ro { display: flex; align-items: baseline; justify-content: space-between; }
+.ro .k { font-size: 7.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.ro .v { font-size: 10px; color: var(--accent); }
+.ro .v.grn { color: #2FE6C0; }
+
+@keyframes pipBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+@keyframes pipScan {
+  0% { top: 6%; }
+  100% { top: 94%; }
+}
+
+/* REQUESTING — camera permission pending: accent dot, pulsing ring (same
+   treatment as calibrating, dimmer border) */
+.hand-pill[data-state="requesting"] {
+  border-color: var(--line-strong);
+  color: var(--fg);
+}
+.hand-pill[data-state="requesting"] .dot { background: var(--accent); }
+.hand-pill[data-state="requesting"] .dot::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px solid var(--accent);
+  opacity: 0.6;
+  animation: pulse 1.4s ease-out infinite;
+}
+
+/* Hand-mode failure notice (denied / no camera / unsupported) */
+.hand-notice {
+  position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
+  z-index: 9999; display: inline-flex; align-items: center; gap: 12px;
+  font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--fg);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: 0.5px solid var(--line-strong); border-radius: 999px;
+  padding: 8px 14px;
+}
+.hand-notice button {
+  background: none; border: none; padding: 0; cursor: none;
+  color: var(--muted); font-size: 13px; line-height: 1;
+}
+.hand-notice button:hover { color: var(--fg); }
+
+/* ───── Hand Cursor (Phase 2 M1) ─────
+   Ported from .design-bundle "Hand Mode HUD Overlay.html" (FreeReticle /
+   SnapReticle) and "Hand Mode Armed State.html" (.armed). Cursor-owned
+   classes carry an hc- prefix; .armed stays global as the design's reusable
+   hand-hover state (normal specificity — inline transforms must win). */
+
+.hand-cursor {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9996;
+  font-family: var(--f-mono);
+  opacity: 1;
+  transition: opacity 0.25s;
+}
+.hand-cursor.hc-hidden { opacity: 0; }
+
+/* Free reticle — crosshair + bracket box + dot + readout */
+.hc-reticle { position: absolute; left: 0; top: 0; will-change: transform; }
+.hc-cross-h, .hc-cross-v { position: absolute; background: var(--accent); opacity: 0.7; }
+.hc-cross-h { height: 1px; width: 96px; left: -48px; top: 0; }
+.hc-cross-v { width: 1px; height: 96px; left: 0; top: -48px; }
+.hc-box { position: absolute; left: -11px; top: -11px; width: 22px; height: 22px; transition: transform 0.18s; }
+.hc-box::before, .hc-box::after { content: ""; position: absolute; width: 7px; height: 7px; border: 1.5px solid var(--accent); }
+.hc-box::before { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+.hc-box::after { bottom: 0; right: 0; border-left: 0; border-top: 0; }
+.hc-box i { position: absolute; inset: 0; }
+.hc-box i::before, .hc-box i::after { content: ""; position: absolute; width: 7px; height: 7px; border: 1.5px solid var(--accent); }
+.hc-box i::before { top: 0; right: 0; border-left: 0; border-bottom: 0; }
+.hc-box i::after { bottom: 0; left: 0; border-right: 0; border-top: 0; }
+.hc-dot { position: absolute; left: -1.5px; top: -1.5px; width: 3px; height: 3px; border-radius: 50%; background: var(--accent-bright); }
+.hc-readout { position: absolute; left: 22px; top: 12px; font-size: 11px; letter-spacing: 0.06em; color: var(--accent); white-space: nowrap; }
+.hc-readout::before { content: ""; position: absolute; left: -14px; top: -6px; width: 12px; height: 12px; border-left: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong); }
+.hc-readout small { color: var(--muted-2); }
+
+/* Pinch pulse on the bracket box */
+.hc-reticle.hc-pinch .hc-box { transform: scale(0.62); }
+
+/* Snapped reticle — locks to the target rect */
+.hc-snap { position: absolute; left: 0; top: 0; will-change: transform; display: none; }
+.hand-cursor[data-snapped="1"] .hc-snap { display: block; }
+.hc-edge { position: absolute; inset: 0; border: 0.5px solid var(--accent); border-radius: 6px; opacity: 0.5; }
+.hc-sb { position: absolute; width: 16px; height: 16px; }
+.hc-sb::before, .hc-sb::after { content: ""; position: absolute; background: var(--accent-bright); }
+.hc-sb::before { width: 16px; height: 2px; }
+.hc-sb::after { width: 2px; height: 16px; }
+.hc-sb.tl { top: -3px; left: -3px; } .hc-sb.tl::before, .hc-sb.tl::after { top: 0; left: 0; }
+.hc-sb.tr { top: -3px; right: -3px; } .hc-sb.tr::before { top: 0; right: 0; } .hc-sb.tr::after { top: 0; right: 0; }
+.hc-sb.bl { bottom: -3px; left: -3px; } .hc-sb.bl::before { bottom: 0; left: 0; } .hc-sb.bl::after { bottom: 0; left: 0; }
+.hc-sb.br { bottom: -3px; right: -3px; } .hc-sb.br::before { bottom: 0; right: 0; } .hc-sb.br::after { bottom: 0; right: 0; }
+.hc-tag { position: absolute; top: -13px; left: 14px; display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.08em; color: var(--bg); background: var(--accent-bright); border-radius: 4px; padding: 3px 8px; }
+.hc-lock { position: absolute; bottom: -13px; right: 12px; font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); background: var(--bg); padding: 1px 6px; border: 0.5px solid var(--line-strong); border-radius: 3px; }
+
+/* Reusable hand-armed state on snap targets (design: Armed State mockup) */
+.armed {
+  transform: translateY(-4px);
+  box-shadow: 0 0 0 1.5px var(--accent), 0 20px 44px -22px rgba(0, 0, 0, 0.6);
+  border-color: var(--accent);
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.25s;
+}
+
+/* ?debug=hand panel (interactive from M1: trails + TUNE sliders) */
+.hand-debug {
+  position: fixed; right: 30px; bottom: 28px; z-index: 9999;
+  font-family: var(--f-mono); font-size: 9.5px; line-height: 1.7;
+  letter-spacing: 0.06em; color: var(--muted);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  border: 0.5px solid var(--line); border-radius: 8px; padding: 8px 11px;
+  max-height: 80vh; overflow-y: auto; width: 248px;
+}
+.hand-debug b { display: block; color: var(--accent); letter-spacing: 0.12em; font-weight: 500; }
+.hand-debug .hd-trail {
+  display: block; margin: 6px 0; border: 0.5px solid var(--line); border-radius: 4px;
+  background: color-mix(in srgb, var(--fg) 4%, var(--bg));
+}
+.hand-debug .hd-sliders { display: grid; gap: 2px; margin-top: 4px; }
+.hand-debug .hd-sliders label { display: grid; grid-template-columns: 76px 1fr 38px; align-items: center; gap: 6px; }
+.hand-debug .hd-sliders span { font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase; }
+.hand-debug .hd-sliders input[type="range"] { width: 100%; height: 10px; accent-color: var(--accent); cursor: pointer; }
+.hand-debug .hd-sliders i { font-style: normal; font-size: 9px; color: var(--accent); text-align: right; }
+.hand-debug .hd-log {
+  margin-top: 6px; font-family: var(--f-mono); font-size: 8.5px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--accent); background: none;
+  border: 0.5px solid var(--line-strong); border-radius: 4px; padding: 3px 8px; cursor: pointer;
+}

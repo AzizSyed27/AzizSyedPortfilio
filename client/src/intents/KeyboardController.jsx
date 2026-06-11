@@ -1,5 +1,7 @@
 import { useEffect } from "react";
 import { useActions, ROUTE_ORDER } from "./actions";
+import { useOverlay } from "./OverlayContext";
+import { useMode } from "../mode/ModeProvider";
 
 const NUMBER_KEY_MAP = ROUTE_ORDER.reduce((acc, id, i) => {
   acc[String(i + 1)] = id;
@@ -8,6 +10,8 @@ const NUMBER_KEY_MAP = ROUTE_ORDER.reduce((acc, id, i) => {
 
 export function KeyboardController() {
   const actions = useActions();
+  const overlay = useOverlay();
+  const { handState, toggleHandMode } = useMode();
 
   useEffect(() => {
     const onKey = (e) => {
@@ -28,7 +32,15 @@ export function KeyboardController() {
         return;
       }
       if (e.key === "Escape") {
-        actions.closeOverlay();
+        // Overlay-first (Phase 1 behavior), then exit hand mode. Esc during
+        // the boot sequence is handled by BootSequence's own skip listener.
+        if (overlay.cheatSheetOpen || overlay.openProjectId || overlay.themeWheelOpen) {
+          actions.closeOverlay();
+        } else if (handState === "live") {
+          toggleHandMode();
+        } else {
+          actions.closeOverlay();
+        }
         return;
       }
       if (e.key === "[") {
@@ -43,7 +55,7 @@ export function KeyboardController() {
 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [actions]);
+  }, [actions, overlay, handState, toggleHandMode]);
 
   return null;
 }
