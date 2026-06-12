@@ -27,6 +27,7 @@ export function DebugOverlay() {
   const ratioRef = useRef(null);
   const arbRef = useRef(null);
   const poseRef = useRef(null);
+  const twoHandRef = useRef(null);
   const transRef = useRef(null);
   const [, bump] = useState(0); // refresh slider value labels only
 
@@ -87,6 +88,12 @@ export function DebugOverlay() {
           `pose: ${arbitrator.context.pose ?? "—"} (cand ${arbitrator.context.candidatePose ?? "—"})` +
           `${arbitrator.context.swipeArmed ? " · armed" : ""}${ratios}`;
       }
+      if (twoHandRef.current) {
+        const th = window.__handDebug?.gestures?.getTwoHand?.();
+        twoHandRef.current.textContent = th
+          ? `2h: ${th.phase}${th.mode ? `/${th.mode}` : ""} · span×${th.spanRatio.toFixed(2)} · θ${th.totalRotateRad.toFixed(2)} · z${th.zoomEmits}/r${th.rotateEmits}${th.capturedProject ? ` · ${th.capturedProject}` : ""}`
+          : "2h: —";
+      }
       if (transRef.current) {
         transRef.current.textContent = arbitrator.transitions
           .slice(-5)
@@ -109,6 +116,7 @@ export function DebugOverlay() {
       <div ref={arbRef}>arb: IDLE</div>
       <div ref={poseRef}>pose: —</div>
       <div ref={ratioRef}>pinch — · IDLE</div>
+      <div ref={twoHandRef}>2h: —</div>
       <pre ref={transRef} className="hd-trans">—</pre>
       <canvas ref={canvasRef} className="hd-trail" width={TRAIL_W} height={TRAIL_H} />
       <div className="hd-sliders">

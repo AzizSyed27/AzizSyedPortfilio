@@ -140,7 +140,7 @@ export default function Home() {
       <Section num="02" label="Selected work · /projects">
         <div className="featured-grid">
           {FEATURED_PROJECTS.map((p) => (
-            <article key={p.id} className="project-card" data-cursor="hover" onClick={() => actions.openProject(p.id)}>
+            <article key={p.id} className="project-card" data-cursor="hover" data-hand-project={p.id} onClick={() => actions.openProject(p.id)}>
               <div>
                 <div className="pc-num">{p.num} · {p.url}</div>
                 <h3 className="pc-title">{p.title}</h3>

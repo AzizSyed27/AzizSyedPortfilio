@@ -115,6 +115,22 @@ export const TUNE = {
   // origin (< maxDisplacement). A fast move lasting longer than
   // maxDurationMs is swipe-like and cancels the burst.
   flick: { minVelocity: 2.5, maxDisplacement: 0.12, maxDurationMs: 250, cooldownMs: 700 },
+  // Two-hand spatial (M3): spread-zoom + rotate over the 3D gallery, and
+  // pull-apart over an armed project card. Suppressed emits do NOT advance
+  // the prev baselines — slow deliberate motion accumulates past the dead
+  // zone; zero-mean jitter never does.
+  twoHand: {
+    engageMs: 200,           // both hands stable this long before engaging (spec §4)
+    releaseGraceMs: 150,     // one hand briefly lost ≠ exit; < cursor.graceMs
+    zoomGain: 1.0,           // exponent on the span ratio (1.0 = physical)
+    rotateGainPx: 1000,       // px per radian of hand-line twist (×0.01 = model rad; 1.4:1)
+    spanDeadZone: 0.015,     // |ratio−1| below this = landmark jitter, no emit
+    rotateDeadZoneRad: 0.01,
+    minSpan: 0.08,           // hands nearly overlapping → geometry unstable, freeze
+    maxStepRad: 0.35,        // per-frame angle jump = pairing flip → skip + rebaseline
+    pullRatio: 1.6,          // span growth over baseline that fires pull-apart (spec)
+    pullCooldownMs: 1200,    // spec
+  },
 };
 
 // Slider metadata for the ?debug=hand panel: [dotted path, label, min, max, step]
@@ -144,6 +160,12 @@ export const TUNE_SPEC = [
   ["swipe.returnSuppressMs", "return supp", 0, 3000, 100],
   ["flick.minVelocity", "flick vel", 1, 6, 0.1],
   ["flick.maxDisplacement", "flick disp", 0.04, 0.3, 0.01],
+  ["twoHand.zoomGain", "2h zoom", 0.4, 3, 0.1],
+  ["twoHand.rotateGainPx", "2h rotate", 20, 200, 5],
+  ["twoHand.spanDeadZone", "2h dead", 0.005, 0.05, 0.005],
+  ["twoHand.pullRatio", "pull ratio", 1.2, 2.5, 0.05],
+  ["twoHand.engageMs", "2h engage", 100, 600, 25],
+  ["twoHand.releaseGraceMs", "2h grace", 60, 400, 10],
 ];
 
 // Hand mode is desktop-only: needs camera access and a fine pointer device.

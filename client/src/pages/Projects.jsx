@@ -37,6 +37,7 @@ function ProjectCardTilt({ p }) {
       ref={ref}
       className="project-card project-card--tilt"
       data-cursor="hover"
+      data-hand-project={p.id}
       data-hover={hover ? "1" : "0"}
       onMouseMove={onMove}
       onMouseEnter={onEnter}

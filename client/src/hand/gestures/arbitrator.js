@@ -12,17 +12,20 @@ export const ARB_STATES = [
   "PINCH_ACTIVE",  // pinch held (click fired on entry)
   "SCROLL",        // fist-scroll owns the frame; cursor suppressed
   "SWIPE_COOLDOWN",// swipe fired; suppress everything until cooldown ends
+  "TWO_HAND",      // M3: both hands engaged — spread-zoom / rotate / pull-apart
   // Reserved for later milestones (documented so the table is forward-complete):
-  // "TWO_HAND" — M3: both hands stable 200ms → spread-zoom / rotate / pull-apart
-  // "DIAL"     — M4: modal theme dial; only dial + commit/cancel gestures exist
+  // "DIAL" — M4: modal theme dial; only dial + commit/cancel gestures exist
 ];
 
 const ALLOWED = {
   IDLE: ["CURSOR"],
-  CURSOR: ["IDLE", "PINCH_ACTIVE", "SCROLL", "SWIPE_COOLDOWN"],
-  PINCH_ACTIVE: ["CURSOR", "IDLE"],
-  SCROLL: ["CURSOR", "IDLE"],
+  CURSOR: ["IDLE", "PINCH_ACTIVE", "SCROLL", "SWIPE_COOLDOWN", "TWO_HAND"],
+  // PULL grips are pinches/fists: the primary hand legitimately transits
+  // PINCH_ACTIVE or SCROLL in the ~engageMs before TWO_HAND wins the frame.
+  PINCH_ACTIVE: ["CURSOR", "IDLE", "TWO_HAND"],
+  SCROLL: ["CURSOR", "IDLE", "TWO_HAND"],
   SWIPE_COOLDOWN: ["CURSOR", "IDLE"],
+  TWO_HAND: ["CURSOR", "IDLE"],
 };
 
 const LOG_LEN = 10;
@@ -32,8 +35,16 @@ export function createArbitrator() {
     state: "IDLE",
     enteredAtMs: 0,
     // Per-frame context written by the controllers, read by PIP/debug/gates.
-    context: { overlayOpen: false, pose: null, candidatePose: null, swipeArmed: false, lastPinchReleaseMs: -Infinity },
-    cooldowns: { swipe: -Infinity, flick: -Infinity },
+    context: {
+      overlayOpen: false,
+      pose: null,
+      candidatePose: null,
+      swipeArmed: false,
+      lastPinchReleaseMs: -Infinity,
+      armedProject: null, // data-hand-project of the snapped card (HandCursor writes)
+      twoHandMode: null,  // 'SPATIAL' | 'PULL' while TWO_HAND owns the frame
+    },
+    cooldowns: { swipe: -Infinity, flick: -Infinity, pull: -Infinity },
     // Direction + timestamp of the last fired swipe — the return-motion
     // suppression reads this (a hand returning to rest after a swipe moves
     // in the opposite direction and must not navigate back).
@@ -72,8 +83,11 @@ export function createArbitrator() {
       arb.context.candidatePose = null;
       arb.context.swipeArmed = false;
       arb.context.lastPinchReleaseMs = -Infinity;
+      arb.context.armedProject = null;
+      arb.context.twoHandMode = null;
       arb.cooldowns.swipe = -Infinity;
       arb.cooldowns.flick = -Infinity;
+      arb.cooldowns.pull = -Infinity;
       arb.lastSwipe.dir = null;
       arb.lastSwipe.tMs = -Infinity;
       arb.transitions.length = 0;

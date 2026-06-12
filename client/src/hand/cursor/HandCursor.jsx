@@ -75,11 +75,16 @@ export function HandCursor() {
     const onFrame = (results, meta) => {
       controller.onFrame(results, meta);
       const phase = controller.state.pinch.phase;
-      if (phase === "PINCHED" && prevPhase !== "PINCHED") {
-        arbitrator.to("PINCH_ACTIVE", "pinch down", meta.nowMs);
-      } else if (phase !== "PINCHED" && prevPhase === "PINCHED") {
-        arbitrator.context.lastPinchReleaseMs = meta.nowMs;
-        arbitrator.to("CURSOR", "pinch released", meta.nowMs);
+      // During TWO_HAND, skip the mirror writes (they'd be REJECTED and spam
+      // the transitions ring — pinch grips are normal during a pull-apart);
+      // prevPhase still tracks so the release edge stays correct after exit.
+      if (arbitrator.state !== "TWO_HAND") {
+        if (phase === "PINCHED" && prevPhase !== "PINCHED") {
+          arbitrator.to("PINCH_ACTIVE", "pinch down", meta.nowMs);
+        } else if (phase !== "PINCHED" && prevPhase === "PINCHED") {
+          arbitrator.context.lastPinchReleaseMs = meta.nowMs;
+          arbitrator.to("CURSOR", "pinch released", meta.nowMs);
+        }
       }
       prevPhase = phase;
     };
@@ -142,6 +147,7 @@ export function HandCursor() {
       if (snapped?.el) snapped.el.classList.remove("armed");
       snapped = null;
       armedRef.current = null;
+      arbitrator.context.armedProject = null;
       if (rootRef.current) rootRef.current.dataset.snapped = "0";
     };
 
@@ -157,10 +163,13 @@ export function HandCursor() {
       const st = controller.state;
       const lost = !st.present || performance.now() - st.lastSeenMs > TUNE.cursor.graceMs;
       // While another gesture family owns the frame (fist-scroll, swipe
-      // cooldown) the cursor is fully suppressed — same path as hand-lost,
-      // so there's never armed/snap residue and resume pops cleanly.
+      // cooldown, two-hand spatial) the cursor is fully suppressed — same
+      // path as hand-lost, so there's never armed/snap residue and resume
+      // pops cleanly.
       const suppressed =
-        arbitrator.state === "SCROLL" || arbitrator.state === "SWIPE_COOLDOWN";
+        arbitrator.state === "SCROLL" ||
+        arbitrator.state === "SWIPE_COOLDOWN" ||
+        arbitrator.state === "TWO_HAND";
       root.classList.toggle("hc-hidden", lost || suppressed);
       if (lost || suppressed) {
         clearArmed();
@@ -185,6 +194,8 @@ export function HandCursor() {
         if (next?.el) next.el.classList.add("armed");
         snapped = next;
         armedRef.current = next;
+        // Pull-apart (M3) reads this: which project card the hand is aimed at.
+        arbitrator.context.armedProject = next?.el?.dataset?.handProject ?? null;
         root.dataset.snapped = next ? "1" : "0";
         if (next && tagRef.current) tagRef.current.textContent = `→ ${next.code}`;
       } else if (next) {

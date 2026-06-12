@@ -1,7 +1,8 @@
 // Synthetic HandLandmarker results for the ?debug=hand surface — lets the
-// debug panel and Playwright drive the cursor pipeline without a camera.
-// Only the landmarks the cursor system reads need to be geometrically honest:
-// palm points 0/5/9/13/17 (centroid + knuckle span 5↔17) and tips 4/8 (pinch).
+// debug panel and Playwright drive the cursor/gesture pipeline without a
+// camera. Only the landmarks the systems read need to be geometrically
+// honest: palm points 0/5/9/13/17 (centroid + knuckle span 5↔17), tips 4/8
+// (pinch), and the four fingertips when a pose is requested.
 
 import { TUNE } from "../config";
 
@@ -18,15 +19,7 @@ const PALM_OFFSETS = {
 // Tip landmark for each finger MCP, used by the pose articulation.
 const FINGER_TIPS = { 5: 8, 9: 12, 13: 16, 17: 20 };
 
-/**
- * Build a one-hand HandLandmarkerResult-shaped object whose palm centroid is
- * (cx, cy) in camera space. pinch=true puts the thumb tip on the index tip.
- * pose: 'open' | 'fist' articulates the four fingertips on the wrist→MCP ray
- * at extension factor 1.8 / 0.85 (the ratio poses.js measures reads exactly
- * that). pose undefined keeps the legacy M1 geometry, which deliberately
- * classifies as a null pose (index ~1.51, others ~0.65).
- */
-export function makeFrame({ cx, cy, pinch = false, pose }) {
+function buildHand({ cx, cy, pinch = false, pose }) {
   const keys = Object.keys(PALM_OFFSETS);
   const mean = keys.reduce(
     (m, k) => [m[0] + PALM_OFFSETS[k][0] / keys.length, m[1] + PALM_OFFSETS[k][1] / keys.length],
@@ -66,12 +59,23 @@ export function makeFrame({ cx, cy, pinch = false, pose }) {
       : { x: lm[8].x + 0.06, y: lm[8].y + 0.01, z: 0 };
   }
 
-  return {
-    landmarks: [lm],
-    worldLandmarks: [lm],
-    handednesses: [[{ categoryName: "Right", displayName: "Right", score: 0.99 }]],
-    handedness: [[{ categoryName: "Right", displayName: "Right", score: 0.99 }]],
-  };
+  return lm;
+}
+
+/**
+ * Build a HandLandmarkerResult-shaped object. Single hand (legacy,
+ * byte-identical to the original): makeFrame({cx, cy, pinch, pose}).
+ * Two hands (M3): makeFrame({hands: [{cx, cy, pose, pinch}, {...}]}) —
+ * index 0 is labeled Right, index 1 Left.
+ */
+export function makeFrame(spec) {
+  const handSpecs = spec.hands ?? [spec];
+  const lms = handSpecs.map(buildHand);
+  const labels = ["Right", "Left"];
+  const handedness = handSpecs.map((_, i) => [
+    { categoryName: labels[i] ?? "Unknown", displayName: labels[i] ?? "Unknown", score: 0.99 },
+  ]);
+  return { landmarks: lms, worldLandmarks: lms, handednesses: handedness, handedness };
 }
 
 /**
