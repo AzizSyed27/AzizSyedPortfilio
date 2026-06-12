@@ -20,6 +20,7 @@ import { useHandTracking } from "./useHandTracking";
 import { landmarksToFeatureVector } from "./features";
 import { DEBUG_PARAM, DEBUG_VALUE, FPS_WINDOW, PIP_THROTTLE_HZ, TUNE, isHandModeSupported } from "./config";
 import { makeFrame, viewportToCamera } from "./debug/syntheticFrame";
+import { createArbitrator } from "./gestures/arbitrator";
 
 const HandPipelineContext = createContext(null);
 
@@ -76,6 +77,11 @@ export function HandPipelineProvider({ children }) {
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
   const dismissNotice = useCallback(() => setNotice(null), []);
+
+  // The shared interaction state machine — stable identity, mutated in place
+  // by HandCursor/HandGestures, read everywhere (PIP label, debug, gates).
+  const arbRef = useRef(null);
+  if (!arbRef.current) arbRef.current = createArbitrator();
 
   // Per-frame data lives in refs — zero re-renders on the inference path.
   const statsRef = useRef(EMPTY_STATS());
@@ -154,6 +160,7 @@ export function HandPipelineProvider({ children }) {
       setError(null);
       statsRef.current = EMPTY_STATS();
       latestVectorRef.current = null;
+      arbRef.current.reset();
     }
   }, [active]);
 
@@ -189,6 +196,7 @@ export function HandPipelineProvider({ children }) {
     window.__handDebug = Object.assign(window.__handDebug ?? {}, {
       version: 1,
       tune: TUNE,
+      arb: arbRef.current,
       injectFrame: handleResults,
       makeFrame,
       viewportToCamera,
@@ -199,7 +207,7 @@ export function HandPipelineProvider({ children }) {
   }, [handleResults]);
 
   const value = useMemo(
-    () => ({ status, error, notice, dismissNotice, subscribeFrame, getLatestVector, debug }),
+    () => ({ status, error, notice, dismissNotice, subscribeFrame, getLatestVector, debug, arbitrator: arbRef.current }),
     [status, error, notice, dismissNotice, subscribeFrame, getLatestVector, debug],
   );
 

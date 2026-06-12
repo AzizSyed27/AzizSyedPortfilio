@@ -22,9 +22,12 @@ function setPath(obj, path, value) {
 }
 
 export function DebugOverlay() {
-  const { debug } = useHandPipeline();
+  const { debug, arbitrator } = useHandPipeline();
   const canvasRef = useRef(null);
   const ratioRef = useRef(null);
+  const arbRef = useRef(null);
+  const poseRef = useRef(null);
+  const transRef = useRef(null);
   const [, bump] = useState(0); // refresh slider value labels only
 
   useEffect(() => {
@@ -68,11 +71,33 @@ export function DebugOverlay() {
         ratioRef.current.textContent =
           `pinch ${st.pinch.ratio.toFixed(2)} (in<${TUNE.pinch.enter} out>${TUNE.pinch.exit}) · ${st.pinch.phase}`;
       }
+
+      if (arbRef.current) {
+        const inState = Math.max(0, performance.now() - arbitrator.enteredAtMs);
+        arbRef.current.textContent =
+          `arb: ${arbitrator.state} · ${Math.round(inState)}ms · modal:${arbitrator.context.overlayOpen ? "y" : "n"}`;
+      }
+      if (poseRef.current) {
+        const g = window.__handDebug?.gestures;
+        const r = g?.getRatios?.();
+        const ratios = r
+          ? ` · i${r.index.toFixed(2)} m${r.middle.toFixed(2)} r${r.ring.toFixed(2)} p${r.pinky.toFixed(2)}`
+          : "";
+        poseRef.current.textContent =
+          `pose: ${arbitrator.context.pose ?? "—"} (cand ${arbitrator.context.candidatePose ?? "—"})` +
+          `${arbitrator.context.swipeArmed ? " · armed" : ""}${ratios}`;
+      }
+      if (transRef.current) {
+        transRef.current.textContent = arbitrator.transitions
+          .slice(-5)
+          .map((tr) => (tr.from === tr.to ? `· ${tr.reason}` : `${tr.from}→${tr.to} (${tr.reason})`))
+          .join("\n") || "—";
+      }
     };
 
     raf = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(raf);
-  }, []);
+  }, [arbitrator]);
 
   return (
     <div className="hand-debug">
@@ -81,8 +106,10 @@ export function DebugOverlay() {
       <div>error: {debug.error?.message ?? "—"}</div>
       <div>fps: {debug.fps.toFixed(1)} · inference: {debug.inferenceMs.toFixed(1)}ms</div>
       <div>hands: {debug.handsCount} · {debug.handednesses.join(" · ") || "—"}</div>
-      <div>arb: CURSOR (M1 — single-state)</div>
+      <div ref={arbRef}>arb: IDLE</div>
+      <div ref={poseRef}>pose: —</div>
       <div ref={ratioRef}>pinch — · IDLE</div>
+      <pre ref={transRef} className="hd-trans">—</pre>
       <canvas ref={canvasRef} className="hd-trail" width={TRAIL_W} height={TRAIL_H} />
       <div className="hd-sliders">
         {TUNE_SPEC.map(([path, label, min, max, step]) => (

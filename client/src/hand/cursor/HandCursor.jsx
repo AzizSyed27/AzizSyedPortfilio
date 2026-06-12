@@ -19,7 +19,7 @@ import { DEBUG_PARAM, DEBUG_VALUE, TUNE } from "../config";
 const PINCH_PULSE_MS = 200;
 
 export function HandCursor() {
-  const { subscribeFrame } = useHandPipeline();
+  const { subscribeFrame, arbitrator } = useHandPipeline();
   const actions = useActions();
   const overlay = useOverlay();
   const { pathname } = useLocation();
@@ -41,6 +41,11 @@ export function HandCursor() {
     const registry = createTargetRegistry();
     const controller = createCursorController({
       onPinch: () => {
+        // Arbitrator gates: pinch is a CURSOR-family gesture only, and a
+        // fist being formed reads as a momentary pinch (~66ms confirm vs
+        // FIST's 120ms stability) — candidatePose kills that false click.
+        if (arbitrator.state !== "CURSOR" && arbitrator.state !== "PINCH_ACTIVE") return;
+        if (arbitrator.context.candidatePose === "FIST") return;
         const armed = armedRef.current;
         if (armed?.el?.isConnected) {
           armed.el.click();
@@ -61,15 +66,29 @@ export function HandCursor() {
     );
   });
 
-  // Inference-side subscription.
+  // Inference-side subscription. The wrapper also mirrors the pinch FSM into
+  // the arbitrator (HandCursor's two sanctioned transitions: CURSOR ↔
+  // PINCH_ACTIVE) — release timestamps feed flick's just-after-pinch window.
   useEffect(() => {
     const { controller } = sysRef.current;
-    const unsubscribe = subscribeFrame(controller.onFrame);
+    let prevPhase = "IDLE";
+    const onFrame = (results, meta) => {
+      controller.onFrame(results, meta);
+      const phase = controller.state.pinch.phase;
+      if (phase === "PINCHED" && prevPhase !== "PINCHED") {
+        arbitrator.to("PINCH_ACTIVE", "pinch down", meta.nowMs);
+      } else if (phase !== "PINCHED" && prevPhase === "PINCHED") {
+        arbitrator.context.lastPinchReleaseMs = meta.nowMs;
+        arbitrator.to("CURSOR", "pinch released", meta.nowMs);
+      }
+      prevPhase = phase;
+    };
+    const unsubscribe = subscribeFrame(onFrame);
     return () => {
       unsubscribe();
       controller.reset();
     };
-  }, [subscribeFrame]);
+  }, [subscribeFrame, arbitrator]);
 
   // Rect-cache invalidation: scroll/resize, periodic catch-all for silent
   // layout changes, and route/overlay transitions (after a paint).
@@ -137,8 +156,13 @@ export function HandCursor() {
 
       const st = controller.state;
       const lost = !st.present || performance.now() - st.lastSeenMs > TUNE.cursor.graceMs;
-      root.classList.toggle("hc-hidden", lost);
-      if (lost) {
+      // While another gesture family owns the frame (fist-scroll, swipe
+      // cooldown) the cursor is fully suppressed — same path as hand-lost,
+      // so there's never armed/snap residue and resume pops cleanly.
+      const suppressed =
+        arbitrator.state === "SCROLL" || arbitrator.state === "SWIPE_COOLDOWN";
+      root.classList.toggle("hc-hidden", lost || suppressed);
+      if (lost || suppressed) {
         clearArmed();
         pull = 0;
         wasLost = true;
@@ -204,7 +228,9 @@ export function HandCursor() {
       // Belt-and-braces: never leave armed residue after exit.
       document.querySelectorAll(".armed").forEach((el) => el.classList.remove("armed"));
     };
-  }, []);
+    // arbitrator is a stable mutable object from the provider — the dep
+    // satisfies the linter without ever re-running the loop.
+  }, [arbitrator]);
 
   return (
     <div ref={rootRef} className="hand-cursor hc-hidden" data-snapped="0" aria-hidden="true">

@@ -64,8 +64,10 @@ export function useActions() {
     window.open(url, "_blank", "noopener,noreferrer");
   }, []);
 
-  const scrollByPx = useCallback((dy) => {
-    window.scrollBy({ top: dy, behavior: "smooth" });
+  const scrollByPx = useCallback((dy, opts = {}) => {
+    // opts.behavior: continuous gesture scroll passes "instant" — smooth
+    // restarts its animation on every call and stalls per-frame deltas.
+    window.scrollBy({ top: dy, behavior: opts.behavior ?? "smooth" });
   }, []);
 
   const scrollToTop = useCallback(() => {

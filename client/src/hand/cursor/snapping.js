@@ -25,8 +25,10 @@ function rectDistance(rect, x, y) {
 
 // While a modal overlay is up, only its own controls are valid snap targets —
 // arming (and clicking) page elements behind the backdrop is spec §4's
-// "modal overlays shrink the active gesture set". The M2 arbitrator will
-// formalize this; for M1 the two modal roots are known by class.
+// "modal overlays shrink the active gesture set". This is the DOM-level
+// mechanism; the arbitrator's context.overlayOpen (mirrored from
+// OverlayContext React state, the source of truth this class query
+// approximates) is the formal gesture-set gate from M2 on.
 function scopeRoot() {
   return (
     document.querySelector(".exploded-view") ??

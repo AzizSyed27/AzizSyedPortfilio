@@ -9,6 +9,7 @@ import { HudReticle } from "./HudReticle";
 import { SensorPip } from "./SensorPip";
 import { HandNotice } from "./HandNotice";
 import { HandCursor } from "../hand/cursor/HandCursor";
+import { HandGestures } from "../hand/gestures/HandGestures";
 import { useHandPipeline } from "../hand/HandPipelineProvider";
 import { DebugOverlay } from "../hand/debug/DebugOverlay";
 import { DEBUG_PARAM, DEBUG_VALUE } from "../hand/config";
@@ -29,6 +30,7 @@ export function OverlayHost() {
       {handState === "live" && <HudReticle />}
       {handState === "live" && <SensorPip />}
       {handState === "live" && <HandCursor />}
+      {handState === "live" && <HandGestures />}
       {notice && <HandNotice message={notice} onDismiss={dismissNotice} />}
       {debugHand && <DebugOverlay />}
     </>

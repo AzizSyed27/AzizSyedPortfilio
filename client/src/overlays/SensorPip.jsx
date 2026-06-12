@@ -8,7 +8,7 @@ import { HAND_CONNECTIONS } from "../hand/config";
 // via the pipeline's frame-renderer registration, outside React; the readout
 // row below it is ordinary React state throttled by the provider.
 export function SensorPip() {
-  const { subscribeFrame, debug } = useHandPipeline();
+  const { subscribeFrame, debug, arbitrator } = useHandPipeline();
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -63,6 +63,18 @@ export function SensorPip() {
   const hasHand = debug.handsCount > 0;
   const track = !tracking ? "init" : hasHand ? "lock" : "scan";
 
+  // Live gesture label from the arbitrator (mutable shared object — safe to
+  // read at render time; this component already re-renders at the debug
+  // snapshot's 5Hz throttle).
+  const gestureLabel =
+    arbitrator.state === "SCROLL" ? "▸ fist · scroll"
+    : arbitrator.state === "PINCH_ACTIVE" ? "▸ pinch"
+    : arbitrator.state === "SWIPE_COOLDOWN" ? "▸ swipe"
+    : arbitrator.context.pose === "OPEN_PALM"
+      ? (arbitrator.context.swipeArmed ? "▸ open palm · armed" : "▸ open palm")
+    : hasHand ? "▸ tracking"
+    : "▸ no hand";
+
   return (
     <div className="pip" aria-hidden="true">
       <div className="pip-head">
@@ -73,7 +85,7 @@ export function SensorPip() {
         <div className="scan" />
         <canvas ref={canvasRef} className="pip-canvas" />
         <span className="vc a" /><span className="vc b" /><span className="vc c" /><span className="vc d" />
-        <span className="pip-gesture">{hasHand ? "▸ tracking" : "▸ no hand"}</span>
+        <span className="pip-gesture">{gestureLabel}</span>
       </div>
       <div className="pip-readout">
         <div className="ro"><span className="k">fps</span><span className="v">{Math.round(debug.fps)}</span></div>

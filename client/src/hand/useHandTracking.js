@@ -15,6 +15,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CAMERA_CONSTRAINTS,
   DELEGATE,
+  MIN_HAND_DETECTION_CONFIDENCE,
+  MIN_HAND_PRESENCE_CONFIDENCE,
+  MIN_TRACKING_CONFIDENCE,
   MODEL_ASSET_PATH,
   NUM_HANDS,
   WASM_BASE_PATH,
@@ -126,6 +129,11 @@ export function useHandTracking(options = {}) {
             },
             runningMode: "VIDEO",
             numHands: config.numHands,
+            // Third port deviation: explicit confidence thresholds — lowered
+            // tracking confidence keeps landmarks through moderate motion blur.
+            minHandDetectionConfidence: MIN_HAND_DETECTION_CONFIDENCE,
+            minHandPresenceConfidence: MIN_HAND_PRESENCE_CONFIDENCE,
+            minTrackingConfidence: MIN_TRACKING_CONFIDENCE,
           });
         };
 
