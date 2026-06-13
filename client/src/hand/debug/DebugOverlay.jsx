@@ -75,8 +75,10 @@ export function DebugOverlay() {
 
       if (arbRef.current) {
         const inState = Math.max(0, performance.now() - arbitrator.enteredAtMs);
+        const dial = window.__handDebug?.gestures?.getDial?.();
+        const dialStr = arbitrator.state === "DIAL" && dial ? ` · ${dial.index} ${dial.theme}` : "";
         arbRef.current.textContent =
-          `arb: ${arbitrator.state} · ${Math.round(inState)}ms · modal:${arbitrator.context.overlayOpen ? "y" : "n"}`;
+          `arb: ${arbitrator.state} · ${Math.round(inState)}ms · modal:${arbitrator.context.overlayOpen ? "y" : "n"}${dialStr}`;
       }
       if (poseRef.current) {
         const g = window.__handDebug?.gestures;

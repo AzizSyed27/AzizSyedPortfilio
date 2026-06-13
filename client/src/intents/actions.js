@@ -88,6 +88,14 @@ export function useActions() {
       // theme
       setTheme: theme.setTheme,
       cycleTheme: theme.cycleTheme,
+      themeId: theme.themeId, // current base theme (the dial needs the baseline detent)
+      // theme dial (M4): preview via override (base/localStorage stay clean
+      // until commit); commit keeps the chosen theme visible for the session.
+      previewTheme: theme.setThemeOverride,
+      commitTheme: (id) => { theme.setTheme(id); theme.setThemeOverride(null); },
+      cancelThemeDial: () => theme.setThemeOverride("hud"),
+      openThemeDial: () => overlay.setThemeWheelOpen(true),
+      closeThemeDial: () => overlay.setThemeWheelOpen(false),
       // mode / hand
       toggleHandMode: mode.toggleHandMode,
       // gallery

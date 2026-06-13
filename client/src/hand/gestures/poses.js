@@ -42,3 +42,26 @@ export function detectPose(lm) {
   }
   return null;
 }
+
+// Palm-up detection (M4 theme-dial summon) — the depth-based, flaky one.
+// Palm normal = (lm5−lm0) × (lm17−lm0). Image y is down, so a palm facing the
+// ceiling has a normal pointing up → negative normalized y. Returns that
+// "up amount" in [0..1]; pinch-pill is the reliable entry, this is additive.
+export function palmUpAmount(lm) {
+  const w = lm[0];
+  const a = { x: lm[5].x - w.x, y: lm[5].y - w.y, z: (lm[5].z ?? 0) - (w.z ?? 0) };
+  const b = { x: lm[17].x - w.x, y: lm[17].y - w.y, z: (lm[17].z ?? 0) - (w.z ?? 0) };
+  // cross product a × b
+  const n = {
+    x: a.y * b.z - a.z * b.y,
+    y: a.z * b.x - a.x * b.z,
+    z: a.x * b.y - a.y * b.x,
+  };
+  const len = Math.hypot(n.x, n.y, n.z);
+  if (len < 1e-6) return 0;
+  return -n.y / len; // up (image −y) → positive
+}
+
+export function isPalmUp(lm) {
+  return detectPose(lm) === "OPEN_PALM" && palmUpAmount(lm) > TUNE.dial.palmUpThreshold;
+}

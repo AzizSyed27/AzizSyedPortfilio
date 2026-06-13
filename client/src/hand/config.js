@@ -131,6 +131,16 @@ export const TUNE = {
     pullRatio: 1.6,          // span growth over baseline that fires pull-apart (spec)
     pullCooldownMs: 1200,    // spec
   },
+  // Theme dial (M4): modal radial picker. Turn the hand like a wheel (angle of
+  // the index-MCP→pinky-MCP vector, 2D-robust) to step detents; pinch commits,
+  // flick cancels. Wrap-around (8 themes) → any theme is ≤4 detents away.
+  dial: {
+    rollPerDetentDeg: 18,    // hand-turn per theme step (~90–110° comfortable / 8)
+    hysteresis: 0.25,        // detent-boundary stickiness (fraction of a detent)
+    flipDirection: false,    // turn-direction → index sign (real-camera tune)
+    palmUpThreshold: 0.5,    // |palm-normal vertical| to count as palm-up (depth, flaky)
+    palmUpDwellMs: 500,      // hold palm-up this long to summon (spec)
+  },
 };
 
 // Slider metadata for the ?debug=hand panel: [dotted path, label, min, max, step]
@@ -166,6 +176,9 @@ export const TUNE_SPEC = [
   ["twoHand.pullRatio", "pull ratio", 1.2, 2.5, 0.05],
   ["twoHand.engageMs", "2h engage", 100, 600, 25],
   ["twoHand.releaseGraceMs", "2h grace", 60, 400, 10],
+  ["dial.rollPerDetentDeg", "dial step°", 8, 40, 1],
+  ["dial.palmUpThreshold", "palmup thr", 0.2, 0.9, 0.05],
+  ["dial.palmUpDwellMs", "palmup dwell", 200, 1200, 50],
 ];
 
 // Hand mode is desktop-only: needs camera access and a fine pointer device.

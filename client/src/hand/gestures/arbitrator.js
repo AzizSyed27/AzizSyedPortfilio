@@ -13,19 +13,20 @@ export const ARB_STATES = [
   "SCROLL",        // fist-scroll owns the frame; cursor suppressed
   "SWIPE_COOLDOWN",// swipe fired; suppress everything until cooldown ends
   "TWO_HAND",      // M3: both hands engaged — spread-zoom / rotate / pull-apart
-  // Reserved for later milestones (documented so the table is forward-complete):
-  // "DIAL" — M4: modal theme dial; only dial + commit/cancel gestures exist
+  "DIAL",          // M4: modal theme dial; only turn + pinch-commit + flick-cancel
 ];
 
 const ALLOWED = {
   IDLE: ["CURSOR"],
-  CURSOR: ["IDLE", "PINCH_ACTIVE", "SCROLL", "SWIPE_COOLDOWN", "TWO_HAND"],
+  CURSOR: ["IDLE", "PINCH_ACTIVE", "SCROLL", "SWIPE_COOLDOWN", "TWO_HAND", "DIAL"],
   // PULL grips are pinches/fists: the primary hand legitimately transits
   // PINCH_ACTIVE or SCROLL in the ~engageMs before TWO_HAND wins the frame.
-  PINCH_ACTIVE: ["CURSOR", "IDLE", "TWO_HAND"],
+  // PINCH_ACTIVE → DIAL: pinching the theme pill passes through PINCH_ACTIVE.
+  PINCH_ACTIVE: ["CURSOR", "IDLE", "TWO_HAND", "DIAL"],
   SCROLL: ["CURSOR", "IDLE", "TWO_HAND"],
   SWIPE_COOLDOWN: ["CURSOR", "IDLE"],
   TWO_HAND: ["CURSOR", "IDLE"],
+  DIAL: ["CURSOR", "IDLE"],
 };
 
 const LOG_LEN = 10;
@@ -43,8 +44,11 @@ export function createArbitrator() {
       lastPinchReleaseMs: -Infinity,
       armedProject: null, // data-hand-project of the snapped card (HandCursor writes)
       twoHandMode: null,  // 'SPATIAL' | 'PULL' while TWO_HAND owns the frame
+      dialIndex: 0,        // selected theme detent while DIAL owns the frame
+      requestDial: false,  // HandCursor sets this on a pinch over the theme pill
+      requestDialClose: false, // KeyboardController sets this on Esc during the dial
     },
-    cooldowns: { swipe: -Infinity, flick: -Infinity, pull: -Infinity },
+    cooldowns: { swipe: -Infinity, flick: -Infinity, pull: -Infinity, dial: -Infinity },
     // Direction + timestamp of the last fired swipe — the return-motion
     // suppression reads this (a hand returning to rest after a swipe moves
     // in the opposite direction and must not navigate back).
@@ -85,9 +89,13 @@ export function createArbitrator() {
       arb.context.lastPinchReleaseMs = -Infinity;
       arb.context.armedProject = null;
       arb.context.twoHandMode = null;
+      arb.context.dialIndex = 0;
+      arb.context.requestDial = false;
+      arb.context.requestDialClose = false;
       arb.cooldowns.swipe = -Infinity;
       arb.cooldowns.flick = -Infinity;
       arb.cooldowns.pull = -Infinity;
+      arb.cooldowns.dial = -Infinity;
       arb.lastSwipe.dir = null;
       arb.lastSwipe.tMs = -Infinity;
       arb.transitions.length = 0;

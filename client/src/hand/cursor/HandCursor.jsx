@@ -47,6 +47,14 @@ export function HandCursor() {
         if (arbitrator.state !== "CURSOR" && arbitrator.state !== "PINCH_ACTIVE") return;
         if (arbitrator.context.candidatePose === "FIST") return;
         const armed = armedRef.current;
+        // Theme pill (M4): pinching it opens the gesture dial instead of
+        // clicking through to the dropdown. HandGestures picks up the request
+        // next frame and transitions to DIAL.
+        if (armed?.el?.dataset?.handDial) {
+          arbitrator.context.requestDial = true;
+          pulseUntilRef.current = performance.now() + PINCH_PULSE_MS;
+          return;
+        }
         if (armed?.el?.isConnected) {
           armed.el.click();
         } else if (overlayOpenRef.current) {
@@ -75,10 +83,10 @@ export function HandCursor() {
     const onFrame = (results, meta) => {
       controller.onFrame(results, meta);
       const phase = controller.state.pinch.phase;
-      // During TWO_HAND, skip the mirror writes (they'd be REJECTED and spam
-      // the transitions ring — pinch grips are normal during a pull-apart);
+      // During TWO_HAND / DIAL, skip the mirror writes (they'd be REJECTED and
+      // spam the transitions ring — pinch grips/commits are normal there);
       // prevPhase still tracks so the release edge stays correct after exit.
-      if (arbitrator.state !== "TWO_HAND") {
+      if (arbitrator.state !== "TWO_HAND" && arbitrator.state !== "DIAL") {
         if (phase === "PINCHED" && prevPhase !== "PINCHED") {
           arbitrator.to("PINCH_ACTIVE", "pinch down", meta.nowMs);
         } else if (phase !== "PINCHED" && prevPhase === "PINCHED") {
@@ -169,7 +177,8 @@ export function HandCursor() {
       const suppressed =
         arbitrator.state === "SCROLL" ||
         arbitrator.state === "SWIPE_COOLDOWN" ||
-        arbitrator.state === "TWO_HAND";
+        arbitrator.state === "TWO_HAND" ||
+        arbitrator.state === "DIAL";
       root.classList.toggle("hc-hidden", lost || suppressed);
       if (lost || suppressed) {
         clearArmed();

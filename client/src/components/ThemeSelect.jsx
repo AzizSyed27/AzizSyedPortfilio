@@ -26,6 +26,7 @@ export function ThemeSelect() {
       <button
         className="theme-pill"
         data-open={open ? "1" : "0"}
+        data-hand-dial="1"
         onClick={() => setOpen((v) => !v)}
         data-cursor="hover"
         title="Select a color theme"

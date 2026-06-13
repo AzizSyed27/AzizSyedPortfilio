@@ -8,6 +8,7 @@ import { useMode } from "../mode/ModeProvider";
 import { HudReticle } from "./HudReticle";
 import { SensorPip } from "./SensorPip";
 import { HandNotice } from "./HandNotice";
+import { ThemeWheel } from "./ThemeWheel";
 import { HandCursor } from "../hand/cursor/HandCursor";
 import { HandGestures } from "../hand/gestures/HandGestures";
 import { useHandPipeline } from "../hand/HandPipelineProvider";
@@ -31,6 +32,7 @@ export function OverlayHost() {
       {handState === "live" && <SensorPip />}
       {handState === "live" && <HandCursor />}
       {handState === "live" && <HandGestures />}
+      {overlay.themeWheelOpen && <ThemeWheel />}
       {notice && <HandNotice message={notice} onDismiss={dismissNotice} />}
       {debugHand && <DebugOverlay />}
     </>

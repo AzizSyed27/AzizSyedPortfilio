@@ -67,7 +67,8 @@ export function SensorPip() {
   // read at render time; this component already re-renders at the debug
   // snapshot's 5Hz throttle).
   const gestureLabel =
-    arbitrator.state === "TWO_HAND"
+    arbitrator.state === "DIAL" ? "▸ theme dial"
+    : arbitrator.state === "TWO_HAND"
       ? (arbitrator.context.twoHandMode === "PULL" ? "▸ pull apart" : "▸ two hands · spatial")
     : arbitrator.state === "SCROLL" ? "▸ fist · scroll"
     : arbitrator.state === "PINCH_ACTIVE" ? "▸ pinch"

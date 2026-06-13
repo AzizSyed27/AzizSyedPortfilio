@@ -7,7 +7,8 @@ const GESTURES = [
   { gesture: "Two-hand rotate",  mouse: "Drag inside gallery",intent: "Rotate 3D model" },
   { gesture: "Pull apart",       mouse: "Click project card", intent: "Open exploded view" },
   { gesture: "Flick away",       mouse: "Esc · backdrop click",intent: "Close overlay" },
-  { gesture: "Palm up",          mouse: "Press H",            intent: "Toggle this cheat sheet" },
+  { gesture: "Pinch theme pill / palm up", mouse: "Theme menu", intent: "Summon theme dial" },
+  { gesture: "Turn hand · pinch / flick",  mouse: "Theme menu", intent: "Spin dial · apply / cancel" },
 ];
 
 export function CheatSheet({ onClose }) {
