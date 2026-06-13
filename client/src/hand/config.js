@@ -140,6 +140,7 @@ export const TUNE = {
     flipDirection: false,    // turn-direction → index sign (real-camera tune)
     palmUpThreshold: 0.5,    // |palm-normal vertical| to count as palm-up (depth, flaky)
     palmUpDwellMs: 500,      // hold palm-up this long to summon (spec)
+    palmHoldGraceMs: 300,    // palm-up dropout tolerance before the wheel closes
   },
 };
 
@@ -179,6 +180,7 @@ export const TUNE_SPEC = [
   ["dial.rollPerDetentDeg", "dial step°", 8, 40, 1],
   ["dial.palmUpThreshold", "palmup thr", 0.2, 0.9, 0.05],
   ["dial.palmUpDwellMs", "palmup dwell", 200, 1200, 50],
+  ["dial.palmHoldGraceMs", "palm grace", 100, 800, 50],
 ];
 
 // Hand mode is desktop-only: needs camera access and a fine pointer device.

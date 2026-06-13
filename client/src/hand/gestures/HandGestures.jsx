@@ -116,12 +116,15 @@ export function HandGestures() {
         stillStartMs: null,
         lastArmedMs: -Infinity,
         // Theme dial (M4)
+        dialMode: "ONE",     // 'ONE' = pinch-pill (same hand turns); 'TWO' = palm-up summon + other hand turns
         dialBaseRoll: 0,
         dialBaseIndex: 0,
         dialIndexDelta: 0,
         dialLastIndex: 0,
         dialPinchArmed: false,
+        dialBaseSet: false,  // TWO mode: rotating hand's roll baseline captured yet?
         palmUpStartMs: null,
+        palmLostMs: null,    // TWO mode: palm-up hand dropout timer (grace before close)
       },
     };
   }
@@ -208,24 +211,42 @@ export function HandGestures() {
       return a;
     };
     const rollAngle = (lm) => Math.atan2(lm[17].y - lm[5].y, lm[17].x - lm[5].x);
+    const palmCentroid = (lm) => {
+      let cx = 0, cy = 0;
+      for (const p of PALM_POINTS) { cx += lm[p].x / PALM_POINTS.length; cy += lm[p].y / PALM_POINTS.length; }
+      return { sx: 1 - cx, sy: cy };
+    };
+    const findPalmUp = (results) => {
+      const hands = results.landmarks ?? [];
+      for (let i = 0; i < hands.length; i++) if (isPalmUp(hands[i])) return i;
+      return -1;
+    };
 
     const resetDial = () => {
       track.dialIndexDelta = 0;
       track.dialPinchArmed = false;
+      track.dialBaseSet = false;
       track.palmUpStartMs = null;
+      track.palmLostMs = null;
     };
 
-    const enterDial = (lm, nowMs) => {
+    // mode: 'ONE' (pinch-pill — that same hand turns) | 'TWO' (palm-up summon —
+    // the OTHER hand turns). rollLm: the turning hand at entry (ONE), or null
+    // (TWO — baseline is captured when the rotating hand first appears).
+    const enterDial = (nowMs, mode, rollLm) => {
       let baseIndex = THEME_ORDER.indexOf(actionsRef.current.themeId);
       if (baseIndex < 0) baseIndex = 0;
       arb.context.requestDial = false;
-      if (!arb.to("DIAL", "theme dial", nowMs)) return;
-      track.dialBaseRoll = rollAngle(lm);
+      if (!arb.to("DIAL", `theme dial ${mode}`, nowMs)) return;
+      track.dialMode = mode;
       track.dialBaseIndex = baseIndex;
       track.dialIndexDelta = 0;
       track.dialLastIndex = baseIndex;
       track.dialPinchArmed = false;
       track.palmUpStartMs = null;
+      track.palmLostMs = null;
+      if (rollLm) { track.dialBaseRoll = rollAngle(rollLm); track.dialBaseSet = true; }
+      else track.dialBaseSet = false;
       arb.context.dialIndex = baseIndex;
       actionsRef.current.openThemeDial();
       actionsRef.current.previewTheme(THEME_ORDER[baseIndex]); // lift HUD → show current theme
@@ -241,29 +262,34 @@ export function HandGestures() {
       arb.to(track.present ? "CURSOR" : "IDLE", commit ? "dial commit" : "dial cancel", nowMs);
     };
 
-    const dialFrame = (lm, sx, sy, nowMs) => {
+    // Pinch-commit (latch) + flick-cancel + roll→detent for the controlling
+    // hand (ONE: the single hand; TWO: the rotating hand). Returns true if the
+    // dial exited so the caller stops.
+    const controlHand = (lm, sx, sy, nowMs) => {
       const pinching = gripOf(lm) === "PINCH";
-
-      // Commit on pinch — but only after one non-pinch frame, so the pinch
-      // that OPENED the dial (still held on entry) can't auto-commit.
+      // Commit only after one non-pinch frame, so the pinch that opened the
+      // dial (still held on entry) can't auto-commit.
       if (!pinching) track.dialPinchArmed = true;
       if (track.dialPinchArmed && pinching) {
         arb.note(`dial commit → ${THEME_ORDER[arb.context.dialIndex]}`, nowMs);
         exitDial(true, nowMs);
-        return;
+        return true;
       }
-
-      // Flick cancels.
       flick.push(sx, sy, nowMs);
       if (flick.evaluate()) {
         flick.clear();
         arb.note("dial cancel (flick)", nowMs);
         exitDial(false, nowMs);
-        return;
+        return true;
       }
-
       // Roll → detent (frozen while pinching so the commit can't reselect).
       if (!pinching) {
+        if (!track.dialBaseSet) {
+          track.dialBaseRoll = rollAngle(lm);
+          track.dialBaseIndex = arb.context.dialIndex;
+          track.dialIndexDelta = 0;
+          track.dialBaseSet = true;
+        }
         const detentRad = (TUNE.dial.rollPerDetentDeg * Math.PI) / 180;
         const pos = wrapPi(rollAngle(lm) - track.dialBaseRoll) / detentRad;
         const band = 0.5 + TUNE.dial.hysteresis;
@@ -277,6 +303,33 @@ export function HandGestures() {
           actionsRef.current.previewTheme(THEME_ORDER[idx]);
         }
       }
+      return false;
+    };
+
+    const dialFrame = (results, lm, sx, sy, nowMs) => {
+      if (track.dialMode !== "TWO") {
+        controlHand(lm, sx, sy, nowMs); // ONE: the single hand controls
+        return;
+      }
+      // TWO: Hand A holds palm-up to keep the wheel open; lowering it closes.
+      const aIdx = findPalmUp(results);
+      if (aIdx === -1) {
+        track.palmLostMs ??= nowMs;
+        if (nowMs - track.palmLostMs > TUNE.dial.palmHoldGraceMs) {
+          arb.note("dial cancel (palm lowered)", nowMs);
+          exitDial(false, nowMs);
+        }
+        return; // grace: a brief palm-up dropout doesn't close
+      }
+      track.palmLostMs = null;
+      // Hand B = the other hand — it turns / pinches / flicks.
+      const hands = results.landmarks ?? [];
+      let bIdx = -1;
+      for (let i = 0; i < hands.length; i++) { if (i !== aIdx) { bIdx = i; break; } }
+      if (bIdx === -1) { track.dialBaseSet = false; return; } // only summon hand up — wait for B
+      const bLm = hands[bIdx];
+      const c = palmCentroid(bLm);
+      controlHand(bLm, c.sx, c.sy, nowMs);
     };
 
     const onFrame = (results, meta) => {
@@ -333,7 +386,7 @@ export function HandGestures() {
           arb.note("dial cancel (esc)", meta.nowMs);
           exitDial(false, meta.nowMs);
         } else {
-          dialFrame(lm, sx, sy, meta.nowMs);
+          dialFrame(results, lm, sx, sy, meta.nowMs);
         }
         track.lastSx = sx;
         track.lastSy = sy;
@@ -341,15 +394,15 @@ export function HandGestures() {
         return;
       }
 
-      // Pinch on the theme pill (HandCursor set this) opens the dial — unless
-      // we just closed it (the commit pinch is still held).
+      // Pinch on the theme pill (HandCursor set this) opens the one-hand dial
+      // (same hand turns) — unless we just closed it (commit pinch still held).
       if (
         arb.context.requestDial &&
         (arb.state === "CURSOR" || arb.state === "PINCH_ACTIVE")
       ) {
         arb.context.requestDial = false;
         if (arb.canFire("dial", meta.nowMs, DIAL_REENTER_MS)) {
-          enterDial(lm, meta.nowMs);
+          enterDial(meta.nowMs, "ONE", lm);
           track.lastSx = sx;
           track.lastSy = sy;
           track.lastHandCount = handCount;
@@ -357,10 +410,34 @@ export function HandGestures() {
         }
       }
 
-      // Two-hand spatial (M3): runs ahead of the single-hand world. While
-      // not engaged it only watches; once TWO_HAND owns the frame, all
-      // single-hand processing below is short-circuited.
-      if (handCount >= 2 || twoHand.stats().phase !== "IDLE") {
+      if (arb.state === "IDLE") arb.to("CURSOR", "hand present", meta.nowMs);
+
+      // Palm-up summon (M4.1, two-hand): hold an upward-facing palm (Hand A) to
+      // open the theme dial; the OTHER hand turns it. Pre-empts M3 two-hand
+      // spatial so summoning on the gallery never starts a zoom. Depth-based
+      // (flaky) — pinch-the-pill stays the reliable one-hand entry.
+      const puIdx = findPalmUp(results);
+      if (
+        arb.state === "CURSOR" && !arb.context.overlayOpen &&
+        puIdx !== -1 && arb.canFire("dial", meta.nowMs, DIAL_REENTER_MS)
+      ) {
+        track.palmUpStartMs ??= meta.nowMs;
+        if (meta.nowMs - track.palmUpStartMs >= TUNE.dial.palmUpDwellMs) {
+          enterDial(meta.nowMs, "TWO", null);
+          track.lastSx = sx;
+          track.lastSy = sy;
+          track.lastHandCount = handCount;
+          return;
+        }
+      } else if (puIdx === -1) {
+        track.palmUpStartMs = null;
+      }
+
+      // Two-hand spatial (M3): runs ahead of the single-hand world. Skipped
+      // while a palm-up hand is summoning the dial (puIdx !== -1), but kept
+      // running once already engaged so an in-progress zoom/rotate continues.
+      const twoHandActive = arb.state === "TWO_HAND" || twoHand.stats().phase !== "IDLE";
+      if (twoHandActive || (puIdx === -1 && handCount >= 2)) {
         const hands = [];
         for (let i = 0; i < Math.min(handCount, 2); i++) {
           const hlm = results.landmarks[i];
@@ -399,27 +476,6 @@ export function HandGestures() {
       track.lastRatios = fingerRatios(lm);
       arb.context.pose = st.stable;
       arb.context.candidatePose = st.candidate;
-
-      if (arb.state === "IDLE") arb.to("CURSOR", "hand present", meta.nowMs);
-
-      // Palm-up summon (M4, additive/flaky): hold an upward-facing open palm
-      // to open the theme dial. One hand, CURSOR, no modal. Depth-based — the
-      // pinch-on-pill path is the reliable entry.
-      if (
-        arb.state === "CURSOR" && !arb.context.overlayOpen && handCount === 1 &&
-        isPalmUp(lm) && arb.canFire("dial", meta.nowMs, DIAL_REENTER_MS)
-      ) {
-        track.palmUpStartMs ??= meta.nowMs;
-        if (meta.nowMs - track.palmUpStartMs >= TUNE.dial.palmUpDwellMs) {
-          enterDial(lm, meta.nowMs);
-          track.lastSx = sx;
-          track.lastSy = sy;
-          track.lastHandCount = handCount;
-          return;
-        }
-      } else {
-        track.palmUpStartMs = null;
-      }
 
       if (arb.state === "SWIPE_COOLDOWN" && meta.nowMs - arb.enteredAtMs > TUNE.swipe.cooldownMs) {
         arb.to("CURSOR", "swipe cooldown elapsed", meta.nowMs);

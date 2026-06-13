@@ -7,7 +7,7 @@ const GESTURES = [
   { gesture: "Two-hand rotate",  mouse: "Drag inside gallery",intent: "Rotate 3D model" },
   { gesture: "Pull apart",       mouse: "Click project card", intent: "Open exploded view" },
   { gesture: "Flick away",       mouse: "Esc · backdrop click",intent: "Close overlay" },
-  { gesture: "Pinch theme pill / palm up", mouse: "Theme menu", intent: "Summon theme dial" },
+  { gesture: "Pinch theme pill, or palm-up + 2nd hand", mouse: "Theme menu", intent: "Summon theme dial" },
   { gesture: "Turn hand · pinch / flick",  mouse: "Theme menu", intent: "Spin dial · apply / cancel" },
 ];
 
