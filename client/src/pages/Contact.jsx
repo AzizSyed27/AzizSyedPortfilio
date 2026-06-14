@@ -4,6 +4,8 @@ import { Section } from "../components/Section";
 import { HeroBand } from "../components/HeroBand";
 import { ContactBeacon } from "../components/ContactBeacon";
 import { useActions } from "../intents/actions";
+import { useMode } from "../mode/ModeProvider";
+import { ContactHand } from "./ContactHand";
 import { BIO } from "../content/bio";
 
 const SERVICE_ID  = import.meta.env.VITE_EMAILJS_SERVICE_ID;
@@ -56,6 +58,12 @@ function ContactDetails() {
 }
 
 export default function Contact() {
+  const { handState } = useMode();
+  if (handState === "live") return <ContactHand />;
+  return <ContactMouse />;
+}
+
+function ContactMouse() {
   const formRef = useRef(null);
   const [status, setStatus] = useState("idle"); // idle | sending | sent | error
   const [error, setError] = useState("");

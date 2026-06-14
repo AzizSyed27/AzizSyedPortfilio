@@ -2475,3 +2475,102 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
 .td-modal .active-idx { font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted-2); margin-top: 8px; }
 .td-hint { margin-top: 18px; display: inline-flex; align-items: center; gap: 6px; font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); border: 0.5px solid var(--line); border-radius: 999px; padding: 7px 16px; background: color-mix(in srgb, var(--bg) 60%, transparent); }
 .td-hint b { color: var(--accent); }
+
+/* ───── Contact hand mode (Phase 2 M5) ─────
+   Ported from .design-bundle "Contact Hand Mode.html", scoped under
+   .contact-hand and theme-tokenized. Keyframes are ch-prefixed to avoid
+   colliding with existing ones. */
+.contact-hand .field { display: flex; flex-direction: column; gap: 9px; }
+.contact-hand .field-head { display: flex; justify-content: space-between; align-items: center; }
+.contact-hand .field-head label { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+
+.contact-hand .listening { display: inline-flex; align-items: center; gap: 8px; font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+.contact-hand .listening .rec { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); position: relative; }
+.contact-hand .listening .rec::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 1px solid var(--accent); opacity: 0.5; animation: chPulse 1.5s ease-out infinite; }
+@keyframes chPulse { 0% { transform: scale(0.5); opacity: 0.7; } 100% { transform: scale(1.5); opacity: 0; } }
+.contact-hand .wave { display: inline-flex; align-items: center; gap: 2px; height: 13px; }
+.contact-hand .wave i { width: 2px; background: var(--accent); border-radius: 1px; height: 4px; animation: chWave 0.9s ease-in-out infinite; }
+.contact-hand .wave i:nth-child(2) { animation-delay: .12s; } .contact-hand .wave i:nth-child(3) { animation-delay: .24s; }
+.contact-hand .wave i:nth-child(4) { animation-delay: .36s; } .contact-hand .wave i:nth-child(5) { animation-delay: .48s; } .contact-hand .wave i:nth-child(6) { animation-delay: .60s; }
+@keyframes chWave { 0%, 100% { height: 4px; } 50% { height: 13px; } }
+
+.contact-hand .field-box { border: 0.5px solid var(--line-strong); border-radius: 8px; background: color-mix(in srgb, var(--accent) 4%, transparent); padding: 14px 16px; font-family: var(--f-display); font-size: 21px; line-height: 1.35; color: var(--fg); width: 100%; outline: none; resize: none; }
+.contact-hand .field-box::placeholder { color: var(--muted-2); }
+.contact-hand textarea.field-box { min-height: 124px; }
+.contact-hand .field-box:focus, .contact-hand .field.is-listening .field-box { border-color: var(--accent); }
+.contact-hand .interim { color: var(--muted); }
+
+.contact-hand .send-bay { margin-top: 6px; position: relative; overflow: hidden; border: 0.5px dashed var(--line-strong); border-radius: 10px; background: color-mix(in srgb, var(--accent) 4%, transparent); padding: 22px 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 116px; }
+.contact-hand .send-bay::before, .contact-hand .send-bay::after { content: ""; position: absolute; top: 0; bottom: 0; width: 0.5px; background: linear-gradient(to top, transparent, var(--accent) 60%, transparent); opacity: 0.28; }
+.contact-hand .send-bay::before { left: 32%; } .contact-hand .send-bay::after { left: 40%; }
+.contact-hand .send-bay[data-armed="1"] { border-color: var(--accent); box-shadow: 0 0 24px -10px var(--accent); }
+.contact-hand .launch-zone { position: relative; width: 150px; height: 80px; flex: none; }
+.contact-hand .msg-puck { position: absolute; left: 0; bottom: 6px; z-index: 3; padding: 9px 14px; border: 0.5px solid var(--accent); border-radius: 8px; background: color-mix(in srgb, var(--accent) 10%, transparent); font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg); display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 0 16px -4px var(--accent); }
+.contact-hand .msg-puck .pk-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.contact-hand.sending .msg-puck { animation: chLaunch 0.9s cubic-bezier(0.3,0,0.3,1) forwards; }
+.contact-hand .trail { position: absolute; left: 8px; bottom: 6px; width: 92px; height: 74px; z-index: 1; pointer-events: none; }
+.contact-hand .trail span { position: absolute; bottom: 0; width: 1.5px; border-radius: 1px; background: linear-gradient(to top, var(--accent), transparent); opacity: 0; }
+.contact-hand.sending .trail span { animation: chStreak 0.9s ease-in forwards; }
+.contact-hand .trail span:nth-child(1) { left: 14px; height: 40px; animation-delay: .05s; }
+.contact-hand .trail span:nth-child(2) { left: 34px; height: 56px; animation-delay: .15s; }
+.contact-hand .trail span:nth-child(3) { left: 52px; height: 34px; animation-delay: .22s; }
+.contact-hand .trail span:nth-child(4) { left: 70px; height: 48px; animation-delay: .1s; }
+@keyframes chLaunch { 0% { transform: translateY(0) scale(1); opacity: 1; } 70% { transform: translateY(-44px) scale(0.96); opacity: 0.9; } 100% { transform: translateY(-96px) scale(0.6); opacity: 0; } }
+@keyframes chStreak { 0% { opacity: 0; transform: translateY(0); } 40% { opacity: 0.6; } 100% { opacity: 0; transform: translateY(-30px); } }
+.contact-hand .launch-btn { text-align: right; }
+.contact-hand .lb-main { display: inline-flex; align-items: center; gap: 10px; font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--bg); background: var(--accent); border: 0.5px solid var(--accent); border-radius: 999px; padding: 11px 20px; cursor: none; box-shadow: 0 0 22px -6px var(--accent); transition: transform .2s; }
+.contact-hand .lb-main:hover { transform: translateY(-3px); }
+.contact-hand .lb-arrow { font-size: 14px; animation: chLift 1.6s ease-in-out infinite; }
+@keyframes chLift { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+.contact-hand .lb-sub { display: block; margin-top: 10px; font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); }
+
+.contact-hand .detail { border-top: 0.5px solid var(--line); padding: 16px 0; }
+.contact-hand .detail:last-of-type { border-bottom: 0.5px solid var(--line); }
+.contact-hand .d-label { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.contact-hand .d-row { display: flex; align-items: center; gap: 14px 16px; flex-wrap: wrap; }
+.contact-hand .d-value { font-family: var(--f-display); font-size: 26px; letter-spacing: -0.01em; color: var(--fg); background: none; border: 0; padding: 0; text-align: left; cursor: none; }
+.contact-hand .links { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+.contact-hand .link-row { display: flex; align-items: center; gap: 14px; }
+.contact-hand .link-row a { font-family: var(--f-display); font-size: 22px; color: var(--fg); text-decoration: none; }
+.contact-hand .link-row a:hover { color: var(--accent); }
+.contact-hand .pinch-tag { display: inline-flex; align-items: center; gap: 7px; font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); border: 0.5px solid var(--line-strong); border-radius: 999px; padding: 4px 10px; background: color-mix(in srgb, var(--accent) 5%, transparent); white-space: nowrap; }
+.contact-hand .pinch-glyph { position: relative; width: 11px; height: 11px; display: inline-block; }
+.contact-hand .pinch-glyph::before, .contact-hand .pinch-glyph::after { content: ""; position: absolute; top: 50%; width: 5px; height: 5px; border: 1px solid var(--accent); border-radius: 50%; transform: translateY(-50%); }
+.contact-hand .pinch-glyph::before { left: 0; animation: chPinch 1.8s ease-in-out infinite; }
+.contact-hand .pinch-glyph::after { right: 0; animation: chPinchR 1.8s ease-in-out infinite; }
+@keyframes chPinch { 0%, 100% { transform: translate(0, -50%); } 50% { transform: translate(3px, -50%); } }
+@keyframes chPinchR { 0%, 100% { transform: translate(0, -50%); } 50% { transform: translate(-3px, -50%); } }
+.contact-hand .speech-note { margin-top: 8px; font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.08em; color: var(--muted-2); }
+
+/* Pinch-hold ring on the cursor reticle */
+.hc-hold-ring { position: absolute; left: -22px; top: -22px; width: 44px; height: 44px; display: none; }
+.hand-cursor[data-hold="1"] .hc-hold-ring { display: block; }
+.hc-hold-ring circle { fill: none; stroke-width: 2.5; }
+.hc-hold-ring .track { stroke: var(--line-strong); }
+.hc-hold-ring .fill { stroke: var(--accent-bright); stroke-linecap: round; transform: rotate(-90deg); transform-origin: 50% 50%; transition: stroke-dashoffset 0.05s linear; }
+
+/* Idle "raise hand" prompt */
+.hand-idle-prompt { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 9994; font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); border: 0.5px solid var(--line-strong); border-radius: 999px; padding: 12px 22px; background: color-mix(in srgb, var(--bg) 70%, transparent); pointer-events: none; animation: chPulseFade 1.8s ease-in-out infinite; }
+@keyframes chPulseFade { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+/* ───── Reduced motion (Phase 2 M6) ─────
+   Silence the decorative looping hand-mode animations. Functional transitions
+   that convey state stay (dial rotor/swatch selection, hold-ring fill, cursor
+   follow, pinch pulse). */
+@media (prefers-reduced-motion: reduce) {
+  .pip .scan,
+  .pip-title .rec,
+  .hand-pill .dot::after,
+  .contact-hand .listening .rec::after,
+  .contact-hand .wave i,
+  .contact-hand .pinch-glyph::before,
+  .contact-hand .pinch-glyph::after,
+  .contact-hand .lb-arrow,
+  .contact-hand.sending .msg-puck,
+  .contact-hand.sending .trail span,
+  .hand-idle-prompt {
+    animation: none !important;
+  }
+  /* keep the idle prompt legible without its pulse */
+  .hand-idle-prompt { opacity: 1; }
+}

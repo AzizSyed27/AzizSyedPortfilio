@@ -43,6 +43,7 @@ export function createArbitrator() {
       swipeArmed: false,
       lastPinchReleaseMs: -Infinity,
       armedProject: null, // data-hand-project of the snapped card (HandCursor writes)
+      armedSend: false,   // armed element is the contact send target (flick-send)
       twoHandMode: null,  // 'SPATIAL' | 'PULL' while TWO_HAND owns the frame
       dialIndex: 0,        // selected theme detent while DIAL owns the frame
       requestDial: false,  // HandCursor sets this on a pinch over the theme pill
@@ -88,6 +89,7 @@ export function createArbitrator() {
       arb.context.swipeArmed = false;
       arb.context.lastPinchReleaseMs = -Infinity;
       arb.context.armedProject = null;
+      arb.context.armedSend = false;
       arb.context.twoHandMode = null;
       arb.context.dialIndex = 0;
       arb.context.requestDial = false;

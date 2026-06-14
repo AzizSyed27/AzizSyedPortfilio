@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { SCENE_PRESETS } from "../three/GalleryScene";
+import { SCENE_PRESETS } from "../three/scenePresets";
+import { useMode } from "../mode/ModeProvider";
 
 const GalleryScene = lazy(() =>
   import("../three/GalleryScene").then((m) => ({ default: m.GalleryScene })),
@@ -51,6 +52,8 @@ const GALLERY_OBJECTS = [
 ];
 
 export function Gallery3D({ hero = false }) {
+  const { handState } = useMode();
+  const handLive = handState === "live"; // perf gate: shed GPU for the tracker
   const [active, setActive] = useState(GALLERY_OBJECTS[0].id);
   const obj = GALLERY_OBJECTS.find((o) => o.id === active) || GALLERY_OBJECTS[0];
   const stageRef = useRef(null);
@@ -150,7 +153,7 @@ export function Gallery3D({ hero = false }) {
             <div className="g3d-object" ref={objRef} style={is3D ? { position: "absolute", inset: 0 } : undefined}>
               {is3D ? (
                 <Suspense fallback={null}>
-                  <GalleryScene preset={SCENE_PRESETS[obj.modelId]} />
+                  <GalleryScene preset={SCENE_PRESETS[obj.modelId]} live={handLive} />
                 </Suspense>
               ) : (
                 <GalleryArt kind={obj.art} />

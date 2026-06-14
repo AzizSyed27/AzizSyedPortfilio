@@ -19,7 +19,7 @@ import { DEBUG_PARAM, DEBUG_VALUE, TUNE } from "../config";
 const PINCH_PULSE_MS = 200;
 
 export function HandCursor() {
-  const { subscribeFrame, arbitrator } = useHandPipeline();
+  const { subscribeFrame, arbitrator, flashNotice } = useHandPipeline();
   const actions = useActions();
   const overlay = useOverlay();
   const { pathname } = useLocation();
@@ -29,8 +29,10 @@ export function HandCursor() {
   const snapRef = useRef(null);
   const readoutRef = useRef(null);
   const tagRef = useRef(null);
+  const holdFillRef = useRef(null);
 
   const actionsRef = useRef(actions);
+  const flashNoticeRef = useRef(flashNotice);
   const overlayOpenRef = useRef(false);
   const armedRef = useRef(null);
   const pulseUntilRef = useRef(0);
@@ -55,6 +57,24 @@ export function HandCursor() {
           pulseUntilRef.current = performance.now() + PINCH_PULSE_MS;
           return;
         }
+        const ds = armed?.el?.dataset;
+        // Copy/open targets (M5) use a sustained pinch-HOLD (handled in the
+        // display loop with a ring), so the instant pinch-click is a no-op.
+        if (ds?.handCopy || ds?.handOpen) {
+          pulseUntilRef.current = performance.now() + PINCH_PULSE_MS;
+          return;
+        }
+        // Contact field → toggle speech; send target → submit (M5).
+        if (ds?.handField) {
+          actionsRef.current.toggleContactField(ds.handField);
+          pulseUntilRef.current = performance.now() + PINCH_PULSE_MS;
+          return;
+        }
+        if (ds?.handSend) {
+          actionsRef.current.submitContact();
+          pulseUntilRef.current = performance.now() + PINCH_PULSE_MS;
+          return;
+        }
         if (armed?.el?.isConnected) {
           armed.el.click();
         } else if (overlayOpenRef.current) {
@@ -69,6 +89,7 @@ export function HandCursor() {
   // Keep dispatch refs fresh without re-subscribing anything.
   useEffect(() => {
     actionsRef.current = actions;
+    flashNoticeRef.current = flashNotice;
     overlayOpenRef.current = Boolean(
       overlay.openProjectId || overlay.cheatSheetOpen || overlay.themeWheelOpen,
     );
@@ -150,12 +171,26 @@ export function HandCursor() {
     let snapped = null;
     let wasLost = true;
     let lastReadout = 0;
+    // Pinch-hold (M5)
+    let holdStartMs = 0;
+    let holdFired = false;
+    let holdCdUntil = 0;
+
+    const HOLD_CIRC = 2 * Math.PI * 18; // r=18 ring circumference
+
+    const resetHold = () => {
+      holdStartMs = 0;
+      holdFired = false;
+      if (rootRef.current) rootRef.current.dataset.hold = "0";
+    };
 
     const clearArmed = () => {
       if (snapped?.el) snapped.el.classList.remove("armed");
       snapped = null;
       armedRef.current = null;
       arbitrator.context.armedProject = null;
+      arbitrator.context.armedSend = false;
+      resetHold();
       if (rootRef.current) rootRef.current.dataset.snapped = "0";
     };
 
@@ -205,11 +240,37 @@ export function HandCursor() {
         armedRef.current = next;
         // Pull-apart (M3) reads this: which project card the hand is aimed at.
         arbitrator.context.armedProject = next?.el?.dataset?.handProject ?? null;
+        // Flick-send (M5): is the armed element the contact send target?
+        arbitrator.context.armedSend = !!next?.el?.dataset?.handSend;
+        resetHold(); // target changed → restart any hold
         root.dataset.snapped = next ? "1" : "0";
         if (next && tagRef.current) tagRef.current.textContent = `→ ${next.code}`;
       } else if (next) {
         snapped = next; // pick up refreshed rect
         armedRef.current = next;
+      }
+
+      // Pinch-hold copy/open (M5): a sustained pinch on a copy/open target
+      // fills the ring, then fires once.
+      const holdEl = snapped?.el;
+      const holdKind = holdEl?.dataset?.handCopy ? "copy" : holdEl?.dataset?.handOpen ? "open" : null;
+      if (holdKind && st.pinch.phase === "PINCHED" && performance.now() > holdCdUntil) {
+        if (!holdStartMs) holdStartMs = performance.now();
+        const progress = Math.min(1, (performance.now() - holdStartMs) / TUNE.pinchHold.ms);
+        root.dataset.hold = "1";
+        if (holdFillRef.current) holdFillRef.current.style.strokeDashoffset = `${HOLD_CIRC * (1 - progress)}`;
+        if (progress >= 1 && !holdFired) {
+          holdFired = true;
+          holdCdUntil = performance.now() + TUNE.pinchHold.cooldownMs;
+          if (holdKind === "copy") {
+            actionsRef.current.copyField(holdEl.dataset.handCopy);
+            flashNoticeRef.current?.(`Copied · ${holdEl.dataset.handCopy}`);
+          } else {
+            actionsRef.current.openLink(holdEl.dataset.handOpen);
+          }
+        }
+      } else if (holdStartMs || (root.dataset.hold === "1")) {
+        resetHold();
       }
 
       const kp = 1 - Math.exp(-TUNE.snap.pullRate * dt);
@@ -253,12 +314,22 @@ export function HandCursor() {
   }, [arbitrator]);
 
   return (
-    <div ref={rootRef} className="hand-cursor hc-hidden" data-snapped="0" aria-hidden="true">
+    <div ref={rootRef} className="hand-cursor hc-hidden" data-snapped="0" data-hold="0" aria-hidden="true">
       <div ref={reticleRef} className="hc-reticle">
         <div className="hc-cross-h" />
         <div className="hc-cross-v" />
         <div className="hc-box"><i /></div>
         <div className="hc-dot" />
+        <svg className="hc-hold-ring" viewBox="0 0 44 44">
+          <circle className="track" cx="22" cy="22" r="18" />
+          <circle
+            ref={holdFillRef}
+            className="fill"
+            cx="22" cy="22" r="18"
+            strokeDasharray={2 * Math.PI * 18}
+            strokeDashoffset={2 * Math.PI * 18}
+          />
+        </svg>
         <div ref={readoutRef} className="hc-readout">x:0.50 y:0.50</div>
       </div>
       <div ref={snapRef} className="hc-snap">

@@ -73,10 +73,24 @@ export function HandPipelineProvider({ children }) {
   const { handState, startBoot, abortHand } = useMode();
   const active = handState !== "standby";
 
+  // Tab hidden → release the camera (the runner unmounts, stopping all tracks
+  // so the OS camera light goes off); tab visible → silently re-acquire
+  // (permission already granted). handState stays put, so on return tracking
+  // resumes with no re-boot.
+  const [hidden, setHidden] = useState(typeof document !== "undefined" && document.hidden);
+  useEffect(() => {
+    const onVis = () => setHidden(document.hidden);
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
   const dismissNotice = useCallback(() => setNotice(null), []);
+  // Transient confirmation toast (e.g. pinch-hold "Copied · …"); HandNotice
+  // auto-dismisses. Same surface as the failure notice.
+  const flashNotice = useCallback((msg) => setNotice(msg), []);
 
   // The shared interaction state machine — stable identity, mutated in place
   // by HandCursor/HandGestures, read everywhere (PIP label, debug, gates).
@@ -207,14 +221,14 @@ export function HandPipelineProvider({ children }) {
   }, [handleResults]);
 
   const value = useMemo(
-    () => ({ status, error, notice, dismissNotice, subscribeFrame, getLatestVector, debug, arbitrator: arbRef.current }),
-    [status, error, notice, dismissNotice, subscribeFrame, getLatestVector, debug],
+    () => ({ status, error, notice, dismissNotice, flashNotice, subscribeFrame, getLatestVector, debug, arbitrator: arbRef.current }),
+    [status, error, notice, dismissNotice, flashNotice, subscribeFrame, getLatestVector, debug],
   );
 
   return (
     <HandPipelineContext.Provider value={value}>
       {children}
-      {active && <PipelineRunner onResults={handleResults} onStatusChange={handleStatusChange} />}
+      {active && !hidden && <PipelineRunner onResults={handleResults} onStatusChange={handleStatusChange} />}
     </HandPipelineContext.Provider>
   );
 }

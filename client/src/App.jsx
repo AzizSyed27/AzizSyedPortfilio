@@ -7,6 +7,7 @@ import { HandPipelineProvider } from "./hand/HandPipelineProvider";
 import { ThemeModeSync } from "./theme/ThemeModeSync";
 import { OverlayProvider } from "./intents/OverlayContext";
 import { GalleryProvider } from "./intents/GalleryContext";
+import { ContactProvider } from "./intents/ContactContext";
 import { KeyboardController } from "./intents/KeyboardController";
 
 import { Header } from "./components/Header";
@@ -49,6 +50,7 @@ export default function App() {
         <HandPipelineProvider>
         <GalleryProvider>
           <OverlayProvider>
+            <ContactProvider>
             <BrowserRouter>
               <ThemeModeSync />
               <KeyboardController />
@@ -70,6 +72,7 @@ export default function App() {
               </ScreenLabel>
               <OverlayHost />
             </BrowserRouter>
+            </ContactProvider>
           </OverlayProvider>
         </GalleryProvider>
         </HandPipelineProvider>

@@ -12,75 +12,11 @@ import { ContactShadows, OrbitControls, useAnimations, useGLTF } from "@react-th
 import * as THREE from "three";
 import { clone as skeletonClone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { useGallery } from "../intents/GalleryContext";
+import { SCENE_PRESETS } from "./scenePresets";
 
-export const SCENE_PRESETS = {
-  e46: {
-    url: "/models/low_poly_bmw_m3-gtr.glb",
-    targetSize: 5,
-    cameraPos: [3.8, 1.6, 4.2],
-    cameraFov: 38,
-    target: [0, 0.2, 0],
-    polar: [0.6, 1.55],
-    distance: [1.2, 14],
-    autoRotateSpeed: 0.35,
-    contactShadow: { y: -0.4, opacity: 0.4, blur: 2.5, far: 3 },
-  },
-  fisherboy: {
-    url: "/models/fisherboy.glb",
-    targetSize: 3.2,
-    cameraPos: [3.3, 1.5, 4.5],
-    cameraFov: 36,
-    target: [0, 0, 0],
-    polar: [0.5, 1.5],
-    distance: [1.2, 12],
-    autoRotateSpeed: 0.22,
-    contactShadow: { y: -1.6, opacity: 0.35, blur: 2.0, far: 2.5 },
-  },
-  forest: {
-    url: "/models/Low_Poly_Forest.glb",
-    targetSize: 8,
-    cameraPos: [5.0, 3.5, 5.5],
-    cameraFov: 40,
-    target: [0, 0.5, 0],
-    polar: [0.5, 1.4],
-    distance: [3, 18],
-    autoRotateSpeed: 0.15,
-    contactShadow: { y: -1.5, opacity: 0.3, blur: 3.0, far: 4 },
-  },
-  court: {
-    url: "/models/basketball_court__low-poly.glb",
-    targetSize: 10,
-    cameraPos: [6.0, 5.0, 7.5],
-    cameraFov: 38,
-    target: [0, 0.4, 0],
-    polar: [0.4, 1.45],
-    distance: [3, 22],
-    autoRotateSpeed: 0.18,
-    contactShadow: { y: -0.5, opacity: 0.25, blur: 3.0, far: 5 },
-  },
-  cat: {
-    url: "/models/cat_-_ps1_low_poly_rigged.glb",
-    targetSize: 3.0,
-    cameraPos: [3.6, 1.7, 4.8],
-    cameraFov: 36,
-    target: [0, 0.1, 0],
-    polar: [0.5, 1.5],
-    distance: [1.5, 14],
-    autoRotateSpeed: 0.3,
-    contactShadow: { y: -0.85, opacity: 0.35, blur: 2.0, far: 2.5 },
-  },
-  coding: {
-    url: "/models/coding.glb",
-    targetSize: 4.5,
-    cameraPos: [3.5, 2.0, 5.5],
-    cameraFov: 38,
-    target: [0, 0.2, 0],
-    polar: [0.5, 1.5],
-    distance: [2, 16],
-    autoRotateSpeed: 0.15,
-    contactShadow: { y: -1.0, opacity: 0.3, blur: 2.5, far: 4 },
-  },
-};
+// Re-export so existing importers of GalleryScene keep working; Gallery3D now
+// imports it from scenePresets directly to avoid statically pulling this module.
+export { SCENE_PRESETS };
 
 // Kick off the fetch the moment this module is evaluated — paired with
 // the lazy import in Gallery3D, this means every GLB starts loading the
@@ -202,7 +138,7 @@ function Lights() {
   );
 }
 
-function ControlsBridge({ preset }) {
+function ControlsBridge({ preset, live }) {
   const controlsRef = useRef();
   const { registerHandlers } = useGallery();
   const [minD, maxD] = preset.distance;
@@ -236,7 +172,7 @@ function ControlsBridge({ preset }) {
       ref={controlsRef}
       enableDamping
       dampingFactor={0.08}
-      autoRotate
+      autoRotate={!live}
       autoRotateSpeed={0.6}
       enablePan={false}
       minDistance={minD}
@@ -248,12 +184,12 @@ function ControlsBridge({ preset }) {
   );
 }
 
-export function GalleryScene({ preset = SCENE_PRESETS.e46 }) {
+export function GalleryScene({ preset = SCENE_PRESETS.e46, live = false }) {
   const cs = preset.contactShadow;
   return (
     <Canvas
       key={preset.url} // clean remount when switching models, so camera re-fits
-      dpr={[1, 1.5]}
+      dpr={live ? [1, 1] : [1, 1.5]}
       gl={{ alpha: true, antialias: true }}
       camera={{ position: preset.cameraPos, fov: preset.cameraFov, near: 0.05, far: 100 }}
       style={{ background: "transparent", width: "100%", height: "100%" }}
@@ -263,11 +199,11 @@ export function GalleryScene({ preset = SCENE_PRESETS.e46 }) {
         <GLTFModel
           url={preset.url}
           targetSize={preset.targetSize}
-          autoRotateSpeed={preset.autoRotateSpeed}
+          autoRotateSpeed={live ? 0 : preset.autoRotateSpeed}
         />
       </Suspense>
       <ContactShadows position={[0, cs.y, 0]} opacity={cs.opacity} blur={cs.blur} far={cs.far} />
-      <ControlsBridge preset={preset} />
+      <ControlsBridge preset={preset} live={live} />
     </Canvas>
   );
 }

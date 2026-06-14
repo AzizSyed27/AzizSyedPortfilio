@@ -2,6 +2,7 @@ import { useCallback, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useOverlay } from "./OverlayContext";
 import { useGallery } from "./GalleryContext";
+import { useContact } from "./ContactContext";
 import { useTheme } from "../theme/ThemeProvider";
 import { useMode } from "../mode/ModeProvider";
 
@@ -25,6 +26,7 @@ export function useActions() {
   const location = useLocation();
   const overlay = useOverlay();
   const gallery = useGallery();
+  const contact = useContact();
   const theme = useTheme();
   const mode = useMode();
 
@@ -102,13 +104,16 @@ export function useActions() {
       rotateModel: gallery.rotateModel,
       zoomModel: gallery.zoomModel,
       selectGalleryItem: gallery.selectGalleryItem,
+      // contact (hand mode — register-handler seam)
+      submitContact: contact.submitContact,
+      toggleContactField: contact.toggleContactField,
       // misc
       scrollBy: scrollByPx,
       scrollToTop,
       copyField,
       openLink,
     }),
-    [goToPage, nextPage, prevPage, currentRouteId, overlay, theme, mode, gallery,
+    [goToPage, nextPage, prevPage, currentRouteId, overlay, theme, mode, gallery, contact,
      scrollByPx, scrollToTop, copyField, openLink],
   );
 }

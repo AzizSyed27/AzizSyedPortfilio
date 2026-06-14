@@ -67,6 +67,9 @@ export const TUNE = {
   snap: { radius: 60, exitPad: 18, switchMargin: 12, pullRate: 22, rectRefreshHz: 4 },
   // Geometric pinch: thumb-tip↔index-tip / knuckle-span, with hysteresis.
   pinch: { enter: 0.4, exit: 0.55, cooldownMs: 250, confirmFrames: 2 },
+  // Pinch-hold (M5): sustained pinch on a copy/open target fills a ring, then
+  // fires copyField/openLink. Distinct from the instant pinch-click.
+  pinchHold: { ms: 600, cooldownMs: 500 },
   // Geometric poses (M2): finger extension ratio = dist2D(tip,wrist)/dist2D(mcp,wrist).
   // Between curlRatio and extendRatio is a deliberate null band the
   // StabilityFilter absorbs. stableMs/clearMs feed the filter live (getters).
@@ -157,6 +160,7 @@ export const TUNE_SPEC = [
   ["snap.pullRate", "snap pull", 6, 40, 1],
   ["pinch.enter", "pinch enter", 0.2, 0.6, 0.01],
   ["pinch.exit", "pinch exit", 0.3, 0.8, 0.01],
+  ["pinchHold.ms", "hold ms", 300, 1200, 50],
   ["poses.extendRatio", "pose extend", 1.2, 2.2, 0.01],
   ["poses.curlRatio", "pose curl", 0.6, 1.5, 0.01],
   ["scroll.gain", "scroll gain", 0.5, 6, 0.1],
