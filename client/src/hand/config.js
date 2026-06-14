@@ -74,6 +74,10 @@ export const TUNE = {
   // upward drag (px) crosses dragLiftPx the message launches (rocket) and
   // submitContact fires; cooldownMs blocks a re-fire while the pinch is held.
   send: { dragLiftPx: 130, cooldownMs: 1200 },
+  // Stack constellation (Services /tools): a pinch grabs the nearest skill
+  // within grabRadiusPx of the cursor (forgiving — the word snaps to the
+  // cursor and tracks the hand until release, which flings it).
+  stack: { grabRadiusPx: 120 },
   // Geometric poses (M2): finger extension ratio = dist2D(tip,wrist)/dist2D(mcp,wrist).
   // Between curlRatio and extendRatio is a deliberate null band the
   // StabilityFilter absorbs. stableMs/clearMs feed the filter live (getters).
@@ -166,6 +170,7 @@ export const TUNE_SPEC = [
   ["pinch.exit", "pinch exit", 0.3, 0.8, 0.01],
   ["pinchHold.ms", "hold ms", 300, 1200, 50],
   ["send.dragLiftPx", "send lift px", 60, 320, 10],
+  ["stack.grabRadiusPx", "stack grab px", 40, 260, 10],
   ["poses.extendRatio", "pose extend", 1.2, 2.2, 0.01],
   ["poses.curlRatio", "pose curl", 0.6, 1.5, 0.01],
   ["scroll.gain", "scroll gain", 0.5, 6, 0.1],

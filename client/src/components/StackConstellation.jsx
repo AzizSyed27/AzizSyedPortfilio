@@ -3,8 +3,10 @@
 // abstract { pointer, grabbed } input so hand mode can feed it later.
 // Mouse drives it now. CSS lives in src/theme/design.css (.const-* L2049+).
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TECHS, CATEGORIES, CAT_ORDER } from "../content/stack";
+import { useHandPointer } from "../hand/useHandPointer";
+import { TUNE } from "../hand/config";
 
 const MAXP = Math.max(...TECHS.map((t) => t.p.length));
 const BY_NAME = Object.fromEntries(TECHS.map((t) => [t.n, t]));
@@ -47,6 +49,54 @@ export function StackConstellation() {
 
   // Keep `active` mirrored on the ref so the rAF loop can read it without a closure.
   useEffect(() => { S.current.active = active; }, [active]);
+
+  // ?debug=hand: expose the physics seam for Playwright verification only.
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    if (new URLSearchParams(window.location.search).get("debug") !== "hand") return undefined;
+    window.__stackDebug = S.current;
+    return () => { delete window.__stackDebug; };
+  }, []);
+
+  // Phase-2 hand seam: the live hand cursor drives the same { pointer, grabbed }
+  // input the mouse uses (see the hand effect below).
+  const { active: handActive, getPointer } = useHandPointer();
+
+  // Release the grabbed word with a throw — shared by mouse pointerup and the
+  // hand loop so the fling math stays identical. Reads the seam only.
+  const throwGrabbed = useCallback(() => {
+    const st = S.current;
+    if (!st.grabbed) return;
+    const b = st.bodies.find((x) => x.name === st.grabbed);
+    if (b) {
+      const vx = Math.abs(st.pointer.svx) > Math.abs(b.vx) ? st.pointer.svx : b.vx;
+      const vy = Math.abs(st.pointer.svy) > Math.abs(b.vy) ? st.pointer.svy : b.vy;
+      b.vx = clamp(vx * 1.7, -72, 72);
+      b.vy = clamp(vy * 1.7, -72, 72);
+      const speed = Math.hypot(b.vx, b.vy);
+      b.throwT = speed > 2 ? 240 : 0;
+    }
+    st.grabbed = null;
+  }, []);
+
+  // Forgiving grab: take the skill nearest the cursor within grabRadiusPx and
+  // snap it to the cursor (zero offset) so it tracks the hand 1:1 until release.
+  const grabNearest = useCallback((x, y) => {
+    const st = S.current;
+    let best = null;
+    let bestD = Infinity;
+    for (const b of st.bodies) {
+      const d = Math.hypot(b.x - x, b.y - y);
+      if (d < bestD) { bestD = d; best = b; }
+    }
+    if (!best || bestD > TUNE.stack.grabRadiusPx) return;
+    st.grabbed = best.name;
+    st.grabDX = 0;
+    st.grabDY = 0;
+    st.targetX = x;
+    st.targetY = y;
+    setActive(best.name);
+  }, []);
 
   // ── physics loop ────────────────────────────────────────────────
   useEffect(() => {
@@ -226,20 +276,7 @@ export function StackConstellation() {
       if (st.grabbed) { st.targetX = p.x - st.grabDX; st.targetY = p.y - st.grabDY; }
     };
 
-    const onUp = () => {
-      const st = S.current;
-      if (!st.grabbed) return;
-      const b = st.bodies.find((x) => x.name === st.grabbed);
-      if (b) {
-        const vx = Math.abs(st.pointer.svx) > Math.abs(b.vx) ? st.pointer.svx : b.vx;
-        const vy = Math.abs(st.pointer.svy) > Math.abs(b.vy) ? st.pointer.svy : b.vy;
-        b.vx = clamp(vx * 1.7, -72, 72);
-        b.vy = clamp(vy * 1.7, -72, 72);
-        const speed = Math.hypot(b.vx, b.vy);
-        b.throwT = speed > 2 ? 240 : 0;
-      }
-      st.grabbed = null;
-    };
+    const onUp = () => throwGrabbed();
 
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
@@ -247,7 +284,51 @@ export function StackConstellation() {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
     };
-  }, [view]);
+  }, [view, throwGrabbed]);
+
+  // ── hand input (drives the same seam as the mouse) ────────────
+  // In hand mode the published cursor feeds pointer + grab/throw: a pinch grabs
+  // the nearest skill, moving the hand drags it, releasing the pinch flings it.
+  useEffect(() => {
+    if (view !== "cloud" || !handActive) return undefined;
+    const field = fieldRef.current;
+    if (!field) return undefined;
+
+    let raf;
+    let prevPinched = false;
+    const loop = () => {
+      raf = requestAnimationFrame(loop);
+      const hp = getPointer();
+      const st = S.current;
+
+      // Hand lost mid-hold → release (a fast loss carries velocity = a throw).
+      if (!hp.present) {
+        if (st.grabbed) throwGrabbed();
+        prevPinched = false;
+        return;
+      }
+
+      const r = field.getBoundingClientRect();
+      const x = hp.x - r.left;
+      const y = hp.y - r.top;
+      st.pointer.vx = x - st.pointer.x;
+      st.pointer.vy = y - st.pointer.y;
+      st.pointer.svx = 0.45 * st.pointer.svx + 0.55 * st.pointer.vx;
+      st.pointer.svy = 0.45 * st.pointer.svy + 0.55 * st.pointer.vy;
+      st.pointer.x = x;
+      st.pointer.y = y;
+      st.pointer.inside = hp.x >= r.left && hp.x <= r.right && hp.y >= r.top && hp.y <= r.bottom;
+
+      if (hp.pinched && !prevPinched) grabNearest(x, y);
+      else if (!hp.pinched && prevPinched && st.grabbed) throwGrabbed();
+
+      if (st.grabbed) { st.targetX = x - st.grabDX; st.targetY = y - st.grabDY; }
+      prevPinched = hp.pinched;
+    };
+
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [view, handActive, getPointer, grabNearest, throwGrabbed]);
 
   const onWordDown = (e, name) => {
     e.preventDefault();
@@ -341,7 +422,7 @@ export function StackConstellation() {
             ) : (
               <div className="cr-hint">
                 <b>drag</b> to grab · <b>fling</b> to scatter · <b>hover</b> to trace links
-                <span className="cr-hand">↳ in hand mode: pinch to grab · fist to reset</span>
+                <span className="cr-hand">↳ in hand mode: pinch to grab &amp; fling · pinch ⟲ to scatter</span>
               </div>
             )}
           </div>

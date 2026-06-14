@@ -102,6 +102,12 @@ export function HandPipelineProvider({ children }) {
   const frameSubsRef = useRef(new Set());
   const latestVectorRef = useRef(null);
 
+  // Live hand cursor, published by HandCursor each display frame and read by
+  // components that run their own physics off the pointer (the Phase-2 seam,
+  // e.g. StackConstellation grab-throw). present=false whenever the cursor is
+  // lost/suppressed so a reader never acts on a stale grab.
+  const handPointerRef = useRef({ x: 0, y: 0, pinched: false, present: false });
+
   // Frame subscribers (SensorPip draw, cursor controller, debug trails) are
   // called per inference frame outside React; returns an unsubscribe.
   const subscribeFrame = useCallback((fn) => {
@@ -221,7 +227,7 @@ export function HandPipelineProvider({ children }) {
   }, [handleResults]);
 
   const value = useMemo(
-    () => ({ status, error, notice, dismissNotice, flashNotice, subscribeFrame, getLatestVector, debug, arbitrator: arbRef.current }),
+    () => ({ status, error, notice, dismissNotice, flashNotice, subscribeFrame, getLatestVector, debug, arbitrator: arbRef.current, handPointerRef }),
     [status, error, notice, dismissNotice, flashNotice, subscribeFrame, getLatestVector, debug],
   );
 

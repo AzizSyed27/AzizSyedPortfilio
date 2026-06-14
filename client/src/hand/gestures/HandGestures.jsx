@@ -23,6 +23,11 @@ const PALM_POINTS = [0, 5, 9, 13, 17];
 // Flick is allowed shortly after a pinch release (spec §3: "from open palm
 // or after pinch") — e.g. pinch-open a project, then flick it away.
 const POST_PINCH_FLICK_MS = 400;
+// Swipe is SUPPRESSED shortly after a pinch release: releasing a fast
+// pinch-drag (e.g. throwing a skill in the stack constellation) leaves a fast
+// open-palm motion in the swipe window that would otherwise read as a page
+// swipe. Long enough to clear the swipe motion buffer (swipe.windowMs).
+const POST_PINCH_SWIPE_MS = 400;
 // After the dial closes, ignore re-entry this long — the commit pinch (or its
 // confirm-lag) is still held and would instantly reopen the dial.
 const DIAL_REENTER_MS = 600;
@@ -599,6 +604,7 @@ export function HandGestures() {
         !modal &&
         handCount === 1 && // one-hand rule: no page swiping with two hands in view
         st.stable === "OPEN_PALM" &&
+        meta.nowMs - arb.context.lastPinchReleaseMs > POST_PINCH_SWIPE_MS && // not a throw-release
         meta.nowMs - track.lastArmedMs < TUNE.swipe.primeGraceMs &&
         arb.canFire("swipe", meta.nowMs, TUNE.swipe.cooldownMs)
       ) {

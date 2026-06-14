@@ -19,7 +19,7 @@ import { DEBUG_PARAM, DEBUG_VALUE, TUNE } from "../config";
 const PINCH_PULSE_MS = 200;
 
 export function HandCursor() {
-  const { subscribeFrame, arbitrator, flashNotice } = useHandPipeline();
+  const { subscribeFrame, arbitrator, flashNotice, handPointerRef } = useHandPipeline();
   const actions = useActions();
   const overlay = useOverlay();
   const { pathname } = useLocation();
@@ -165,6 +165,10 @@ export function HandCursor() {
   // Display loop — all DOM writes happen here.
   useEffect(() => {
     const { registry, controller } = sysRef.current;
+    // Stable seam object captured once (its identity never changes; we only
+    // mutate its fields) so the cleanup can reset it without the ref-in-cleanup
+    // lint trap.
+    const pointer = handPointerRef.current;
     let raf;
     let prevT = performance.now();
     let rx = -100;
@@ -240,6 +244,7 @@ export function HandCursor() {
         clearArmed();
         pull = 0;
         wasLost = true;
+        pointer.present = false; // seam readers must not act on a stale grab
         return;
       }
       if (wasLost) {
@@ -351,6 +356,14 @@ export function HandCursor() {
         st.pinch.phase === "PINCHED" || performance.now() < pulseUntilRef.current,
       );
 
+      // Publish the live pointer for the Phase-2 physics seam (StackConstellation
+      // grab-throw). Use the one-euro position st.x/st.y — NOT the eased rx/ry —
+      // so a fast fling's velocity survives for the throw.
+      pointer.x = st.x;
+      pointer.y = st.y;
+      pointer.pinched = st.pinch.phase === "PINCHED";
+      pointer.present = true;
+
       if (t - lastReadout > 1000 / TUNE.cursor.readoutHz && readoutRef.current) {
         lastReadout = t;
         readoutRef.current.textContent =
@@ -362,12 +375,13 @@ export function HandCursor() {
     return () => {
       cancelAnimationFrame(raf);
       clearArmed();
+      pointer.present = false;
       // Belt-and-braces: never leave armed residue after exit.
       document.querySelectorAll(".armed").forEach((el) => el.classList.remove("armed"));
     };
-    // arbitrator is a stable mutable object from the provider — the dep
-    // satisfies the linter without ever re-running the loop.
-  }, [arbitrator]);
+    // arbitrator and handPointerRef are stable objects from the provider — the
+    // deps satisfy the linter without ever re-running the loop.
+  }, [arbitrator, handPointerRef]);
 
   return (
     <div ref={rootRef} className="hand-cursor hc-hidden" data-snapped="0" data-hold="0" aria-hidden="true">
