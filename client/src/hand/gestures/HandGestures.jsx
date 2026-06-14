@@ -26,9 +26,6 @@ const POST_PINCH_FLICK_MS = 400;
 // After the dial closes, ignore re-entry this long — the commit pinch (or its
 // confirm-lag) is still held and would instantly reopen the dial.
 const DIAL_REENTER_MS = 600;
-// An up-flick lifts the cursor off the send zone before the burst resolves, so
-// fire flick-send if the cursor was over it within this window.
-const SEND_FLICK_WINDOW_MS = 450;
 
 function handednessAt(results, i) {
   const first = results.handednesses?.[i]?.[0] ?? results.handedness?.[i]?.[0];
@@ -115,11 +112,9 @@ export function HandGestures() {
         lastSy: null,
         lastHandCount: 0,
         exitVx: 0,
-        vy: 0,
         smoothSpeed: 0,
         stillStartMs: null,
         lastArmedMs: -Infinity,
-        lastArmedSendMs: -Infinity, // last frame the cursor was over the send zone
         // Theme dial (M4)
         dialMode: "ONE",     // 'ONE' = pinch-pill (same hand turns); 'TWO' = palm-up summon + other hand turns
         dialBaseRoll: 0,
@@ -547,7 +542,6 @@ export function HandGestures() {
         const dt = gapMs / 1000;
         if (dt > 0 && dt < 0.1) {
           track.exitVx = 0.5 * track.exitVx + 0.5 * ((sx - track.lastSx) / dt);
-          track.vy = (sy - track.lastSy) / dt; // up is negative (flick-to-send)
 
           // Swipe arming: a NEAR-STILL open palm held primeDwellMs arms the
           // swipe; the arm stays valid primeGraceMs after stillness ends —
@@ -571,7 +565,6 @@ export function HandGestures() {
           }
         } else {
           track.exitVx = 0; // motion across a gap is not exit velocity
-          track.vy = 0;
           track.stillStartMs = null;
         }
       }
@@ -640,23 +633,8 @@ export function HandGestures() {
         }
       }
 
-      // Flick-to-send: a fast UPWARD throw of the open palm while recently over
-      // the Contact send zone (the throw lifts the cursor off it, so use
-      // recency). Directional up-velocity — not the out-and-back flick.
-      if (arb.context.armedSend) track.lastArmedSendMs = meta.nowMs;
-      if (
-        !modal &&
-        arb.state === "CURSOR" &&
-        meta.nowMs - track.lastArmedSendMs < SEND_FLICK_WINDOW_MS &&
-        st.stable === "OPEN_PALM" &&
-        track.vy < -TUNE.flick.minVelocity &&
-        arb.canFire("flick", meta.nowMs, TUNE.flick.cooldownMs)
-      ) {
-        arb.cooldowns.flick = meta.nowMs;
-        flick.clear();
-        arb.note("FLICK-UP → submitContact", meta.nowMs);
-        actionsRef.current.submitContact();
-      }
+      // (Contact send is now a pinch-grab + lift drag on the envelope, handled
+      // in HandCursor's display loop — the old flick-up-to-send was removed.)
     };
 
     const unsubscribe = subscribeFrame(onFrame);

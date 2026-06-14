@@ -70,8 +70,10 @@ export function HandCursor() {
           pulseUntilRef.current = performance.now() + PINCH_PULSE_MS;
           return;
         }
+        // Send target (Contact envelope): sending is a pinch-HOLD-and-lift
+        // drag handled in the display loop, so the instant pinch-click is a
+        // no-op (prevents an accidental send the moment you grab the envelope).
         if (ds?.handSend) {
-          actionsRef.current.submitContact();
           pulseUntilRef.current = performance.now() + PINCH_PULSE_MS;
           return;
         }
@@ -176,12 +178,30 @@ export function HandCursor() {
     let holdFired = false;
     let holdCdUntil = 0;
 
+    // Drag-to-send (Contact envelope): pinch-grab the armed send target and
+    // lift it; once the upward drag crosses TUNE.send.dragLiftPx the message
+    // launches. dragEl carries the live --hand-lift the page renders.
+    let dragEl = null;
+    let dragStartY = 0;
+    let dragging = false;
+    let sendCdUntil = 0;
+
     const HOLD_CIRC = 2 * Math.PI * 18; // r=18 ring circumference
 
     const resetHold = () => {
       holdStartMs = 0;
       holdFired = false;
       if (rootRef.current) rootRef.current.dataset.hold = "0";
+    };
+
+    const clearSendDrag = () => {
+      if (dragEl) {
+        dragEl.style.removeProperty("--hand-lift");
+        dragEl.style.removeProperty("--hand-lift-p");
+        delete dragEl.dataset.grabbing;
+      }
+      dragEl = null;
+      dragging = false;
     };
 
     const clearArmed = () => {
@@ -191,6 +211,7 @@ export function HandCursor() {
       arbitrator.context.armedProject = null;
       arbitrator.context.armedSend = false;
       resetHold();
+      clearSendDrag();
       if (rootRef.current) rootRef.current.dataset.snapped = "0";
     };
 
@@ -266,11 +287,46 @@ export function HandCursor() {
             actionsRef.current.copyField(holdEl.dataset.handCopy);
             flashNoticeRef.current?.(`Copied · ${holdEl.dataset.handCopy}`);
           } else {
-            actionsRef.current.openLink(holdEl.dataset.handOpen);
+            // Open: window.open from this rAF context has no user activation,
+            // so the browser blocks the popup. Copy the URL instead (a mouse
+            // click on the <a> still opens a real tab, with activation).
+            const url = holdEl.dataset.handOpen;
+            actionsRef.current.copyField(url);
+            flashNoticeRef.current?.(`Link copied — open in a new tab · ${url}`);
           }
         }
       } else if (holdStartMs || (root.dataset.hold === "1")) {
         resetHold();
+      }
+
+      // Pinch-drag-up-to-send (Contact envelope): pinch the armed send target
+      // and lift it; the upward drag from grab-point becomes --hand-lift (the
+      // page raises the envelope), and crossing the threshold fires
+      // submitContact, handing off to the React-driven .sending launch.
+      // Once a drag begins it stays locked to the grabbed element even as the
+      // hand lifts past the target's snap radius — otherwise losing the snap
+      // mid-lift would cancel the send before it could complete.
+      const sendEl = dragging
+        ? dragEl
+        : (snapped?.el?.dataset?.handSend ? snapped.el : null);
+      if (sendEl && st.pinch.phase === "PINCHED" && performance.now() > sendCdUntil) {
+        if (!dragging) {
+          dragging = true;
+          dragStartY = ry;
+          dragEl = sendEl;
+          sendEl.dataset.grabbing = "1";
+        }
+        const lift = Math.max(0, dragStartY - ry);
+        const progress = Math.min(1, lift / TUNE.send.dragLiftPx);
+        sendEl.style.setProperty("--hand-lift", `${lift}px`);
+        sendEl.style.setProperty("--hand-lift-p", `${progress}`);
+        if (lift >= TUNE.send.dragLiftPx) {
+          sendCdUntil = performance.now() + TUNE.send.cooldownMs;
+          clearSendDrag(); // drop the inline lift so the launch keyframe is clean
+          actionsRef.current.submitContact();
+        }
+      } else if (dragging) {
+        clearSendDrag(); // released / moved off before threshold → settle back
       }
 
       const kp = 1 - Math.exp(-TUNE.snap.pullRate * dt);

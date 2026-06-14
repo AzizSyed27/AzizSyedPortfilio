@@ -2500,29 +2500,54 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
 .contact-hand .field-box:focus, .contact-hand .field.is-listening .field-box { border-color: var(--accent); }
 .contact-hand .interim { color: var(--muted); }
 
-.contact-hand .send-bay { margin-top: 6px; position: relative; overflow: hidden; border: 0.5px dashed var(--line-strong); border-radius: 10px; background: color-mix(in srgb, var(--accent) 4%, transparent); padding: 22px 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 116px; }
-.contact-hand .send-bay::before, .contact-hand .send-bay::after { content: ""; position: absolute; top: 0; bottom: 0; width: 0.5px; background: linear-gradient(to top, transparent, var(--accent) 60%, transparent); opacity: 0.28; }
-.contact-hand .send-bay::before { left: 32%; } .contact-hand .send-bay::after { left: 40%; }
-.contact-hand .send-bay[data-armed="1"] { border-color: var(--accent); box-shadow: 0 0 24px -10px var(--accent); }
-.contact-hand .launch-zone { position: relative; width: 150px; height: 80px; flex: none; }
-.contact-hand .msg-puck { position: absolute; left: 0; bottom: 6px; z-index: 3; padding: 9px 14px; border: 0.5px solid var(--accent); border-radius: 8px; background: color-mix(in srgb, var(--accent) 10%, transparent); font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg); display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 0 16px -4px var(--accent); }
-.contact-hand .msg-puck .pk-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
-.contact-hand.sending .msg-puck { animation: chLaunch 0.9s cubic-bezier(0.3,0,0.3,1) forwards; }
-.contact-hand .trail { position: absolute; left: 8px; bottom: 6px; width: 92px; height: 74px; z-index: 1; pointer-events: none; }
-.contact-hand .trail span { position: absolute; bottom: 0; width: 1.5px; border-radius: 1px; background: linear-gradient(to top, var(--accent), transparent); opacity: 0; }
-.contact-hand.sending .trail span { animation: chStreak 0.9s ease-in forwards; }
-.contact-hand .trail span:nth-child(1) { left: 14px; height: 40px; animation-delay: .05s; }
-.contact-hand .trail span:nth-child(2) { left: 34px; height: 56px; animation-delay: .15s; }
-.contact-hand .trail span:nth-child(3) { left: 52px; height: 34px; animation-delay: .22s; }
-.contact-hand .trail span:nth-child(4) { left: 70px; height: 48px; animation-delay: .1s; }
-@keyframes chLaunch { 0% { transform: translateY(0) scale(1); opacity: 1; } 70% { transform: translateY(-44px) scale(0.96); opacity: 0.9; } 100% { transform: translateY(-96px) scale(0.6); opacity: 0; } }
-@keyframes chStreak { 0% { opacity: 0; transform: translateY(0); } 40% { opacity: 0.6; } 100% { opacity: 0; transform: translateY(-30px); } }
-.contact-hand .launch-btn { text-align: right; }
-.contact-hand .lb-main { display: inline-flex; align-items: center; gap: 10px; font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--bg); background: var(--accent); border: 0.5px solid var(--accent); border-radius: 999px; padding: 11px 20px; cursor: none; box-shadow: 0 0 22px -6px var(--accent); transition: transform .2s; }
-.contact-hand .lb-main:hover { transform: translateY(-3px); }
+.contact-hand .send-bay { margin-top: 6px; position: relative; overflow: visible; border: 0.5px dashed var(--line-strong); border-radius: 10px; background: color-mix(in srgb, var(--accent) 4%, transparent); padding: 22px 24px; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; min-height: 116px; transition: border-color .2s, box-shadow .2s; }
+.contact-hand .send-bay::before, .contact-hand .send-bay::after { content: ""; position: absolute; top: 8px; bottom: 8px; width: 0.5px; background: linear-gradient(to top, transparent, var(--accent) 60%, transparent); opacity: 0.22; }
+.contact-hand .send-bay::before { left: 26%; } .contact-hand .send-bay::after { left: 31%; }
+/* Bay lights up while the envelope is locked on (snap reticle shows LOCK). */
+.contact-hand .send-bay:has(.msg-env.armed) { border-color: var(--accent); box-shadow: 0 0 24px -10px var(--accent); }
+
+/* ── Envelope (drag-to-send target) ── */
+.contact-hand .launch-zone { position: relative; width: 108px; height: 78px; flex: none; display: flex; align-items: flex-end; justify-content: center; }
+.contact-hand .launch-pad { position: absolute; left: 50%; bottom: 2px; width: 78px; height: 0.5px; transform: translateX(-50%); background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: 0.45; }
+.contact-hand .msg-env {
+  position: relative; z-index: 3; width: 92px; height: 60px; padding: 0; border: 0; background: none; cursor: none;
+  /* the live pinch-lift (HandCursor writes --hand-lift) raises the envelope */
+  transform: translateY(calc(-1 * var(--hand-lift, 0px)));
+  transition: transform .3s cubic-bezier(.2,.8,.3,1), filter .2s;
+  filter: drop-shadow(0 0 calc(6px + var(--hand-lift-p, 0) * 26px) color-mix(in srgb, var(--accent) 70%, transparent));
+}
+/* During a live drag, the transform must track the hand 1:1 — no easing lag.
+   The transition is only for the settle-back when the pinch is released. */
+.contact-hand .msg-env[data-grabbing="1"] { transition: filter .1s; }
+.contact-hand .msg-env .env-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.contact-hand .msg-env .env-body { fill: color-mix(in srgb, var(--accent) 10%, transparent); stroke: var(--accent); stroke-width: 1.5; transition: stroke .2s; }
+.contact-hand .msg-env .env-flap { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
+.contact-hand .msg-env.armed .env-body, .contact-hand .msg-env.armed .env-flap { stroke: var(--accent-bright); }
+.contact-hand .msg-env .env-tag { position: absolute; inset: 0; display: grid; place-items: center; padding-top: 12px; font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.14em; color: var(--fg); pointer-events: none; }
+/* Exhaust: a faint pre-ignition glow as the drag nears launch, full burn on send. */
+.contact-hand .msg-env .env-flame { position: absolute; left: 50%; bottom: -3px; width: 13px; height: 0; transform: translateX(-50%); border-radius: 2px 2px 60% 60%; background: linear-gradient(to bottom, var(--accent-bright), color-mix(in srgb, var(--accent) 30%, transparent) 60%, transparent); opacity: 0; }
+.contact-hand .msg-env[data-grabbing="1"] .env-flame { opacity: calc(var(--hand-lift-p, 0) * 0.9); height: calc(var(--hand-lift-p, 0) * 16px); }
+/* Rocket launch — driven by the React .sending state once submit fires. */
+.contact-hand.sending .msg-env { animation: chLaunch 0.9s cubic-bezier(0.45,0,0.55,1) forwards; }
+.contact-hand.sending .env-flame { animation: chFlame 0.9s ease-in forwards; }
+@keyframes chLaunch {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  12%  { transform: translateY(8px) rotate(-1.5deg); opacity: 1; }   /* wind-up dip */
+  32%  { transform: translateY(-34px) rotate(2deg); opacity: 1; }
+  100% { transform: translateY(-280px) rotate(7deg); opacity: 0; }   /* accelerate off-top */
+}
+@keyframes chFlame {
+  0%   { opacity: 0; height: 6px; }
+  14%  { opacity: 0.7; height: 12px; }
+  32%  { opacity: 1; height: 30px; }
+  100% { opacity: 0; height: 64px; }
+}
+
+.contact-hand .launch-info { text-align: right; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+.contact-hand .li-main { display: inline-flex; align-items: center; gap: 9px; font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
 .contact-hand .lb-arrow { font-size: 14px; animation: chLift 1.6s ease-in-out infinite; }
 @keyframes chLift { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-.contact-hand .lb-sub { display: block; margin-top: 10px; font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); }
+.contact-hand .lb-sub { display: block; font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
 
 .contact-hand .detail { border-top: 0.5px solid var(--line); padding: 16px 0; }
 .contact-hand .detail:last-of-type { border-bottom: 0.5px solid var(--line); }
@@ -2566,8 +2591,8 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
   .contact-hand .pinch-glyph::before,
   .contact-hand .pinch-glyph::after,
   .contact-hand .lb-arrow,
-  .contact-hand.sending .msg-puck,
-  .contact-hand.sending .trail span,
+  .contact-hand.sending .msg-env,
+  .contact-hand.sending .env-flame,
   .hand-idle-prompt {
     animation: none !important;
   }

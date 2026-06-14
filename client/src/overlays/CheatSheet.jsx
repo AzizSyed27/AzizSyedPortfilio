@@ -10,8 +10,8 @@ const GESTURES = [
   { gesture: "Pinch theme pill, or palm-up + 2nd hand", mouse: "Theme menu", intent: "Summon theme dial" },
   { gesture: "Turn hand · pinch / flick",  mouse: "Theme menu", intent: "Spin dial · apply / cancel" },
   { gesture: "Pinch a field (Contact)",    mouse: "Type",       intent: "Speak to fill it" },
-  { gesture: "Flick ↑ over send",          mouse: "Send button",intent: "Send the message" },
-  { gesture: "Pinch-hold a detail",        mouse: "Copy / link",intent: "Copy email · open link" },
+  { gesture: "Pinch + lift the envelope",  mouse: "Click envelope", intent: "Send the message" },
+  { gesture: "Pinch-hold a detail",        mouse: "Copy / link",intent: "Copy email · copy link" },
 ];
 
 export function CheatSheet({ onClose }) {

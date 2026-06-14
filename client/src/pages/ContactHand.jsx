@@ -137,8 +137,8 @@ export function ContactHand() {
         </h2>
         <p className="lede" style={{ marginBottom: 40 }}>
           {SPEECH_SUPPORTED
-            ? "Speak to fill a field, flick to send, pinch to copy. No keyboard required."
-            : "Type to fill a field, flick to send, pinch to copy. (Voice needs Chrome or Edge.)"}
+            ? "Speak to fill a field, lift the envelope to send, pinch-hold to copy. No keyboard required."
+            : "Type to fill a field, lift the envelope to send, pinch-hold to copy. (Voice needs Chrome or Edge.)"}
         </p>
 
         <div className="contact-grid">
@@ -175,20 +175,31 @@ export function ContactHand() {
               </div>
             ))}
 
-            <div className="send-bay" data-cursor="hover" data-hand-send="1" aria-label="Send message zone">
+            <div className="send-bay" aria-label="Send message zone">
               <div className="launch-zone">
-                <div className="trail"><span /><span /><span /><span /></div>
-                <div className="msg-puck"><span className="pk-dot" /> MSG</div>
-              </div>
-              <div className="launch-btn">
-                <button type="button" className="lb-main" data-cursor="hover" data-hand-send="1" onClick={doSend}>
-                  Flick to launch <span className="lb-arrow">↑</span>
+                <div className="launch-pad" aria-hidden="true" />
+                <button
+                  type="button"
+                  className="msg-env"
+                  data-cursor="hover" data-hand-send="1"
+                  onClick={doSend}
+                  aria-label="Send message — pinch and lift, or click"
+                >
+                  <span className="env-flame" aria-hidden="true" />
+                  <svg className="env-svg" viewBox="0 0 64 44" aria-hidden="true">
+                    <rect className="env-body" x="2.5" y="6.5" width="59" height="33" rx="4" />
+                    <path className="env-flap" d="M3 8 L32 26 L61 8" />
+                  </svg>
+                  <span className="env-tag">MSG</span>
                 </button>
+              </div>
+              <div className="launch-info">
+                <span className="li-main">Pinch &amp; lift to send <span className="lb-arrow">↑</span></span>
                 <span className="lb-sub">
-                  {status === "sending" ? "sending…"
+                  {status === "sending" ? "launching…"
                     : status === "sent" ? "message away ✓"
                     : status === "error" ? error
-                    : "flick up · or pinch the button"}
+                    : "lock on · pinch · lift — or click"}
                 </span>
               </div>
             </div>
@@ -227,7 +238,7 @@ export function ContactHand() {
                   {LINKS.map((l) => (
                     <div key={l.key} className="link-row">
                       <a href={l.url} data-cursor="hover" data-hand-open={l.url} target="_blank" rel="noopener noreferrer">{l.label}</a>
-                      <span className="pinch-tag"><span className="pinch-glyph" /> Pinch to open</span>
+                      <span className="pinch-tag"><span className="pinch-glyph" /> Pinch to copy link</span>
                     </div>
                   ))}
                 </div>

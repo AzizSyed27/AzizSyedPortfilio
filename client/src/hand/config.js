@@ -68,8 +68,12 @@ export const TUNE = {
   // Geometric pinch: thumb-tip↔index-tip / knuckle-span, with hysteresis.
   pinch: { enter: 0.4, exit: 0.55, cooldownMs: 250, confirmFrames: 2 },
   // Pinch-hold (M5): sustained pinch on a copy/open target fills a ring, then
-  // fires copyField/openLink. Distinct from the instant pinch-click.
+  // fires copyField (copy + link-copy). Distinct from the instant pinch-click.
   pinchHold: { ms: 600, cooldownMs: 500 },
+  // Drag-to-send (Contact): pinch-grab the envelope and lift it. Once the
+  // upward drag (px) crosses dragLiftPx the message launches (rocket) and
+  // submitContact fires; cooldownMs blocks a re-fire while the pinch is held.
+  send: { dragLiftPx: 130, cooldownMs: 1200 },
   // Geometric poses (M2): finger extension ratio = dist2D(tip,wrist)/dist2D(mcp,wrist).
   // Between curlRatio and extendRatio is a deliberate null band the
   // StabilityFilter absorbs. stableMs/clearMs feed the filter live (getters).
@@ -161,6 +165,7 @@ export const TUNE_SPEC = [
   ["pinch.enter", "pinch enter", 0.2, 0.6, 0.01],
   ["pinch.exit", "pinch exit", 0.3, 0.8, 0.01],
   ["pinchHold.ms", "hold ms", 300, 1200, 50],
+  ["send.dragLiftPx", "send lift px", 60, 320, 10],
   ["poses.extendRatio", "pose extend", 1.2, 2.2, 0.01],
   ["poses.curlRatio", "pose curl", 0.6, 1.5, 0.01],
   ["scroll.gain", "scroll gain", 0.5, 6, 0.1],
