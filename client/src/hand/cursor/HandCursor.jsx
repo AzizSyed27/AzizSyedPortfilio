@@ -34,6 +34,7 @@ export function HandCursor() {
   const actionsRef = useRef(actions);
   const flashNoticeRef = useRef(flashNotice);
   const overlayOpenRef = useRef(false);
+  const explodedOpenRef = useRef(false);
   const armedRef = useRef(null);
   const pulseUntilRef = useRef(0);
 
@@ -79,7 +80,7 @@ export function HandCursor() {
         }
         if (armed?.el?.isConnected) {
           armed.el.click();
-        } else if (overlayOpenRef.current) {
+        } else if (overlayOpenRef.current && !explodedOpenRef.current) {
           actionsRef.current.closeOverlay();
         }
         pulseUntilRef.current = performance.now() + PINCH_PULSE_MS;
@@ -95,6 +96,9 @@ export function HandCursor() {
     overlayOpenRef.current = Boolean(
       overlay.openProjectId || overlay.cheatSheetOpen || overlay.themeWheelOpen,
     );
+    // The exploded view owns the pinch (grab a fragment), so an empty-space
+    // pinch must NOT fall through to closeOverlay there.
+    explodedOpenRef.current = Boolean(overlay.openProjectId);
   });
 
   // Inference-side subscription. The wrapper also mirrors the pinch FSM into

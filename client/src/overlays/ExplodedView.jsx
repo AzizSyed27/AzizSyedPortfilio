@@ -1,6 +1,10 @@
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { PROJECTS_BY_ID } from "../content/projects";
 import DecryptedText from "../components/DecryptedText";
+import { useHandPointer } from "../hand/useHandPointer";
+import { TUNE } from "../hand/config";
+
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
 // Per-project exploded view — a full-screen HUD scene ported from the Claude
 // Design handoff (.design-bundle/.../<project> Exploded.html). Five floating
@@ -91,6 +95,52 @@ export function ExplodedView({ id, origin, onClose }) {
     b.el.setAttribute("data-grabbed", "");
   };
 
+  // Phase-2 hand seam: the live hand cursor drives the same physRef the mouse
+  // uses (see the hand loop below).
+  const { active: handActive, getPointer } = useHandPointer();
+
+  // Release the grabbed fragment with a throw — shared by mouse pointerup and
+  // the hand loop so the fling math stays identical. Reads the seam only.
+  const releaseThrow = useCallback(() => {
+    const P = physRef.current;
+    if (!P.grabbed) return;
+    const b = P.bodies.find((x) => x.id === P.grabbed);
+    if (b) {
+      const vx = Math.abs(P.pointer.svx) > Math.abs(b.vx) ? P.pointer.svx : b.vx;
+      const vy = Math.abs(P.pointer.svy) > Math.abs(b.vy) ? P.pointer.svy : b.vy;
+      b.vx = clamp(vx * 1.5, -40, 40);
+      b.vy = clamp(vy * 1.5, -40, 40);
+      b.throwT = Math.hypot(b.vx, b.vy) > 1.5 ? 140 : 0;
+      b.state = b.throwT > 0 ? "thrown" : "settling";
+      b.el.removeAttribute("data-grabbed");
+    }
+    P.grabbed = null;
+  }, []);
+
+  // Forgiving grab for hand mode: take the fragment whose box is nearest the
+  // cursor (0 if inside) within grabRadiusPx, and snap it to the cursor (zero
+  // offset) so it tracks the hand 1:1 — fragments are large, so this uses
+  // box-distance, not center-distance.
+  const grabNearestFrag = useCallback((x, y) => {
+    const P = physRef.current;
+    let best = null;
+    let bestD = Infinity;
+    for (const b of P.bodies) {
+      const dx = Math.max(Math.abs(x - b.x) - b.hw, 0);
+      const dy = Math.max(Math.abs(y - b.y) - b.hh, 0);
+      const d = Math.hypot(dx, dy);
+      if (d < bestD) { bestD = d; best = b; }
+    }
+    if (!best || bestD > TUNE.stack.grabRadiusPx) return;
+    P.grabbed = best.id;
+    P.grabDX = 0;
+    P.grabDY = 0;
+    P.targetX = x;
+    P.targetY = y;
+    best.state = "grabbed";
+    best.el.setAttribute("data-grabbed", "");
+  }, []);
+
   // Esc closes.
   useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape") onClose(); };
@@ -155,7 +205,6 @@ export function ExplodedView({ id, origin, onClose }) {
     const P = physRef.current;
     P.canGrab = canGrab;
     P.grabbed = null;
-    const clampN = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
     // Build bodies in layout space.
     const measure = (b) => {
@@ -313,20 +362,7 @@ export function ExplodedView({ id, origin, onClose }) {
       P.pointer.x = x; P.pointer.y = y;
       if (P.grabbed) { P.targetX = x - P.grabDX; P.targetY = y - P.grabDY; }
     };
-    const onPointerUp = () => {
-      if (!P.grabbed) return;
-      const b = bodies.find((x) => x.id === P.grabbed);
-      if (b) {
-        const vx = Math.abs(P.pointer.svx) > Math.abs(b.vx) ? P.pointer.svx : b.vx;
-        const vy = Math.abs(P.pointer.svy) > Math.abs(b.vy) ? P.pointer.svy : b.vy;
-        b.vx = clampN(vx * 1.5, -40, 40);
-        b.vy = clampN(vy * 1.5, -40, 40);
-        b.throwT = Math.hypot(b.vx, b.vy) > 1.5 ? 140 : 0;
-        b.state = b.throwT > 0 ? "thrown" : "settling";
-        b.el.removeAttribute("data-grabbed");
-      }
-      P.grabbed = null;
-    };
+    const onPointerUp = () => releaseThrow();
 
     if (!reduced) window.addEventListener("mousemove", onMoveMouse);
     if (canGrab) {
@@ -350,7 +386,63 @@ export function ExplodedView({ id, origin, onClose }) {
       core.remove();
       P.bodies = []; P.grabbed = null; P.canGrab = false;
     };
-  }, [id, grown]);
+  }, [id, grown, releaseThrow]);
+
+  // Hand input — drives the same physRef seam as the mouse. A pinch grabs the
+  // nearest fragment, moving the hand drags it, releasing the pinch flings it.
+  // The physics frame() loop above animates grabbed/thrown/settling; this loop
+  // only writes the seam (pointer + grabbed/target), never the DOM.
+  useEffect(() => {
+    if (!grown || !handActive) return undefined;
+    const scene = sceneRef.current;
+    if (!scene) return undefined;
+    const canGrab =
+      !prefersReduced() &&
+      typeof matchMedia !== "undefined" &&
+      matchMedia("(min-width: 981px) and (pointer: fine)").matches;
+    if (!canGrab) return undefined;
+
+    let raf;
+    let prevPinched = false;
+    const loop = () => {
+      raf = requestAnimationFrame(loop);
+      const hp = getPointer();
+      const P = physRef.current;
+
+      if (!hp.present) {
+        if (P.grabbed) releaseThrow();
+        prevPinched = false;
+        return;
+      }
+
+      const r = scene.getBoundingClientRect();
+      const x = hp.x - r.left;
+      const y = hp.y - r.top;
+      P.pointer.vx = x - P.pointer.x;
+      P.pointer.vy = y - P.pointer.y;
+      P.pointer.svx = 0.45 * P.pointer.svx + 0.55 * P.pointer.vx;
+      P.pointer.svy = 0.45 * P.pointer.svy + 0.55 * P.pointer.vy;
+      P.pointer.x = x;
+      P.pointer.y = y;
+
+      if (hp.pinched && !prevPinched) grabNearestFrag(x, y);
+      else if (!hp.pinched && prevPinched && P.grabbed) releaseThrow();
+
+      if (P.grabbed) { P.targetX = x - P.grabDX; P.targetY = y - P.grabDY; }
+      prevPinched = hp.pinched;
+    };
+
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [grown, handActive, getPointer, grabNearestFrag, releaseThrow]);
+
+  // ?debug=hand: expose the physics seam for Playwright verification only.
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    if (new URLSearchParams(window.location.search).get("debug") !== "hand") return undefined;
+    window.__expDebug = physRef.current;
+    return () => { delete window.__expDebug; };
+  }, []);
 
   if (!project) return null;
   const { num, title, tags = [], stats = [], arch = [], caseStudy, preview = {} } = project;
