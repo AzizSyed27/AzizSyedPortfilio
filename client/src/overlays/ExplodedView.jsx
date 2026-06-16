@@ -1,4 +1,4 @@
-import { createContext, Fragment, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { createContext, Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { PROJECTS_BY_ID } from "../content/projects";
 import DecryptedText from "../components/DecryptedText";
 import { useHandPointer } from "../hand/useHandPointer";
@@ -540,18 +540,20 @@ export function ExplodedView({ id, origin, onClose }) {
               )}
             </div>
 
-            <div className="frag" id="exp-frag-stats" data-depth={DEPTH.stats} onPointerDown={onFragDown}>
-              <div className="frag-label"><Decrypt text="L02 · METRICS" delay={D.stats} /></div>
-              <span className="frag-idx"><Decrypt text="02 / 05" delay={D.stats} /></span>
-              <div className="stat-row">
-                {stats.map((s, i) => (
-                  <div className="stat-cell" key={i}>
-                    <div className="v"><Decrypt text={s.v} delay={D.stats + 40 + i * 30} /></div>
-                    <div className="l"><Decrypt text={s.l} delay={D.stats + 70 + i * 30} /></div>
-                  </div>
-                ))}
+            {stats.length > 0 && (
+              <div className="frag" id="exp-frag-stats" data-depth={DEPTH.stats} onPointerDown={onFragDown}>
+                <div className="frag-label"><Decrypt text="L02 · METRICS" delay={D.stats} /></div>
+                <span className="frag-idx"><Decrypt text="02 / 05" delay={D.stats} /></span>
+                <div className="stat-row">
+                  {stats.map((s, i) => (
+                    <div className="stat-cell" key={i}>
+                      <div className="v"><Decrypt text={s.v} delay={D.stats + 40 + i * 30} /></div>
+                      <div className="l"><Decrypt text={s.l} delay={D.stats + 70 + i * 30} /></div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="frag" id="exp-frag-tags" data-depth={DEPTH.tags} onPointerDown={onFragDown}>
               <div className="frag-label"><Decrypt text="L03 · STACK" delay={D.tags} /></div>

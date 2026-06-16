@@ -72,26 +72,21 @@ function ProjectCardTilt({ p }) {
   );
 }
 
-function ArchiveRow({ p, defaultOpen }) {
-  const [open, setOpen] = useState(!!defaultOpen);
+function ArchiveRow({ p }) {
+  const actions = useActions();
   return (
     <div
       className="project-row archive-row"
       data-cursor="hover"
-      data-open={open ? "1" : "0"}
-      onClick={() => setOpen((v) => !v)}
+      data-hand-project={p.id}
+      onClick={(e) => actions.openProject(p.id, rectOf(e.currentTarget))}
     >
-      <span className="pr-num">P/{p.num}</span>
+      <span className="pr-num">{p.num}</span>
       <div>
         <div className="pr-title">{p.title}</div>
         <div className="eyebrow" style={{ marginTop: 6 }}>{p.note}</div>
-        {p.extra && (
-          <div className="ar-extra">
-            <div className="ar-extra-inner">{p.extra}</div>
-          </div>
-        )}
       </div>
-      <span className="pr-tags">{p.tags}</span>
+      <span className="pr-tags">{p.tags.join(" · ")}</span>
       <span className="pr-arrow">→</span>
     </div>
   );
@@ -119,7 +114,7 @@ export default function Projects() {
       <Section num="05" label="Additional · /archive">
         <div>
           {ARCHIVE_PROJECTS.map((p) => (
-            <ArchiveRow key={p.title} p={p} defaultOpen={p.title === "GymNet"} />
+            <ArchiveRow key={p.id} p={p} />
           ))}
         </div>
       </Section>
