@@ -24,14 +24,24 @@ export function SensorPip() {
     const w = rect.width;
     const h = rect.height;
 
+    // Skeleton colors are cached and only re-resolved when the theme changes —
+    // a full getComputedStyle() every inference frame is a forced style recalc
+    // that adds up while the camera pipeline + overlays are running.
+    let themeKey = null;
+    let accent = "#000";
+    let accentBright = "#000";
+    const refreshColors = () => {
+      const key = document.documentElement.dataset.theme ?? "";
+      if (key === themeKey) return;
+      themeKey = key;
+      const styles = getComputedStyle(document.documentElement);
+      accent = styles.getPropertyValue("--accent").trim();
+      accentBright = styles.getPropertyValue("--accent-bright").trim() || accent;
+    };
+
     const draw = (results) => {
       ctx.clearRect(0, 0, w, h);
-
-      // Re-read per frame (≤30fps, negligible) so theme switches recolor the
-      // skeleton with no observer plumbing.
-      const styles = getComputedStyle(document.documentElement);
-      const accent = styles.getPropertyValue("--accent").trim();
-      const accentBright = styles.getPropertyValue("--accent-bright").trim() || accent;
+      refreshColors();
 
       for (const lm of results.landmarks ?? []) {
         // Bones — mirrored X so the wireframe moves like a mirror

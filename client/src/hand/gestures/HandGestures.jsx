@@ -441,8 +441,13 @@ export function HandGestures() {
       // Two-hand spatial (M3): runs ahead of the single-hand world. Skipped
       // while a palm-up hand is summoning the dial (puIdx !== -1), but kept
       // running once already engaged so an in-progress zoom/rotate continues.
+      // Also skipped whenever an overlay is open (e.g. the exploded view): the
+      // two-hand FSM + per-hand grip work is wasted there (no gallery, and
+      // two-hand swiping is disabled), so trimming it frees the frame budget
+      // for the grab/throw + camera pipeline. (The DIAL modal already returned
+      // earlier, so this never touches the theme dial.)
       const twoHandActive = arb.state === "TWO_HAND" || twoHand.stats().phase !== "IDLE";
-      if (twoHandActive || (puIdx === -1 && handCount >= 2)) {
+      if (!arb.context.overlayOpen && (twoHandActive || (puIdx === -1 && handCount >= 2))) {
         const hands = [];
         for (let i = 0; i < Math.min(handCount, 2); i++) {
           const hlm = results.landmarks[i];

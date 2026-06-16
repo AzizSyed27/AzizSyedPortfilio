@@ -1,10 +1,16 @@
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { createContext, Fragment, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { PROJECTS_BY_ID } from "../content/projects";
 import DecryptedText from "../components/DecryptedText";
 import { useHandPointer } from "../hand/useHandPointer";
+import { useMode } from "../mode/ModeProvider";
 import { TUNE } from "../hand/config";
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+// When true (hand mode), Decrypt renders plain text instead of running its
+// per-character scramble — avoids ~40 setInterval-driven re-render loops on
+// open while the camera pipeline is already saturating the main thread.
+const DecryptPlainContext = createContext(false);
 
 // Per-project exploded view — a full-screen HUD scene ported from the Claude
 // Design handoff (.design-bundle/.../<project> Exploded.html). Five floating
@@ -37,6 +43,15 @@ const HUD_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./<>#";
 // text under reduced motion. `bold` wraps the result in <b> (replaces the old
 // ScrambleText `as="b"`).
 function Decrypt({ text, delay = 0, className, bold = false }) {
+  
+  // To disable the scramble for performance in exploded views hand mode
+  /*
+  const plain = useContext(DecryptPlainContext) || prefersReduced();
+  if (plain) {
+    const node = <span className={className}>{text}</span>;
+    return bold ? <b>{node}</b> : node;
+  */
+ 
   if (prefersReduced()) {
     const plain = <span className={className}>{text}</span>;
     return bold ? <b>{plain}</b> : plain;
@@ -58,6 +73,10 @@ function Decrypt({ text, delay = 0, className, bold = false }) {
 
 export function ExplodedView({ id, origin, onClose }) {
   const project = PROJECTS_BY_ID[id];
+  // In hand mode we drop the expensive glassy blur + text scramble (see the
+  // [data-hand] CSS and DecryptPlainContext) — the camera pipeline already
+  // saturates the frame budget, so the exploded view must stay cheap.
+  const handLive = useMode().handState === "live";
   const sceneRef = useRef(null);
   const svgRef = useRef(null);
   const coordsRef = useRef(null);
@@ -463,8 +482,10 @@ export function ExplodedView({ id, origin, onClose }) {
   };
 
   return (
+    <DecryptPlainContext.Provider value={handLive}>
     <div
       className="exploded-view"
+      data-hand={handLive ? "1" : undefined}
       role="dialog"
       aria-modal="true"
       aria-labelledby="exp-title"
@@ -752,7 +773,28 @@ export function ExplodedView({ id, origin, onClose }) {
           .exploded-view .live-dot { animation: none; }
           .exploded-view .exp-backdrop { animation: none; }
         }
+
+        /* ── Hand mode (Phase 2) performance ──
+           backdrop-filter blur on the 5 moving fragment panels (re-rasterized
+           every frame by the physics loop) is the main source of drag jitter
+           while the camera pipeline runs. In hand mode, drop all blur and use
+           opaque panels + lighter shadows instead. Scoped to [data-hand] so the
+           mouse experience keeps the glassy look. */
+        .exploded-view[data-hand] .exp-backdrop {
+          backdrop-filter: none; -webkit-backdrop-filter: none;
+          background: color-mix(in srgb, var(--bg) 82%, transparent);
+        }
+        .exploded-view[data-hand] .frag {
+          backdrop-filter: none; -webkit-backdrop-filter: none;
+          background: color-mix(in srgb, var(--surface) 95%, transparent);
+          box-shadow: 0 16px 34px -24px rgba(0,0,0,0.8);
+        }
+        .exploded-view[data-hand] .frag:hover,
+        .exploded-view[data-hand] .frag[data-grabbed] {
+          box-shadow: 0 0 0 1px var(--accent), 0 16px 34px -24px rgba(0,0,0,0.85);
+        }
       `}</style>
     </div>
+    </DecryptPlainContext.Provider>
   );
 }
