@@ -1,0 +1,266 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - button "Open navigation menu" [ref=e6] [cursor=pointer]: ☰
+      - link "East Wave Collision Consultants" [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img "East Wave Collision Consultants" [ref=e8]
+      - link "Call Now" [ref=e10] [cursor=pointer]:
+        - /url: tel:6474510916
+  - main [ref=e11]:
+    - generic [ref=e14]:
+      - button "Close" [ref=e15] [cursor=pointer]:
+        - img [ref=e16]
+      - img [ref=e20]
+      - heading "Have you been in an accident?" [level=2] [ref=e22]:
+        - text: Have you been
+        - text: in an accident?
+      - paragraph [ref=e23]:
+        - text: Call us
+        - strong [ref=e24]: before
+        - text: speaking to your insurance company — every hour counts.
+      - generic [ref=e25]:
+        - link "📞 Call 647-451-0916" [ref=e26] [cursor=pointer]:
+          - /url: tel:6474510916
+        - link "See What To Do First →" [ref=e27] [cursor=pointer]:
+          - /url: /accident
+      - button "No, just browsing" [ref=e28] [cursor=pointer]
+    - generic [ref=e29]:
+      - img [ref=e31]
+      - generic [ref=e32]:
+        - generic [ref=e35]:
+          - paragraph [ref=e36]: We are
+          - heading "YOUR COLLISION EXPERTS" [level=1] [ref=e37]:
+            - text: YOUR
+            - text: COLLISION
+            - text: EXPERTS
+          - paragraph [ref=e38]: East Wave guides GTA drivers through every step after a collision — securing your rental, managing your claim, and fighting for the settlement you deserve.
+          - generic [ref=e39]:
+            - link "Involved in a Collision?" [ref=e40] [cursor=pointer]:
+              - /url: /accident
+            - link "Call Now" [ref=e41] [cursor=pointer]:
+              - /url: tel:6474510916
+        - generic [ref=e43]:
+          - generic [ref=e44]:
+            - paragraph [ref=e45]: 500+
+            - paragraph [ref=e46]: Accidents Handled
+          - generic [ref=e47]:
+            - paragraph [ref=e48]: "8"
+            - paragraph [ref=e49]: Languages Spoken
+          - generic [ref=e50]:
+            - paragraph [ref=e51]: Free
+            - paragraph [ref=e52]: Initial Consultation
+    - generic [ref=e53]:
+      - img [ref=e55]
+      - generic [ref=e58]:
+        - generic [ref=e59]:
+          - paragraph [ref=e60]: Why Choose East Wave
+          - heading "We Handle Everything" [level=2] [ref=e61]
+          - paragraph [ref=e62]: From free consultation to maximum settlement, we take care of every step so you can focus on recovery.
+        - generic [ref=e64]:
+          - generic [ref=e66]:
+            - img [ref=e67]
+            - heading "No Cost to You" [level=3] [ref=e71]
+            - paragraph [ref=e72]: Our expert services are provided at absolutely NO CHARGE to you.
+          - generic [ref=e74]:
+            - img [ref=e75]
+            - heading "Top Dollar for Your Vehicle" [level=3] [ref=e78]
+            - paragraph [ref=e79]: We ensure you receive the BEST VALUE possible for your vehicle.
+          - generic [ref=e81]:
+            - img [ref=e82]
+            - heading "Secondary Appraisal" [level=3] [ref=e86]
+            - paragraph [ref=e87]: If your insurance undervalues your car, we step in with a SECONDARY APPRAISAL to maximize your payout.
+          - generic [ref=e89]:
+            - img [ref=e90]
+            - heading "Professional Repairs" [level=3] [ref=e92]
+            - paragraph [ref=e93]: Repairs are performed using OEM parts and come with a LIFETIME WARRANTY for as long as you own the vehicle.
+          - generic [ref=e95]:
+            - img [ref=e96]
+            - heading "Deductible Waived" [level=3] [ref=e99]
+            - paragraph [ref=e100]: We WAIVE YOUR DEDUCTIBLE (limitations apply), helping you keep more of your money.
+          - generic [ref=e102]:
+            - img [ref=e103]
+            - heading "Extended Rental Coverage" [level=3] [ref=e107]
+            - paragraph [ref=e108]: We provide EXTENDED RENTAL COVERAGE (limitations apply), ensuring you have a rental vehicle even after your insurance stops paying.
+          - generic [ref=e110]:
+            - img [ref=e111]
+            - heading "Full Collision Management" [level=3] [ref=e114]
+            - paragraph [ref=e115]: From towing at the crash site to repairs, insurance claims, and payouts, we handle everything so you don't have to.
+          - generic [ref=e117]:
+            - img [ref=e118]
+            - heading "Hassle-Free Process" [level=3] [ref=e121]
+            - paragraph [ref=e122]: All our providers bill your insurance directly, making the process seamless and stress-free.
+    - generic [ref=e123]:
+      - img [ref=e125]
+      - generic [ref=e128]:
+        - generic [ref=e131]:
+          - generic [ref=e133]:
+            - generic [ref=e135]: "5"
+            - generic [ref=e136]: We Handle the Rest
+            - paragraph [ref=e137]: Our team manages your claim, rental car, and repair process.
+          - generic [ref=e139]:
+            - generic [ref=e141]: "1"
+            - generic [ref=e142]: Stay Safe
+            - paragraph [ref=e143]: Move to a safe location. Call 911 if anyone is injured.
+          - generic [ref=e145]:
+            - generic [ref=e147]: "2"
+            - generic [ref=e148]: Call East Wave
+            - paragraph [ref=e149]: Call us at 647-451-0916 before speaking to any insurance adjuster.
+          - generic [ref=e151]:
+            - generic [ref=e153]: "3"
+            - generic [ref=e154]: Exchange Info
+            - paragraph [ref=e155]: Collect the other driver's name, licence plate, and insurance info.
+          - generic [ref=e157]:
+            - generic [ref=e159]: "4"
+            - generic [ref=e160]: Document the Scene
+            - paragraph [ref=e161]: Take photos of all vehicles, damage, licence plates, and road signs.
+          - generic [ref=e163]:
+            - generic [ref=e165]: "5"
+            - generic [ref=e166]: We Handle the Rest
+            - paragraph [ref=e167]: Our team manages your claim, rental car, and repair process.
+          - generic [ref=e169]:
+            - generic [ref=e171]: "1"
+            - generic [ref=e172]: Stay Safe
+            - paragraph [ref=e173]: Move to a safe location. Call 911 if anyone is injured.
+        - generic [ref=e181]:
+          - paragraph [ref=e182]: Step By Step
+          - heading "What To Do After An Accident" [level=2] [ref=e183]:
+            - text: What To Do After
+            - text: An Accident
+          - paragraph [ref=e184]: Follow these steps carefully to protect your rights and get the settlement you deserve.
+          - link "See Full Accident Guide" [ref=e185] [cursor=pointer]:
+            - /url: /accident
+    - generic [ref=e186]:
+      - img [ref=e188]
+      - generic [ref=e190]:
+        - generic [ref=e191]:
+          - paragraph [ref=e192]: Why Community Collision Resource Exists
+          - heading "What Do We Really Do?" [level=2] [ref=e193]
+        - generic [ref=e194]:
+          - generic [ref=e195]:
+            - paragraph [ref=e196]: Without East Wave
+            - heading "You're Alone, and feel lost after an accident." [level=3] [ref=e197]:
+              - text: You're Alone, and feel
+              - text: lost after an accident.
+            - generic [ref=e198]:
+              - generic [ref=e199]:
+                - img [ref=e201]
+                - paragraph [ref=e206]: Confused by fine print and policy language
+              - generic [ref=e207]:
+                - img [ref=e209]
+                - paragraph [ref=e213]: Unaware of your rights and entitlements
+              - generic [ref=e214]:
+                - img [ref=e216]
+                - paragraph [ref=e220]: No trusted partner fighting for you
+          - generic [ref=e221]:
+            - paragraph [ref=e222]: With East Wave
+            - heading "We don't just move your car. We move you through the system." [level=3] [ref=e223]:
+              - text: We don't just move your car.
+              - text: We move you through the system.
+            - generic [ref=e224]:
+              - generic [ref=e225]:
+                - img [ref=e227]
+                - paragraph [ref=e230]: We handle every document and claim step
+              - generic [ref=e231]:
+                - img [ref=e233]
+                - paragraph [ref=e236]: We know your rights — and enforce them
+              - generic [ref=e237]:
+                - img [ref=e239]
+                - paragraph [ref=e242]: Your strategic partner from day one
+        - generic [ref=e243]: We're not a tow company. Not a body shop. We're your collision consultancy.
+    - generic [ref=e244]:
+      - img [ref=e246]
+      - generic [ref=e248]:
+        - generic [ref=e249]:
+          - paragraph [ref=e250]: Who We Help
+          - heading "We've Got Everyone Covered" [level=2] [ref=e251]
+        - generic [ref=e252]:
+          - generic [ref=e253]:
+            - img [ref=e254]
+            - paragraph [ref=e259]: Individuals & Families
+          - generic [ref=e260]:
+            - img [ref=e261]
+            - paragraph [ref=e265]: Corporate Fleets
+          - generic [ref=e266]:
+            - img [ref=e267]
+            - paragraph [ref=e269]: Rideshare Operators
+          - generic [ref=e270]:
+            - img [ref=e271]
+            - paragraph [ref=e274]: Schools & Institutions
+          - generic [ref=e275]:
+            - img [ref=e276]
+            - paragraph [ref=e281]: Delivery & Logistics
+          - generic [ref=e282]:
+            - img [ref=e283]
+            - paragraph [ref=e287]: Small Businesses
+        - paragraph [ref=e288]: From a single car to a fleet of 50 — we treat every case like it's our own.
+    - generic [ref=e289]:
+      - img [ref=e291]
+      - generic [ref=e293]:
+        - generic [ref=e294]:
+          - img [ref=e295]
+          - heading "Why Timing Is Everything" [level=2] [ref=e298]
+        - blockquote [ref=e299]:
+          - paragraph [ref=e300]: "\"The best time to call us is at the time of the accident. The second-best time is right now.\""
+        - generic [ref=e301]:
+          - generic [ref=e302]:
+            - img [ref=e304]
+            - generic [ref=e306]:
+              - paragraph [ref=e307]: Wrong tow truck, wrong yard
+              - paragraph [ref=e308]: If your vehicle gets picked up by a non-contracted truck, our hands become tied.
+          - generic [ref=e309]:
+            - img [ref=e311]
+            - generic [ref=e315]:
+              - paragraph [ref=e316]: Call us first, stay in control
+              - paragraph [ref=e317]: We ensure your vehicle ends up at the right place and you remain in control — not your insurance company.
+        - link "Call Now — Don't Wait" [ref=e319] [cursor=pointer]:
+          - /url: tel:6474510916
+    - generic [ref=e320]:
+      - img [ref=e322]
+      - generic [ref=e324]:
+        - paragraph [ref=e325]: We Meet The Nicest People By Accident
+        - heading "Been In An Accident?" [level=2] [ref=e326]:
+          - text: Been In An
+          - text: Accident?
+        - paragraph [ref=e327]:
+          - text: Call us
+          - strong [ref=e328]: before
+          - text: speaking to any insurance adjuster. One call can mean the difference between a fair settlement and a lowball offer.
+        - generic [ref=e329]:
+          - link "Call 647-451-0916" [ref=e330] [cursor=pointer]:
+            - /url: tel:6474510916
+          - link "Learn what to do first →" [ref=e331] [cursor=pointer]:
+            - /url: /accident
+      - img [ref=e333]
+  - contentinfo [ref=e335]:
+    - generic [ref=e336]:
+      - generic [ref=e337]:
+        - paragraph [ref=e338]: East Wave Collision Consultants
+        - paragraph [ref=e339]: "\"We meet the nicest people by accident\""
+        - paragraph [ref=e340]:
+          - link "647-451-0916" [ref=e341] [cursor=pointer]:
+            - /url: tel:6474510916
+      - navigation [ref=e342]:
+        - link "In an Accident?" [ref=e343] [cursor=pointer]:
+          - /url: /accident
+        - link "Know Your Rights" [ref=e344] [cursor=pointer]:
+          - /url: /rights
+        - link "Service Areas" [ref=e345] [cursor=pointer]:
+          - /url: /areas
+        - link "About Us" [ref=e346] [cursor=pointer]:
+          - /url: /about
+        - link "FAQ" [ref=e347] [cursor=pointer]:
+          - /url: /faq
+      - navigation [ref=e348]:
+        - link "Contact" [ref=e349] [cursor=pointer]:
+          - /url: /contact
+        - link "Ambassador Program" [ref=e350] [cursor=pointer]:
+          - /url: /ambassador
+        - link "AI & Social Media Policy" [ref=e351] [cursor=pointer]:
+          - /url: /policy
+        - link "@ewavecc" [ref=e352] [cursor=pointer]:
+          - /url: https://instagram.com/ewavecc
+    - generic [ref=e353]: © 2026 East Wave Collision Consultants. All rights reserved.
+  - link "Chat with us on WhatsApp" [ref=e354] [cursor=pointer]:
+    - /url: https://wa.me/16474510916
+    - img [ref=e355]

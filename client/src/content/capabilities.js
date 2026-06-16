@@ -1,3 +1,6 @@
+import trunorthShot from "../assets/project-pics/trunorth.png";
+import eastwaveShot from "../assets/project-pics/eastwave.png";
+
 export const CAPABILITIES = [
   {
     num: "C/01",
@@ -44,6 +47,28 @@ export const CAPABILITIES = [
 ];
 
 export const CLIENTS = [
+  {
+    id: "C/trunorth",
+    initial: "T",
+    name: "Tru North Couriers",
+    url: "https://trunorthcouriers.onrender.com/",
+    image: trunorthShot,
+    role: "Courier & logistics site — quoting, booking, live tracking",
+    desc: "Marketing + booking site for a Toronto courier (since 2016): medical, same-day, e-commerce fulfilment, and cross-border services, with real-time package tracking and a three-step quote-to-delivery flow.",
+    metric: "99.2%",
+    metricL: "on-time rate",
+    story: "Gave a GTA courier a real booking + live-tracking site fronting 10,000+ deliveries at a 99.2% on-time rate.",
+  },
+  {
+    id: "C/eastwave",
+    initial: "E",
+    name: "East Wave Collision Consultants",
+    url: "https://east-wave-collision-consultantcy.vercel.app/",
+    image: eastwaveShot,
+    role: "Collision-consultancy site — claim & settlement guidance",
+    desc: "Lead-generating marketing site for a collision consultancy that guides GTA drivers through every step after an accident — arranging a rental, managing the insurance claim, and advocating for a fair settlement.",
+    story: "Built a clean, conversion-focused site that turns post-accident searches into consultation calls.",
+  },
   {
     id: "C/01",
     initial: "A",

@@ -1,0 +1,470 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - navigation "Main navigation" [ref=e3]:
+      - list [ref=e5]:
+        - listitem [ref=e6]:
+          - link "Services" [ref=e7] [cursor=pointer]:
+            - /url: /services
+        - listitem [ref=e8]:
+          - link "About" [ref=e9] [cursor=pointer]:
+            - /url: /about
+        - listitem [ref=e10]:
+          - link "Track" [ref=e11] [cursor=pointer]:
+            - /url: /track
+        - listitem [ref=e12]:
+          - link "Contact" [ref=e13] [cursor=pointer]:
+            - /url: /contact
+      - generic [ref=e14]:
+        - link "Login" [ref=e15] [cursor=pointer]:
+          - /url: /login
+        - link "Sign Up" [ref=e16] [cursor=pointer]:
+          - /url: /signup
+        - link "Get a Quote" [ref=e17] [cursor=pointer]:
+          - /url: /quote
+  - main [ref=e18]:
+    - region "Hero" [ref=e19]:
+      - generic [ref=e20]:
+        - generic [ref=e22]:
+          - paragraph [ref=e23]: Toronto's trusted courier service
+          - heading "We move the way your business moves." [level=1] [ref=e26]
+          - generic [ref=e27]:
+            - link "Get a Quote" [ref=e28] [cursor=pointer]:
+              - /url: /quote
+              - text: Get a Quote
+              - img [ref=e29]
+            - link "Track a Package" [ref=e31] [cursor=pointer]:
+              - /url: /track
+              - img [ref=e32]
+              - text: Track a Package
+          - generic [ref=e36]:
+            - generic [ref=e37]:
+              - generic [ref=e38]: 10,000+
+              - generic [ref=e39]: Deliveries completed
+            - generic [ref=e40]:
+              - generic [ref=e41]: 99.2%
+              - generic [ref=e42]: On-time rate
+            - generic [ref=e43]:
+              - generic [ref=e44]: 24 / 7
+              - generic [ref=e45]: Support available
+        - img "Tru North Couriers branded delivery van" [ref=e47]
+    - region "Our Services" [ref=e48]:
+      - generic [ref=e49]:
+        - generic [ref=e51]:
+          - paragraph [ref=e52]: What We Deliver
+          - heading "Our Services" [level=2] [ref=e55]
+        - list [ref=e56]:
+          - listitem [ref=e57]:
+            - link "Medical Courier Temperature-controlled transport of specimens, medications, and lab samples. Learn more" [ref=e58] [cursor=pointer]:
+              - /url: /services/medical
+              - generic [ref=e60]:
+                - img [ref=e62]
+                - heading "Medical Courier" [level=3] [ref=e66]
+                - paragraph [ref=e67]: Temperature-controlled transport of specimens, medications, and lab samples.
+                - generic [ref=e68]:
+                  - text: Learn more
+                  - img [ref=e69]
+          - listitem [ref=e71]:
+            - link "Same-Day Delivery Urgent pickups dispatched within the hour, delivered across the GTA. Learn more" [ref=e72] [cursor=pointer]:
+              - /url: /services/same-day
+              - generic [ref=e74]:
+                - img [ref=e76]
+                - heading "Same-Day Delivery" [level=3] [ref=e78]
+                - paragraph [ref=e79]: Urgent pickups dispatched within the hour, delivered across the GTA.
+                - generic [ref=e80]:
+                  - text: Learn more
+                  - img [ref=e81]
+          - listitem [ref=e83]:
+            - link "E-Commerce Fulfilment Last-mile delivery integrated with your online store — fast and reliable. Learn more" [ref=e84] [cursor=pointer]:
+              - /url: /services/ecommerce
+              - generic [ref=e86]:
+                - img [ref=e88]
+                - heading "E-Commerce Fulfilment" [level=3] [ref=e92]
+                - paragraph [ref=e93]: Last-mile delivery integrated with your online store — fast and reliable.
+                - generic [ref=e94]:
+                  - text: Learn more
+                  - img [ref=e95]
+          - listitem [ref=e97]:
+            - link "Cross-Border Shipping Seamless Canada–US shipments with full customs documentation support. Learn more" [ref=e98] [cursor=pointer]:
+              - /url: /services/cross-border
+              - generic [ref=e100]:
+                - img [ref=e102]
+                - heading "Cross-Border Shipping" [level=3] [ref=e105]
+                - paragraph [ref=e106]: Seamless Canada–US shipments with full customs documentation support.
+                - generic [ref=e107]:
+                  - text: Learn more
+                  - img [ref=e108]
+          - listitem [ref=e110]:
+            - link "Recurring Routes Scheduled, repeated runs tailored to your business rhythm. Learn more" [ref=e111] [cursor=pointer]:
+              - /url: /services/recurring
+              - generic [ref=e113]:
+                - img [ref=e115]
+                - heading "Recurring Routes" [level=3] [ref=e120]
+                - paragraph [ref=e121]: Scheduled, repeated runs tailored to your business rhythm.
+                - generic [ref=e122]:
+                  - text: Learn more
+                  - img [ref=e123]
+    - region "A Track Record You Can Count On" [ref=e125]:
+      - generic [ref=e126]:
+        - generic [ref=e128]:
+          - paragraph [ref=e129]: By the Numbers
+          - heading "A Track Record You Can Count On" [level=2] [ref=e132]
+          - paragraph [ref=e133]: Over eight years delivering for Toronto's busiest businesses — our numbers speak for themselves.
+        - list "Key business metrics" [ref=e134]:
+          - listitem [ref=e135]:
+            - generic [ref=e136]:
+              - img [ref=e138]
+              - paragraph [ref=e141]:
+                - generic [ref=e142]: 0+
+              - generic [ref=e143]:
+                - paragraph [ref=e144]: Years Serving Toronto
+                - paragraph [ref=e145]: Trusted by the city since 2016
+          - listitem [ref=e146]:
+            - generic [ref=e147]:
+              - img [ref=e149]
+              - paragraph [ref=e154]:
+                - generic [ref=e155]: 0+
+              - generic [ref=e156]:
+                - paragraph [ref=e157]: Deliveries Completed
+                - paragraph [ref=e158]: Every parcel handled with care
+          - listitem [ref=e159]:
+            - generic [ref=e160]:
+              - img [ref=e162]
+              - paragraph [ref=e165]:
+                - generic [ref=e166]: 0.2%
+              - generic [ref=e167]:
+                - paragraph [ref=e168]: On-Time Delivery Rate
+                - paragraph [ref=e169]: Industry-leading reliability
+          - listitem [ref=e170]:
+            - generic [ref=e171]:
+              - img [ref=e173]
+              - paragraph [ref=e178]:
+                - generic [ref=e179]: 0+
+              - generic [ref=e180]:
+                - paragraph [ref=e181]: Business Partners
+                - paragraph [ref=e182]: From clinics to e-commerce brands
+    - region "How It Works" [ref=e183]:
+      - generic [ref=e184]:
+        - generic [ref=e186]:
+          - paragraph [ref=e187]: Simple Process
+          - heading "How It Works" [level=2] [ref=e190]
+          - paragraph [ref=e191]: Three simple steps from booking to confirmed delivery.
+        - generic [ref=e192]:
+          - generic [ref=e193]:
+            - generic [ref=e194]:
+              - img [ref=e196]
+              - generic: "01"
+            - generic [ref=e199]:
+              - heading "Book Your Delivery" [level=3] [ref=e200]
+              - paragraph [ref=e201]: Request a quote online or call us directly. Tell us where, when, and what you need delivered — we handle the rest.
+          - generic [ref=e202]:
+            - generic [ref=e203]:
+              - img [ref=e205]
+              - generic: "02"
+            - generic [ref=e210]:
+              - heading "We Pick Up & Deliver" [level=3] [ref=e211]
+              - paragraph [ref=e212]: A dedicated driver picks up your package and transports it with care using the fastest, most reliable route.
+          - generic [ref=e213]:
+            - generic [ref=e214]:
+              - img [ref=e216]
+              - generic: "03"
+            - generic [ref=e219]:
+              - heading "Confirmed & Complete" [level=3] [ref=e220]
+              - paragraph [ref=e221]: Receive real-time tracking updates and proof of delivery the moment your package arrives safely at its destination.
+    - region "Trusted by Toronto's Best" [ref=e222]:
+      - generic [ref=e224]:
+        - paragraph [ref=e225]: Client Stories
+        - heading "Trusted by Toronto's Best" [level=2] [ref=e228]
+        - paragraph [ref=e229]: From healthcare to e-commerce, businesses across the GTA rely on us to keep things moving.
+      - generic [ref=e231]:
+        - generic [ref=e232]:
+          - blockquote [ref=e233]:
+            - img [ref=e234]
+            - paragraph [ref=e237]: “Tru North has been a lifeline for our clinic. Specimens arrive on time, every time, and the chain-of-custody handling gives us complete peace of mind.”
+            - generic [ref=e238]:
+              - generic [ref=e239]: DSC
+              - generic [ref=e240]:
+                - paragraph [ref=e241]: Dr. Sarah Chen
+                - paragraph [ref=e242]: Lab Director, MedPoint Diagnostics
+          - blockquote [ref=e243]:
+            - img [ref=e244]
+            - paragraph [ref=e247]: “We switched to Tru North for same-day delivery across the GTA and our customer complaints dropped overnight. Their drivers are professional and fast.”
+            - generic [ref=e248]:
+              - generic [ref=e249]: MJ
+              - generic [ref=e250]:
+                - paragraph [ref=e251]: Marcus Johnson
+                - paragraph [ref=e252]: Operations Manager, VoltEdge Electronics
+          - blockquote [ref=e253]:
+            - img [ref=e254]
+            - paragraph [ref=e257]: “Our cross-border shipments used to be a nightmare. Tru North handles all the customs paperwork and gets packages across seamlessly, it just works.”
+            - generic [ref=e258]:
+              - generic [ref=e259]: PR
+              - generic [ref=e260]:
+                - paragraph [ref=e261]: Priya Ramachandran
+                - paragraph [ref=e262]: Logistics Coordinator, Northbound Commerce
+          - blockquote [ref=e263]:
+            - img [ref=e264]
+            - paragraph [ref=e267]: “Having a dedicated recurring route means we never worry about our daily inter-office deliveries. Reliable, consistent, and easy to work with.”
+            - generic [ref=e268]:
+              - generic [ref=e269]: DP
+              - generic [ref=e270]:
+                - paragraph [ref=e271]: David Park
+                - paragraph [ref=e272]: Office Manager, Beacon Legal Group
+          - blockquote [ref=e273]:
+            - img [ref=e274]
+            - paragraph [ref=e277]: “Tru North has been a lifeline for our clinic. Specimens arrive on time, every time, and the chain-of-custody handling gives us complete peace of mind.”
+            - generic [ref=e278]:
+              - generic [ref=e279]: DSC
+              - generic [ref=e280]:
+                - paragraph [ref=e281]: Dr. Sarah Chen
+                - paragraph [ref=e282]: Lab Director, MedPoint Diagnostics
+          - blockquote [ref=e283]:
+            - img [ref=e284]
+            - paragraph [ref=e287]: “We switched to Tru North for same-day delivery across the GTA and our customer complaints dropped overnight. Their drivers are professional and fast.”
+            - generic [ref=e288]:
+              - generic [ref=e289]: MJ
+              - generic [ref=e290]:
+                - paragraph [ref=e291]: Marcus Johnson
+                - paragraph [ref=e292]: Operations Manager, VoltEdge Electronics
+          - blockquote [ref=e293]:
+            - img [ref=e294]
+            - paragraph [ref=e297]: “Our cross-border shipments used to be a nightmare. Tru North handles all the customs paperwork and gets packages across seamlessly, it just works.”
+            - generic [ref=e298]:
+              - generic [ref=e299]: PR
+              - generic [ref=e300]:
+                - paragraph [ref=e301]: Priya Ramachandran
+                - paragraph [ref=e302]: Logistics Coordinator, Northbound Commerce
+          - blockquote [ref=e303]:
+            - img [ref=e304]
+            - paragraph [ref=e307]: “Having a dedicated recurring route means we never worry about our daily inter-office deliveries. Reliable, consistent, and easy to work with.”
+            - generic [ref=e308]:
+              - generic [ref=e309]: DP
+              - generic [ref=e310]:
+                - paragraph [ref=e311]: David Park
+                - paragraph [ref=e312]: Office Manager, Beacon Legal Group
+        - generic [ref=e313]:
+          - blockquote [ref=e314]:
+            - img [ref=e315]
+            - paragraph [ref=e318]: “Tru North has been a lifeline for our clinic. Specimens arrive on time, every time, and the chain-of-custody handling gives us complete peace of mind.”
+            - generic [ref=e319]:
+              - generic [ref=e320]: DSC
+              - generic [ref=e321]:
+                - paragraph [ref=e322]: Dr. Sarah Chen
+                - paragraph [ref=e323]: Lab Director, MedPoint Diagnostics
+          - blockquote [ref=e324]:
+            - img [ref=e325]
+            - paragraph [ref=e328]: “We switched to Tru North for same-day delivery across the GTA and our customer complaints dropped overnight. Their drivers are professional and fast.”
+            - generic [ref=e329]:
+              - generic [ref=e330]: MJ
+              - generic [ref=e331]:
+                - paragraph [ref=e332]: Marcus Johnson
+                - paragraph [ref=e333]: Operations Manager, VoltEdge Electronics
+          - blockquote [ref=e334]:
+            - img [ref=e335]
+            - paragraph [ref=e338]: “Our cross-border shipments used to be a nightmare. Tru North handles all the customs paperwork and gets packages across seamlessly, it just works.”
+            - generic [ref=e339]:
+              - generic [ref=e340]: PR
+              - generic [ref=e341]:
+                - paragraph [ref=e342]: Priya Ramachandran
+                - paragraph [ref=e343]: Logistics Coordinator, Northbound Commerce
+          - blockquote [ref=e344]:
+            - img [ref=e345]
+            - paragraph [ref=e348]: “Having a dedicated recurring route means we never worry about our daily inter-office deliveries. Reliable, consistent, and easy to work with.”
+            - generic [ref=e349]:
+              - generic [ref=e350]: DP
+              - generic [ref=e351]:
+                - paragraph [ref=e352]: David Park
+                - paragraph [ref=e353]: Office Manager, Beacon Legal Group
+          - blockquote [ref=e354]:
+            - img [ref=e355]
+            - paragraph [ref=e358]: “Tru North has been a lifeline for our clinic. Specimens arrive on time, every time, and the chain-of-custody handling gives us complete peace of mind.”
+            - generic [ref=e359]:
+              - generic [ref=e360]: DSC
+              - generic [ref=e361]:
+                - paragraph [ref=e362]: Dr. Sarah Chen
+                - paragraph [ref=e363]: Lab Director, MedPoint Diagnostics
+          - blockquote [ref=e364]:
+            - img [ref=e365]
+            - paragraph [ref=e368]: “We switched to Tru North for same-day delivery across the GTA and our customer complaints dropped overnight. Their drivers are professional and fast.”
+            - generic [ref=e369]:
+              - generic [ref=e370]: MJ
+              - generic [ref=e371]:
+                - paragraph [ref=e372]: Marcus Johnson
+                - paragraph [ref=e373]: Operations Manager, VoltEdge Electronics
+          - blockquote [ref=e374]:
+            - img [ref=e375]
+            - paragraph [ref=e378]: “Our cross-border shipments used to be a nightmare. Tru North handles all the customs paperwork and gets packages across seamlessly, it just works.”
+            - generic [ref=e379]:
+              - generic [ref=e380]: PR
+              - generic [ref=e381]:
+                - paragraph [ref=e382]: Priya Ramachandran
+                - paragraph [ref=e383]: Logistics Coordinator, Northbound Commerce
+          - blockquote [ref=e384]:
+            - img [ref=e385]
+            - paragraph [ref=e388]: “Having a dedicated recurring route means we never worry about our daily inter-office deliveries. Reliable, consistent, and easy to work with.”
+            - generic [ref=e389]:
+              - generic [ref=e390]: DP
+              - generic [ref=e391]:
+                - paragraph [ref=e392]: David Park
+                - paragraph [ref=e393]: Office Manager, Beacon Legal Group
+    - region "Our Coverage Area" [ref=e394]:
+      - generic [ref=e395]:
+        - generic [ref=e397]:
+          - paragraph [ref=e398]: Where We Deliver
+          - heading "Our Coverage Area" [level=2] [ref=e401]
+          - paragraph [ref=e402]: From downtown Toronto to cross-border destinations, we've got the routes covered.
+        - generic [ref=e403]:
+          - img [ref=e405]:
+            - generic [ref=e412]:
+              - generic [ref=e413]: Lake Huron
+              - generic [ref=e414]: Georgian Bay
+              - generic [ref=e415]: Lake Ontario
+              - generic [ref=e416]: Lake Erie
+            - generic [ref=e419]: United States
+            - generic:
+              - generic: GTA
+              - generic: Same-Day
+            - generic [ref=e423]:
+              - generic [ref=e428]: Ottawa
+              - generic [ref=e431]: Hamilton
+              - generic [ref=e434]: London
+              - generic [ref=e437]: Barrie
+              - generic [ref=e440]: Kingston
+              - generic [ref=e443]: Windsor
+              - generic [ref=e446]: Buffalo
+              - generic [ref=e449]: Detroit
+          - generic [ref=e453]:
+            - generic [ref=e455] [cursor=pointer]:
+              - img [ref=e457]
+              - generic [ref=e460]:
+                - heading "Greater Toronto Area" [level=3] [ref=e461]
+                - paragraph [ref=e462]: Same-day and on-demand coverage across Toronto, Mississauga, Brampton, Markham, Vaughan, and surrounding municipalities.
+                - generic [ref=e463]:
+                  - generic [ref=e464]: Toronto
+                  - generic [ref=e465]: Mississauga
+                  - generic [ref=e466]: Brampton
+                  - generic [ref=e467]: Markham
+                  - generic [ref=e468]: Vaughan
+                  - generic [ref=e469]: Scarborough
+                  - generic [ref=e470]: Etobicoke
+            - generic [ref=e472] [cursor=pointer]:
+              - img [ref=e474]
+              - generic [ref=e479]:
+                - heading "Greater Ontario" [level=3] [ref=e480]
+                - paragraph [ref=e481]: Next-day and scheduled service to Hamilton, Kitchener-Waterloo, Ottawa, London, and all major Ontario corridors.
+                - generic [ref=e482]:
+                  - generic [ref=e483]: Hamilton
+                  - generic [ref=e484]: Kitchener-Waterloo
+                  - generic [ref=e485]: Ottawa
+                  - generic [ref=e486]: London
+                  - generic [ref=e487]: Barrie
+                  - generic [ref=e488]: Niagara Region
+            - generic [ref=e490] [cursor=pointer]:
+              - img [ref=e492]
+              - generic [ref=e495]:
+                - heading "Cross-Border (Canada–US)" [level=3] [ref=e496]
+                - paragraph [ref=e497]: Full customs documentation and reliable delivery to and from US border states and major metro areas.
+                - generic [ref=e498]:
+                  - generic [ref=e499]: New York
+                  - generic [ref=e500]: Michigan
+                  - generic [ref=e501]: Ohio
+                  - generic [ref=e502]: Pennsylvania
+                  - generic [ref=e503]: Buffalo
+                  - generic [ref=e504]: Detroit
+    - region "Ready to ship with confidence?" [ref=e505]:
+      - generic [ref=e507]:
+        - paragraph [ref=e508]: Get Started
+        - heading "Ready to ship with confidence?" [level=2] [ref=e511]
+        - paragraph [ref=e512]: Whether it's a one-time urgent delivery or a long-term logistics partnership, we're here to move your business forward.
+        - generic [ref=e513]:
+          - link "Get a Free Quote" [ref=e514] [cursor=pointer]:
+            - /url: /quote
+            - text: Get a Free Quote
+            - img [ref=e515]
+          - link "Contact Us" [ref=e517] [cursor=pointer]:
+            - /url: /contact
+            - img [ref=e518]
+            - text: Contact Us
+  - contentinfo [ref=e520]:
+    - generic [ref=e521]:
+      - generic [ref=e522]:
+        - generic [ref=e523]:
+          - link "Tru North Couriers — Home" [ref=e524] [cursor=pointer]:
+            - /url: /
+            - img "Tru North Couriers" [ref=e525]
+          - paragraph [ref=e526]: Reliable, professional courier services across Toronto and beyond. Medical, same-day, and cross-border deliveries handled with care.
+          - list [ref=e527]:
+            - listitem [ref=e528]:
+              - link "X (Twitter)" [ref=e529] [cursor=pointer]:
+                - /url: https://twitter.com
+                - img [ref=e530]
+            - listitem [ref=e532]:
+              - link "Instagram" [ref=e533] [cursor=pointer]:
+                - /url: https://instagram.com
+                - img [ref=e534]
+            - listitem [ref=e536]:
+              - link "LinkedIn" [ref=e537] [cursor=pointer]:
+                - /url: https://linkedin.com
+                - img [ref=e538]
+        - generic [ref=e540]:
+          - heading "Services" [level=3] [ref=e541]
+          - list [ref=e542]:
+            - listitem [ref=e543]:
+              - link "Medical Courier" [ref=e544] [cursor=pointer]:
+                - /url: /services/medical
+            - listitem [ref=e545]:
+              - link "Same-Day Delivery" [ref=e546] [cursor=pointer]:
+                - /url: /services/same-day
+            - listitem [ref=e547]:
+              - link "E-Commerce Fulfilment" [ref=e548] [cursor=pointer]:
+                - /url: /services/ecommerce
+            - listitem [ref=e549]:
+              - link "Cross-Border Shipping" [ref=e550] [cursor=pointer]:
+                - /url: /services/cross-border
+            - listitem [ref=e551]:
+              - link "Recurring Routes" [ref=e552] [cursor=pointer]:
+                - /url: /services/recurring
+        - generic [ref=e553]:
+          - heading "Company" [level=3] [ref=e554]
+          - list [ref=e555]:
+            - listitem [ref=e556]:
+              - link "About Us" [ref=e557] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=e558]:
+              - link "Contact" [ref=e559] [cursor=pointer]:
+                - /url: /contact
+            - listitem [ref=e560]:
+              - link "Track a Package" [ref=e561] [cursor=pointer]:
+                - /url: /track
+            - listitem [ref=e562]:
+              - link "Get a Quote" [ref=e563] [cursor=pointer]:
+                - /url: /quote
+        - generic [ref=e564]:
+          - heading "Contact" [level=3] [ref=e565]
+          - list [ref=e566]:
+            - listitem [ref=e567]:
+              - link "Toronto, ON, Canada" [ref=e568] [cursor=pointer]:
+                - /url: https://maps.google.com/?q=Toronto,+ON,+Canada
+                - img [ref=e569]
+                - generic [ref=e572]: Toronto, ON, Canada
+            - listitem [ref=e573]:
+              - link "+1-647-569-3331" [ref=e574] [cursor=pointer]:
+                - /url: tel:+16475693331
+                - img [ref=e575]
+                - generic [ref=e577]: +1-647-569-3331
+            - listitem [ref=e578]:
+              - link "Info@trunorthcouriers.ca" [ref=e579] [cursor=pointer]:
+                - /url: mailto:Info@trunorthcouriers.ca
+                - img [ref=e580]
+                - generic [ref=e583]: Info@trunorthcouriers.ca
+      - generic [ref=e584]:
+        - paragraph [ref=e585]: © 2026 Tru North Couriers. All rights reserved.
+        - generic [ref=e586]:
+          - link "Privacy Policy" [ref=e587] [cursor=pointer]:
+            - /url: /privacy
+          - link "Terms of Service" [ref=e588] [cursor=pointer]:
+            - /url: /terms
+  - alert [ref=e589]
+  - generic:
+    - generic:
+      - generic:
+        - img

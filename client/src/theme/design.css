@@ -1636,6 +1636,29 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
   text-transform: none;
 }
 
+/* Freelance site cards: a clickable screenshot thumbnail replaces the letter
+   logo, plus a "Visit site ↗" link in the body. */
+.client-card--site { grid-template-columns: 168px 1fr auto; }
+.client-shot {
+  display: block; width: 168px; aspect-ratio: 16 / 10; border-radius: 8px; overflow: hidden;
+  border: 0.5px solid var(--line-strong); background: var(--surface); cursor: none;
+  box-shadow: 0 10px 24px -18px rgba(0,0,0,0.6);
+  transition: box-shadow .3s, border-color .3s;
+}
+.client-shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.client-card--site:hover .client-shot {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 18px 36px -22px rgba(0,0,0,0.7);
+}
+.client-link {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 10px;
+  font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--accent); border: 0.5px solid var(--line-strong); border-radius: 999px; padding: 5px 11px;
+  background: color-mix(in srgb, var(--accent) 5%, transparent); text-decoration: none; cursor: none;
+  transition: border-color .2s, background .2s;
+}
+.client-link:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+
 /* ───── Contact page ───── */
 .contact-grid {
   display: grid;
@@ -1835,6 +1858,9 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
   .project-row .pr-tags { display: none; }
   .client-card { grid-template-columns: 60px 1fr; }
   .client-card .stat { grid-column: span 2; text-align: left; }
+  /* Site cards: full-width screenshot above the body on small screens. */
+  .client-card--site { grid-template-columns: 1fr; }
+  .client-card--site .client-shot { width: 100%; aspect-ratio: 16 / 9; }
   .log-entry { grid-template-columns: 1fr; gap: 10px; }
   .log-meta { flex-direction: row; align-items: center; gap: 14px; }
 }

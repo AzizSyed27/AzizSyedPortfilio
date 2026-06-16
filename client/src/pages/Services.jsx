@@ -56,12 +56,43 @@ function CapCard({ c }) {
 function ClientCard({ c }) {
   const { typed, active, start, stop } = useTypewriter(c.story || "");
   return (
-    <div className="client-card" onMouseEnter={start} onMouseLeave={stop} data-cursor="hover">
-      <div className="logo">{c.initial}</div>
+    <div
+      className={`client-card${c.image ? " client-card--site" : ""}`}
+      onMouseEnter={start}
+      onMouseLeave={stop}
+      data-cursor="hover"
+    >
+      {c.image ? (
+        <a
+          className="client-shot"
+          href={c.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-cursor="hover"
+          aria-label={`Visit ${c.name}`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <img src={c.image} alt={`${c.name} website`} loading="lazy" />
+        </a>
+      ) : (
+        <div className="logo">{c.initial}</div>
+      )}
       <div className="client-body">
         <h4>{c.name}</h4>
         <div className="eyebrow" style={{ marginTop: 6 }}>{c.role}</div>
         <p>{c.desc}</p>
+        {c.url && (
+          <a
+            className="client-link"
+            href={c.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-cursor="hover"
+            onClick={(e) => e.stopPropagation()}
+          >
+            Visit site <span aria-hidden="true">↗</span>
+          </a>
+        )}
         <div className="cap-more">
           <div className="cap-more-inner">
             <div className="cap-more-label">Outcome</div>
@@ -72,9 +103,11 @@ function ClientCard({ c }) {
           </div>
         </div>
       </div>
-      <div className="stat">
-        <b>{c.metric}</b>{c.metricL}
-      </div>
+      {c.metric && (
+        <div className="stat">
+          <b>{c.metric}</b>{c.metricL}
+        </div>
+      )}
     </div>
   );
 }
