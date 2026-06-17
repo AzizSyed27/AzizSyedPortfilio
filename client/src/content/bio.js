@@ -6,7 +6,6 @@ export const BIO = {
   phone: "+1 (647) 539-0000",
   github: "https://github.com/AzizSyed27",
   linkedin: "https://ca.linkedin.com/in/azizsyed",
-  resumePath: "/src/assets/Aziz_Syed_Resume.pdf",
   tagline: "I build software that thinks, sees & responds.",
   blurb:
     "I'm Aziz — I build data engineering pipelines, agentic LLM systems, and graceful technical experiences that ship to real users.",
