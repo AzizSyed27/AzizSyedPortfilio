@@ -90,3 +90,30 @@ export const CLIENTS = [
     story: "Trimmed checkout from 5 steps to 3 and automated weekly inventory reconciliation in Python + SQL.",
   },
 ];
+
+// Home-page "Client work / freelance" showcase — the two live freelance builds,
+// shown as browser-chrome screenshot cards. Hand mode turns these into armed
+// "pinch to open" targets that surface an in-page focus preview; mouse opens the
+// live site. Per-card `accent` is the client's brand colour (inline --cw-accent).
+export const HOME_CLIENTS = [
+  {
+    id: "CW/01",
+    shot: eastwaveShot,
+    name: "East Wave Collision Consultants",
+    sector: "Collision claims · GTA",
+    desc: "Full marketing site for a Toronto collision-claims firm — booking flow, multilingual copy, and a conversion-focused hero.",
+    tags: ["Angular", "TypeScript", "Django", "REST API", "CI/CD"],
+    accent: "#13B6C4",
+    url: "https://east-wave-collision-consultantcy.vercel.app/",
+  },
+  {
+    id: "CW/02",
+    shot: trunorthShot,
+    name: "Tru North Couriers",
+    sector: "Logistics · Same-day delivery",
+    desc: "Courier platform front-end — live tracking, quote requests, and client-story sections for a GTA-wide delivery service.",
+    tags: ["React", "Next.js", "TypeScript", "Azure", "Microservices"],
+    accent: "#C8341F",
+    url: "https://trunorthcouriers.onrender.com/",
+  },
+];

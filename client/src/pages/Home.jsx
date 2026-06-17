@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef } from "react";
 import { Section } from "../components/Section";
 import { Marquee } from "../components/Marquee";
+import { ClientWork } from "../components/ClientWork";
 import { useActions } from "../intents/actions";
 import { FEATURED_PROJECTS } from "../content/projects";
 import { BIO } from "../content/bio";
@@ -164,7 +165,25 @@ export default function Home() {
         </div>
       </Section>
 
-      <Section num="03" label="Now · /currently">
+      <Section num="03" label="Client work · /freelance">
+        <div className="home-client-head">
+          <h3 className="display" style={{ fontSize: "clamp(32px, 4vw, 56px)", lineHeight: 0.95 }}>
+            Sites I've shipped for <em>real businesses</em>.
+          </h3>
+          <p className="body-l" style={{ maxWidth: "38ch" }}>
+            Freelance builds for two GTA companies — designed, built, and
+            launched end-to-end.
+          </p>
+        </div>
+        <ClientWork />
+        <div style={{ marginTop: 28 }}>
+          <button className="btn ghost" onClick={() => actions.goToPage("services")} data-cursor="hover">
+            More on services <span className="arr">→</span>
+          </button>
+        </div>
+      </Section>
+
+      <Section num="04" label="Now · /currently">
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 32 }}>
           <NowCard k="Studying" v="B.Sc Computer Science (Honours), Ontario Tech University. Expected May 2027." />
           <NowCard k="Working on" v="Hand-tracking input for the web — a Tony-Stark-style way to control this site without a mouse." />
