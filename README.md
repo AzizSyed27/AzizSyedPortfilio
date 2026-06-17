@@ -59,5 +59,9 @@ The phase briefs live in `portfolio-phase1-implementation-plan.md` and `portfoli
 
 ## Status
 
-- Phase 1 — feature-complete on mouse + keyboard. Theme switching, overlays, 3D scene, contact form, the constellation, and all project/About content are wired.
-- Phase 2 — shipped. Optional webcam hand control behind the action layer: camera + skeleton PIP, hand cursor with pinch-to-click, fist-scroll, swipe navigation, two-hand zoom/rotate, a gesture theme dial, voice-fill Contact, and pinch-grab-throw physics. Desktop + webcam only; the site degrades cleanly to mouse/keyboard with no camera.
+**Both phases are shipped — the portfolio is feature-complete and deployed.**
+
+- Phase 1 — the redesigned site on mouse + keyboard: theme switching, overlays, the 3D gallery, the contact form, the tech-stack constellation, and all project/About content.
+- Phase 2 — optional webcam hand control behind the action layer: camera + skeleton PIP, hand cursor with pinch-to-click, fist-scroll, swipe navigation, two-hand zoom/rotate, a gesture theme dial, voice-fill Contact, and pinch-grab-throw physics in the constellation and exploded views. Desktop + webcam only; degrades cleanly to mouse/keyboard with no camera.
+
+Remaining is config and polish, not features: EmailJS keys for the live contact form, plus cross-browser and real-camera QA.
