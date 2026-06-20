@@ -114,6 +114,22 @@ export function ExplodedView({ id, origin, onClose }) {
     b.el.setAttribute("data-grabbed", "");
   };
 
+  // Click empty background to dismiss. A click only closes when the pointer
+  // press *began* on the background (not a fragment or a button) and barely
+  // moved — so grabbing/dragging/throwing a fragment can never close, even when
+  // the throw is released over empty space (that click lands on .scene, the
+  // common ancestor, and would otherwise bubble up to close).
+  const pressRef = useRef({ x: 0, y: 0, onBg: false });
+  const isBackground = (t) => !t.closest(".frag") && !t.closest("button");
+  const onBgPointerDown = (e) => {
+    pressRef.current = { x: e.clientX, y: e.clientY, onBg: isBackground(e.target) };
+  };
+  const onBgPointerUp = (e) => {
+    const p = pressRef.current;
+    const moved = Math.hypot(e.clientX - p.x, e.clientY - p.y);
+    if (p.onBg && isBackground(e.target) && moved < 6) onClose();
+  };
+
   // Phase-2 hand seam: the live hand cursor drives the same physRef the mouse
   // uses (see the hand loop below).
   const { active: handActive, getPointer } = useHandPointer();
@@ -489,7 +505,8 @@ export function ExplodedView({ id, origin, onClose }) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="exp-title"
-      onClick={onClose}
+      onPointerDown={onBgPointerDown}
+      onPointerUp={onBgPointerUp}
     >
       <div className="exp-viewport">
         <div className="exp-backdrop" aria-hidden="true" />
@@ -514,8 +531,9 @@ export function ExplodedView({ id, origin, onClose }) {
           </div>
         </div>
 
-        {/* Clicks inside the scene shouldn't dismiss; only the backdrop closes. */}
-        <div className="stage" onClick={(e) => e.stopPropagation()}>
+        {/* Clicking empty scene background closes (handled on the root); clicks
+            on the L01–L05 fragments do not — see onBgPointerDown/Up. */}
+        <div className="stage">
           <div className="scene" ref={sceneRef}>
             <svg className="leaders" ref={svgRef} />
 
