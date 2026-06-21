@@ -31,6 +31,11 @@ const DEPTH = { preview: 0.25, stats: 1.5, tags: 1.0, arch: 0.65, case: 1.25 };
 const POP_MS = 420;
 const POP_STAGGER = 130;
 
+// Exit timing: the reverse fly-out. A touch snappier than the entrance, and the
+// stagger runs L05→L01 (the inverse of the open cascade). ~620ms total for 5.
+const CLOSE_MS = 300;
+const CLOSE_STAGGER = 80;
+
 const prefersReduced = () =>
   typeof matchMedia !== "undefined" &&
   matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -82,6 +87,18 @@ export function ExplodedView({ id, origin, onClose }) {
   const coordsRef = useRef(null);
   const [grown, setGrown] = useState(false);
 
+  // Exit animation: every close routes through beginClose, which flips `closing`
+  // so the entrance/physics/hand loops tear down and the reverse fly-out plays
+  // (see the exit effect) before the real onClose unmounts us. Idempotent so a
+  // second close trigger mid-animation is a no-op.
+  const [closing, setClosing] = useState(false);
+  const closingRef = useRef(false);
+  const beginClose = useCallback(() => {
+    if (closingRef.current) return;
+    closingRef.current = true;
+    setClosing(true);
+  }, []);
+
   // Grab/throw physics state — mirrors StackConstellation's S.current shape so a
   // future hand-pointer can drive the same seam (pointer + grabbed). The rAF
   // loop owns `bodies`; pointer handlers write `grabbed`/`target`.
@@ -122,12 +139,14 @@ export function ExplodedView({ id, origin, onClose }) {
   const pressRef = useRef({ x: 0, y: 0, onBg: false });
   const isBackground = (t) => !t.closest(".frag") && !t.closest("button");
   const onBgPointerDown = (e) => {
+    if (closingRef.current) return;
     pressRef.current = { x: e.clientX, y: e.clientY, onBg: isBackground(e.target) };
   };
   const onBgPointerUp = (e) => {
+    if (closingRef.current) return;
     const p = pressRef.current;
     const moved = Math.hypot(e.clientX - p.x, e.clientY - p.y);
-    if (p.onBg && isBackground(e.target) && moved < 6) onClose();
+    if (p.onBg && isBackground(e.target) && moved < 6) beginClose();
   };
 
   // Phase-2 hand seam: the live hand cursor drives the same physRef the mouse
@@ -176,12 +195,13 @@ export function ExplodedView({ id, origin, onClose }) {
     best.el.setAttribute("data-grabbed", "");
   }, []);
 
-  // Esc closes.
+  // Esc closes (plays the exit animation). KeyboardController defers to us here
+  // for the exploded view so the close isn't an instant unmount.
   useEffect(() => {
-    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    const onKey = (e) => { if (e.key === "Escape") beginClose(); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [beginClose]);
 
   // Entrance: each fragment flies in from the clicked card (desktop with an
   // origin rect) or pops in place (small screens / no origin), staggered
@@ -190,6 +210,7 @@ export function ExplodedView({ id, origin, onClose }) {
   // its home (no inline transform) and the physics loop owns it uncontested.
   // Physics stays gated on `grown`, set when the last fragment lands.
   useEffect(() => {
+    if (closing) return undefined; // a close in flight owns the fragments now
     const scene = sceneRef.current;
     if (!scene || prefersReduced()) { setGrown(true); return undefined; }
     const frags = Array.from(scene.querySelectorAll(".frag"));
@@ -220,14 +241,14 @@ export function ExplodedView({ id, origin, onClose }) {
     let cancelled = false;
     anims[anims.length - 1].finished.then(() => { if (!cancelled) setGrown(true); }).catch(() => {});
     return () => { cancelled = true; anims.forEach((a) => a.cancel()); };
-  }, [id, origin]);
+  }, [id, origin, closing]);
 
   // One loop, owned after the grow lands: depth parallax at rest + grab/throw
   // physics (ported from StackConstellation.tick) + leader lines. Everything is
   // in .scene layout coords (offset* are transform-independent) so body coords
   // map 1:1 to the viewBox-less leaders SVG. Static under reduced motion.
   useEffect(() => {
-    if (!grown) return undefined;
+    if (!grown || closing) return undefined;
     const scene = sceneRef.current;
     const svg = svgRef.current;
     if (!scene || !svg) return undefined;
@@ -421,14 +442,14 @@ export function ExplodedView({ id, origin, onClose }) {
       core.remove();
       P.bodies = []; P.grabbed = null; P.canGrab = false;
     };
-  }, [id, grown, releaseThrow]);
+  }, [id, grown, releaseThrow, closing]);
 
   // Hand input — drives the same physRef seam as the mouse. A pinch grabs the
   // nearest fragment, moving the hand drags it, releasing the pinch flings it.
   // The physics frame() loop above animates grabbed/thrown/settling; this loop
   // only writes the seam (pointer + grabbed/target), never the DOM.
   useEffect(() => {
-    if (!grown || !handActive) return undefined;
+    if (!grown || !handActive || closing) return undefined;
     const scene = sceneRef.current;
     if (!scene) return undefined;
     const canGrab =
@@ -469,7 +490,52 @@ export function ExplodedView({ id, origin, onClose }) {
 
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [grown, handActive, getPointer, grabNearestFrag, releaseThrow]);
+  }, [grown, handActive, getPointer, grabNearestFrag, releaseThrow, closing]);
+
+  // Exit animation: shrink each fragment back toward the card and fade out — the
+  // reverse of the entrance — then call the real onClose to unmount. The physics
+  // loop has already torn down (gated on `closing`), so each frag's last inline
+  // transform is its resting/thrown pos; we capture it as the start frame, then
+  // measure the bare home rect to compute the card target (matching the open
+  // math). fill:"both" holds the start during each stagger delay and the shrunk
+  // end until unmount.
+  useEffect(() => {
+    if (!closing) return undefined;
+    const scene = sceneRef.current;
+    const frags = scene ? Array.from(scene.querySelectorAll(".frag")) : [];
+    if (prefersReduced() || !frags.length) { onClose(); return undefined; }
+
+    const canFly =
+      typeof matchMedia !== "undefined" &&
+      matchMedia("(min-width: 981px) and (pointer: fine)").matches &&
+      !!origin && origin.w > 0 && origin.h > 0;
+    const cardCx = canFly ? origin.x + origin.w / 2 : 0;
+    const cardCy = canFly ? origin.y + origin.h / 2 : 0;
+    const n = frags.length;
+
+    const anims = frags.map((el, i) => {
+      const from = getComputedStyle(el).transform || "none";
+      el.style.transform = ""; // bare → measure the home rect for the card delta
+      const r = el.getBoundingClientRect();
+      let to;
+      if (canFly) {
+        const dx = cardCx - (r.left + r.width / 2);
+        const dy = cardCy - (r.top + r.height / 2);
+        to = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) scale(0.18)`;
+      } else {
+        to = "scale(0.5)";
+      }
+      return el.animate(
+        [{ transform: from, opacity: 1 }, { transform: to, opacity: 0 }],
+        { duration: CLOSE_MS, delay: (n - 1 - i) * CLOSE_STAGGER, easing: "cubic-bezier(.4,0,.7,.2)", fill: "both" },
+      );
+    });
+
+    let done = false;
+    const finish = () => { if (!done) { done = true; onClose(); } };
+    Promise.allSettled(anims.map((a) => a.finished)).then(finish);
+    return undefined;
+  }, [closing, onClose, origin]);
 
   // ?debug=hand: expose the physics seam for Playwright verification only.
   useEffect(() => {
@@ -502,6 +568,7 @@ export function ExplodedView({ id, origin, onClose }) {
     <div
       className="exploded-view"
       data-hand={handLive ? "1" : undefined}
+      data-closing={closing ? "1" : undefined}
       role="dialog"
       aria-modal="true"
       aria-labelledby="exp-title"
@@ -622,13 +689,13 @@ export function ExplodedView({ id, origin, onClose }) {
         </div>
 
         <div className="bottom-readout">
-          <button className="back-link" onClick={onClose} type="button">
+          <button className="back-link" onClick={beginClose} type="button">
             <Decrypt text="← back to work" delay={D.bottom} />
           </button>
           <div className="affordance" aria-hidden="true">
             <Decrypt text="move cursor to orbit · layers separated on Z" delay={D.bottom + 40} />
           </div>
-          <button className="exp-close" onClick={onClose} aria-label="Close exploded view" type="button">×</button>
+          <button className="exp-close" onClick={beginClose} aria-label="Close exploded view" type="button">×</button>
         </div>
       </div>
 
@@ -812,6 +879,27 @@ export function ExplodedView({ id, origin, onClose }) {
         .exploded-view[data-hand] .frag:hover,
         .exploded-view[data-hand] .frag[data-grabbed] {
           box-shadow: 0 0 0 1px var(--accent), 0 16px 34px -24px rgba(0,0,0,0.85);
+        }
+
+        /* ── Exit animation (close) ──
+           The fragments themselves shrink back to the card via WAAPI (see the
+           exit effect). Here the backdrop + HUD chrome fade out alongside, and
+           fragments stop taking pointer input mid-collapse. An *animation* (not a
+           transition) is used so it overrides the backdrop's entrance exp-fade,
+           whose forwards (both) fill otherwise pins opacity at 1. */
+        @keyframes exp-chrome-out { to { opacity: 0; } }
+        .exploded-view[data-closing] .exp-backdrop,
+        .exploded-view[data-closing] .top-readout,
+        .exploded-view[data-closing] .bottom-readout,
+        .exploded-view[data-closing] .hud-corner {
+          animation: exp-chrome-out .28s ease forwards;
+        }
+        .exploded-view[data-closing] .frag { pointer-events: none; }
+        @media (prefers-reduced-motion: reduce) {
+          .exploded-view[data-closing] .exp-backdrop,
+          .exploded-view[data-closing] .top-readout,
+          .exploded-view[data-closing] .bottom-readout,
+          .exploded-view[data-closing] .hud-corner { animation: none; opacity: 0; }
         }
       `}</style>
     </div>

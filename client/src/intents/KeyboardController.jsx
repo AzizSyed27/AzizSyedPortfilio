@@ -43,8 +43,11 @@ export function KeyboardController() {
         }
         // Overlay-first (Phase 1 behavior), then exit hand mode. Esc during
         // the boot sequence is handled by BootSequence's own skip listener.
-        if (overlay.cheatSheetOpen || overlay.openProjectId) {
+        if (overlay.cheatSheetOpen) {
           actions.closeOverlay();
+        } else if (overlay.openProjectId) {
+          // ExplodedView owns its own Esc so its exit animation plays instead of
+          // an instant unmount — don't closeOverlay() out from under it here.
         } else if (handState === "live") {
           toggleHandMode();
         } else {
