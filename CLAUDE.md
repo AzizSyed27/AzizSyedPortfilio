@@ -70,7 +70,7 @@ Defined in `ROUTE_BY_ID` in `actions.js` and wired up in `App.jsx`. The design h
 
 `OverlayHost.jsx` is mounted once at App level. It reads `OverlayContext` and conditionally renders `CheatSheet`, `ExplodedView`, `BootSequence`, `HudReticle`. New overlays go through the same pattern — never as routes.
 
-`ExplodedView` reads `OverlayContext.openProjectId` and looks up the project via `PROJECTS_BY_ID` from `src/content/projects.js`. Each featured project carries its own `layers` array describing the exploded layout.
+`ExplodedView` reads `OverlayContext.openProjectId` and looks up the project via `PROJECTS_BY_ID` from `src/content/projects.js`. The exploded layout is *not* data-driven: `ExplodedView` renders a fixed five-fragment scene (L01 preview · L02 metrics · L03 stack · L04 architecture · L05 case study) whose positions are hardcoded as per-id CSS inside the component. A project supplies `preview` / `stats?` / `tags` / `arch` / `caseStudy?`; there is no `layers` array anywhere.
 
 ### Theme system (`client/src/theme/`)
 

@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 
 const BOARD = [
-  { code: "P/01", name: "Projects by the Projects", stack: "Spring Boot · React", year: "25", status: "LIVE" },
-  { code: "P/02", name: "MyE46",                    stack: "R3F · Gemini",         year: "25", status: "LIVE" },
-  { code: "P/03", name: "ASL Hand Coach",           stack: "MediaPipe · CNN",      year: "24", status: "LIVE" },
-  { code: "P/04", name: "HiddenHooks",              stack: "PostGIS · FastAPI",    year: "24", status: "LIVE" },
-  { code: "P/05", name: "GymNet",                   stack: "Spring Boot · React",  year: "24", status: "SHIPPED" },
-  { code: "P/06", name: "DineSmart",                stack: "Angular · GraphQL",    year: "23", status: "SHIPPED" },
-  { code: "P/07", name: "MovieShare",               stack: ".NET · AWS",           year: "23", status: "SHIPPED" },
-  { code: "P/08", name: "CommConnect",              stack: "Next.js · RAG",        year: "24", status: "SHIPPED" },
+  { code: "P/01", name: "Nadi",                     stack: "SUMO · FastAPI",      year: "26", status: "SHIPPED" },
+  { code: "P/02", name: "Projects by the Projects", stack: "Spring Boot · React", year: "25", status: "LIVE" },
+  { code: "P/03", name: "MyE46",                    stack: "R3F · Gemini",        year: "25", status: "LIVE" },
+  { code: "P/04", name: "HiddenHooks",              stack: "PostGIS · FastAPI",   year: "24", status: "LIVE" },
+  { code: "P/05", name: "ASL Hand Coach",           stack: "MediaPipe · CNN",     year: "24", status: "LIVE" },
+  { code: "P/06", name: "GymNet",                   stack: "Spring Boot · React", year: "24", status: "SHIPPED" },
+  { code: "P/07", name: "DineSmart",                stack: "Angular · GraphQL",   year: "23", status: "SHIPPED" },
+  { code: "P/08", name: "MovieShare",               stack: ".NET · AWS",          year: "23", status: "SHIPPED" },
+  { code: "P/09", name: "CommConnect",              stack: "Next.js · RAG",       year: "24", status: "SHIPPED" },
 ];
 const ROWS = 5;
 

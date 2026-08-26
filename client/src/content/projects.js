@@ -18,11 +18,43 @@ import portfolioShot from "../assets/project-pics/portfolioPic.png";
 import homeboundShot from "../assets/project-pics/homebound_demo.png";
 import internHubShot from "../assets/project-pics/internhub_demo.png";
 import morseBridgeShot from "../assets/project-pics/morsebridge_demo.png";
+import nadiShot from "../assets/project-pics/nadi.png";
 
 export const FEATURED_PROJECTS = [
   {
-    id: "pxp",
+    id: "nadi",
     num: "P/01",
+    title: "Nadi",
+    url: "github.com/AzizSyed27",
+    desc: "Preview a proposed street change on a Toronto corridor — SUMO traffic microsimulation coupled with an LLM stakeholder-reaction layer.",
+    tags: ["SUMO", "FastAPI", "Next.js", "deck.gl", "LightRAG"],
+    preview: { image: nadiShot, metaLeft: "SIM · 212 VOICES", dims: "1600×1000" },
+    stats: [
+      { v: "212", l: "Persona voices simulated" },
+      { v: "681", l: "Automated tests" },
+    ],
+    arch: [
+      { label: "SIM", sub: "SUMO · TraCI" },
+      { label: "API", sub: "FastAPI runner" },
+      { label: "AGENTS", sub: "voices · report" },
+      { label: "MAP", sub: "deck.gl · MapLibre" },
+    ],
+    caseStudy: {
+      title: "Preview the street change before you build it.",
+      body: [
+        "Nadi lets a city planner preview a proposed street change on a Toronto corridor. A ",
+        { b: "SUMO microsimulation" },
+        " runs the traffic as physics; an LLM layer voices ",
+        { b: "212 personas pinned to their own trips" },
+        ". The hard part was honesty — every sentence it generates is audited for digits, tallies and safety claims, and ",
+        { b: "681 tests" },
+        " fail if it drifts toward a verdict.",
+      ],
+    },
+  },
+  {
+    id: "pxp",
+    num: "P/02",
     title: "Projects by the Projects",
     url: "ProjectsXProjects.ca",
     desc: "Full-stack nonprofit platform serving 125+ subscribers — donations, content, and supporter newsletters.",
@@ -51,7 +83,7 @@ export const FEATURED_PROJECTS = [
   },
   {
     id: "mye46",
-    num: "P/02",
+    num: "P/03",
     title: "MyE46",
     url: "MyE46.app",
     desc: "Agentic 3D car configurator. Plain-English mods, live budget-aware build updates, real-time part swapping.",
@@ -75,35 +107,6 @@ export const FEATURED_PROJECTS = [
         " that swaps parts, tracks a running budget, and re-renders in real time. The hard part wasn't the AI — it was keeping the GPU calm: adaptive LOD dropped load from ",
         { b: "90% to 15–30%" },
         " under 200 concurrent users.",
-      ],
-    },
-  },
-  {
-    id: "asl",
-    num: "P/03",
-    title: "ASL Hand Coach",
-    url: "ASLHandCoach.ca",
-    desc: "Browser-based ASL trainer. Live camera input, 21 hand keypoints, sub-200ms ML inference.",
-    tags: ["React", "TypeScript", "MediaPipe", "CNN", "Tailwind"],
-    preview: { image: aslShot, metaLeft: "CAM 01 · 21 KEYPOINTS", dims: "640×480" },
-    stats: [
-      { v: "90%", l: "Recognition accuracy" },
-      { v: "<200ms", l: "Inference / frame" },
-    ],
-    arch: [
-      { label: "CAMERA", sub: "getUserMedia" },
-      { label: "DETECT", sub: "CNN palm" },
-      { label: "LANDMARK", sub: "21 keypoints" },
-      { label: "CLASSIFY", sub: "A–Z · 0–9" },
-    ],
-    caseStudy: {
-      title: "Learn to sign, in the browser.",
-      body: [
-        "ASL Hand Coach is a browser-based ASL trainer with ",
-        { b: "no install and no upload" },
-        " — everything runs on-device. A CNN palm detector feeds a 21-keypoint landmark regressor, classifying ",
-        { b: "36 signs at 90% accuracy" },
-        " with sub-200ms inference. It's also the seed of the hand-tracking nav I'm adding to this site.",
       ],
     },
   },
@@ -145,8 +148,38 @@ export const FEATURED_PROJECTS = [
 // metrics panel when absent).
 export const ARCHIVE_PROJECTS = [
   {
-    id: "gymnet",
+    id: "asl",
     num: "P/05",
+    title: "ASL Hand Coach",
+    url: "ASLHandCoach.ca",
+    note: "Browser ASL trainer, 21-keypoint ML",
+    desc: "Browser-based ASL trainer. Live camera input, 21 hand keypoints, sub-200ms ML inference.",
+    tags: ["React", "TypeScript", "MediaPipe", "CNN", "Tailwind"],
+    preview: { image: aslShot, metaLeft: "CAM 01 · 21 KEYPOINTS", dims: "640×480" },
+    stats: [
+      { v: "90%", l: "Recognition accuracy" },
+      { v: "<200ms", l: "Inference / frame" },
+    ],
+    arch: [
+      { label: "CAMERA", sub: "getUserMedia" },
+      { label: "DETECT", sub: "CNN palm" },
+      { label: "LANDMARK", sub: "21 keypoints" },
+      { label: "CLASSIFY", sub: "A–Z · 0–9" },
+    ],
+    caseStudy: {
+      title: "Learn to sign, in the browser.",
+      body: [
+        "ASL Hand Coach is a browser-based ASL trainer with ",
+        { b: "no install and no upload" },
+        " — everything runs on-device. A CNN palm detector feeds a 21-keypoint landmark regressor, classifying ",
+        { b: "36 signs at 90% accuracy" },
+        " with sub-200ms inference. It's also the seed of the hand-tracking nav I'm adding to this site.",
+      ],
+    },
+  },
+  {
+    id: "gymnet",
+    num: "P/06",
     title: "GymNet",
     url: "github.com/AzizSyed27",
     note: "Gym ops + member + admin dashboards",
@@ -172,7 +205,7 @@ export const ARCHIVE_PROJECTS = [
   },
   {
     id: "dinesmart",
-    num: "P/06",
+    num: "P/07",
     title: "DineSmart",
     url: "github.com/AzizSyed27",
     note: "Restaurant management, Apollo Server",
@@ -196,7 +229,7 @@ export const ARCHIVE_PROJECTS = [
   },
   {
     id: "movieshare",
-    num: "P/07",
+    num: "P/08",
     title: "MovieShare",
     url: "github.com/AzizSyed27",
     note: "Cloud movie streaming on AWS CI/CD",
@@ -222,7 +255,7 @@ export const ARCHIVE_PROJECTS = [
   },
   {
     id: "commconnect",
-    num: "P/08",
+    num: "P/09",
     title: "CommConnect",
     url: "github.com/AzizSyed27",
     note: "Community platform with AI RAG assistant",
@@ -248,7 +281,7 @@ export const ARCHIVE_PROJECTS = [
   },
   {
     id: "internhub",
-    num: "P/09",
+    num: "P/10",
     title: "InternHub",
     url: "github.com/AzizSyed27/InternHub",
     note: "Internship tracker + LinkedIn outreach automation",
@@ -278,7 +311,7 @@ export const ARCHIVE_PROJECTS = [
   },
   {
     id: "homebound",
-    num: "P/10",
+    num: "P/11",
     title: "Homebound",
     url: "github.com/AzizSyed27/Homebound",
     note: "ML predictor for stolen-bike recovery",
@@ -308,7 +341,7 @@ export const ARCHIVE_PROJECTS = [
   },
   {
     id: "morsebridge",
-    num: "P/11",
+    num: "P/12",
     title: "MorseBridge",
     url: "github.com/AzizSyed27/MorseBridge",
     note: "Offline SwiftUI Morse-code tutor",
@@ -338,7 +371,7 @@ export const ARCHIVE_PROJECTS = [
   },
   {
     id: "portfolio",
-    num: "P/12",
+    num: "P/13",
     title: "Aziz's Portfolio",
     url: "azizsyed.ca",
     note: "This site — React + hand-tracking control",
